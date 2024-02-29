@@ -1,3 +1,3 @@
 # diTauCathode
 
-more info will come
+Testing weak supervision
