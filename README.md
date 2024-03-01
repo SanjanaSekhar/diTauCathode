@@ -14,3 +14,10 @@ make
 ```
 
 ## Testing weak supervision
+
+First we create .csv files containing the pT, eta, phi and m_tau of the 2 tau jets in signal and background samples. 
+```
+# note that creata_dataset.C should be placed inside the Delphes folder
+# The file takes the root fle name and the label (0 for bkg, 1 for sig) as inputs
+root -l -b -q create_dataset.C'("SM_ttbarTo2Tau2Nu_2J",0)'
+```
