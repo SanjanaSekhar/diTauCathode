@@ -21,44 +21,89 @@ import h5py
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-sig = pd.read_csv("csv_files/LQ_nonResScalarLQ-M1000_2J.csv")
+ending = "030124"
+load_model = False
+test_model = False
+early_stop = 5
+batch_size = 16
+epochs = 20
+
+
+gpu_boole = torch.cuda.is_available()
+print("Is GPU available? ",gpu_boole)
+if load_model: print("Loading model... ")
+
+
+sig = pd.read_csv("csv_files/LQ_nonResScalarLQ-M1000_2J.csv", lineterminator='\n')
 bkg1 = pd.read_csv("csv_files/SM_dyToTauTau_0J1J2J_wPU.csv")
 bkg2 = pd.read_csv("csv_files/SM_ttbarTo2Tau2Nu_2J.csv")
 
 # Format of csv file:
 # tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, tau2_m, m_tau1tau2, isSig
-
+print(sig.shape, bkg1.shape, bkg2.shape)
 sig.columns = ["pt_tau1", "eta_tau1", "phi_tau1", "pt_tau2", "eta_tau2", "phi_tau2", "m_tau1", "m_tau2", "m_tau1tau2", "label"]
 bkg1.columns = ["pt_tau1", "eta_tau1", "phi_tau1", "pt_tau2", "eta_tau2", "phi_tau2", "m_tau1", "m_tau2", "m_tau1tau2", "label"]
 bkg2.columns = ["pt_tau1", "eta_tau1", "phi_tau1", "pt_tau2", "eta_tau2", "phi_tau2", "m_tau1", "m_tau2", "m_tau1tau2", "label"]
 
 print(sig.shape, bkg1.shape, bkg2.shape)
+print(sig)
 print("Min, max m_tt in sig: ", sig['m_tau1tau2'].min(), sig['m_tau1tau2'].max() )
 print("Min, max m_tt in bkg1: ", bkg1['m_tau1tau2'].min(), bkg1['m_tau1tau2'].max() )
 print("Min, max m_tt in bkg2: ", bkg2['m_tau1tau2'].min(), bkg2['m_tau1tau2'].max() )
 
-sig_sigregion = sig.loc(sig['m_tau1tau2'] >= 800)
-bkg1_sigregion = bkg1.loc(bkg1['m_tau1tau2']>= 800)
-bkg2_sigregion = bkg2.loc(bkg2['m_tau1tau2']>= 800)
-bkg1_bkgregion = bkg1.loc(bkg1['m_tau1tau2']< 800)
-bkg2_bkgregion = bkg2.loc(bkg2['m_tau1tau2']< 800)
+# Choose the m_tautau window in which to define 'data' and bkg regions
+# The max ditau inv mass is not the same in all samples
+m_tt_min = 100 
+m_tt_max = np.min([sig['m_tau1tau2'].max(), bkg1['m_tau1tau2'].max(), bkg2['m_tau1tau2'].max()])
+print(m_tt_min, m_tt_max)
 
-print("No. of samples with m_tt > 800 GeV in sig, bkg1 and bkg2")
-print(sig_sigregion.shape, bkg1_sigregion.shape, bkg2_sigregion.shape)
-print("No. of samples with m_tt < 800 GeV in bkg1 and bkg2")
-print(bkg1_bkgregion.shape, bkg2_bkgregion.shape)
+# define "data" and "bkg" regions
+sig_sigregion = sig[sig['m_tau1tau2'] >= m_tt_min] #and sig[sig['m_tau1tau2'] <= m_tt_max]
+bkg1_sigregion = bkg1[bkg1['m_tau1tau2']>=  m_tt_min] #and bkg1[bkg1['m_tau1tau2'] <= m_tt_max]
+bkg2_sigregion = bkg2[bkg2['m_tau1tau2']>= m_tt_min] #and bkg2[bkg2['m_tau1tau2'] <= m_tt_max]
+bkg1_bkgregion = bkg1[bkg1['m_tau1tau2']< m_tt_min]
+bkg2_bkgregion = bkg2[bkg2['m_tau1tau2']< m_tt_min]
 
+print("Percent of samples with m_tt > %f GeV in sig, bkg1 and bkg2"%m_tt_min)
+print(sig_sigregion.shape[0]/sig.shape[0], bkg1_sigregion.shape[0]/bkg1.shape[0], bkg2_sigregion.shape[0]/bkg2.shape[0])
+print("Percent of samples with m_tt < %f GeV in bkg1 and bkg2"%m_tt_min)
+print(bkg1_bkgregion.shape[0]/bkg1.shape[0], bkg2_bkgregion.shape[0]/bkg2.shape[0])
+
+# We want to ensure that the sig/bkg ratio in the "data" is realistic and small
+# choose at random signal samples to inject into the data 
 sig_injection = 0.006
+n_sig = int((sig_injection/(1-sig_injection)) * (bkg1_sigregion.shape[0]+bkg2_sigregion.shape[0]))
+sig_idxs = np.random.choice(range(0,sig_sigregion.shape[0]),size=n_sig) 
+print(sig_idxs)
+sig_to_inject = sig_sigregion.loc[sig_sigregion.index[sig_idxs]]
+print(sig_to_inject.shape)
+# define data and bkg vectors
+# label data as 1 and bkg as 0
+bkg1_sigregion.loc[:,'label'] = 1
+bkg2_sigregion.loc[:,'label'] = 1
+print(bkg1_sigregion)
+sig_to_inject = sig_to_inject.drop(['m_tau1tau2'],axis=1).to_numpy()
+bkg1_sigregion = bkg1_sigregion.drop(['m_tau1tau2'],axis=1).to_numpy()
+bkg2_sigregion = bkg2_sigregion.drop(['m_tau1tau2'],axis=1).to_numpy()
 
- 
+# train val test split: 0.7, 0.1, 0.2
+train_sig, val_sig, test_sig = np.split(sig_to_inject, [int(.8*len(sig_to_inject)), int(.9*len(sig_to_inject))])
+train_bkg1, val_bkg1, test_bkg1 = np.split(bkg1_sigregion, [int(.8*len(bkg1_sigregion)), int(.9*len(bkg1_sigregion))])
+train_bkg2, val_bkg2, test_bkg2 = np.split(bkg2_sigregion, [int(.8*len(bkg2_sigregion)), int(.9*len(bkg2_sigregion))]) 
 
+train = np.vstack((train_sig,train_bkg1,train_bkg2))
+val = np.vstack((val_sig,val_bkg1,val_bkg2))
+test = np.vstack((test_sig,test_bkg1,test_bkg2))
 
+print("train, val, test shapes: ",train.shape, val.shape, test.shape)
 
-train, validate, test = np.split(transformed, [int(.6*len(transformed)), int(.8*len(transformed))])
 
 train_set = torch.tensor(train, dtype=torch.float32)
-val_set = torch.tensor(validate, dtype=torch.float32)
+val_set = torch.tensor(val, dtype=torch.float32)
 test_set = torch.tensor(test, dtype=torch.float32)
+
+batch_size = 16
+epochs = 20
 
 train_loader = torch.utils.data.DataLoader(dataset = train_set,
 	batch_size = batch_size,
@@ -67,90 +112,51 @@ val_loader = torch.utils.data.DataLoader(dataset = val_set,
 	batch_size = batch_size,
 	shuffle = True)
 test_loader = torch.utils.data.DataLoader(dataset = test_set,
-	batch_size = 1,
+	batch_size = batch_size,
 	shuffle = True)
 
-# AUTOENCODER CLASS
+# NN
 
-class AE(torch.nn.Module):
+class NN(torch.nn.Module):
 	def __init__(self):
 		super().__init__()
 
-		# ENCODER
-		self.encoder = torch.nn.Sequential(
-			#torch.nn.Linear(228*3 800),
-			#torch.nn.ReLU(),
-			#torch.nn.Linear(800, 700),
-			#torch.nn.ReLU(),
-			torch.nn.Linear(228*3, 600),
+		self.classifier = torch.nn.Sequential(
+			torch.nn.Linear(8,32),
 			torch.nn.ReLU(),
-                        #torch.nn.Linear(600, 500),
-                        #torch.nn.ReLU(),
-                        torch.nn.Linear(600, 400),
+                        torch.nn.Linear(32,64),
                         torch.nn.ReLU(),
-			#torch.nn.Linear(400, 300),
-			#torch.nn.ReLU(),
-			torch.nn.Linear(400, 200),
+			torch.nn.Linear(64, 32),
 			torch.nn.ReLU(),
-			#torch.nn.Linear(200, 100),
-			#torch.nn.ReLU(),
-			torch.nn.Linear(200, 100),
-			torch.nn.ReLU(),
-			torch.nn.Linear(100, 25),
-			#torch.nn.ReLU(),
-			#torch.nn.Linear(25, 10)
+			torch.nn.Linear(32,1),
+			torch.nn.Sigmoid()
 			)
 
-		# DECODER
-		self.decoder = torch.nn.Sequential(
-			#torch.nn.Linear(10, 25),
-			#torch.nn.ReLU(),
-			torch.nn.Linear(25, 100),
-			torch.nn.ReLU(),
-			#torch.nn.Linear(50, 100),
-			#torch.nn.ReLU(),
-			torch.nn.Linear(100, 200),
-			torch.nn.ReLU(),
-			#torch.nn.Linear(200, 300),
-			#torch.nn.ReLU(),
-			torch.nn.Linear(200, 400),
-			torch.nn.ReLU(),
-			#torch.nn.Linear(400, 500),
-                        #torch.nn.ReLU(),
-                        torch.nn.Linear(400, 600),
-                        torch.nn.ReLU(),
-                       	#torch.nn.Linear(600, 700),
-                        #torch.nn.ReLU(),
-                        torch.nn.Linear(600, 228*3),
-                        #torch.nn.ReLU(),
-                        #torch.nn.Linear(800, 228*4),
+		
                          
-			)
-
 	def forward(self, x):
-		encoded = self.encoder(x)
-		decoded = self.decoder(encoded)
-		return decoded
+		label = self.classifier(x)
+		return label
 
-model = AE()
+model = NN()
 if gpu_boole: model = model.cuda()
 
 optimizer = torch.optim.Adam(model.parameters(),
         lr = 2e-3,
         weight_decay = 1e-8)
 
-#loss_function = torch.nn.MSELoss()
+loss_function = torch.nn.BCELoss()
 #loss_function = chamfer_distance()
 
 # LOAD AN EXISTING MODEL 
 if load_model:
-	checkpoint = torch.load("checkpoints/ae_epoch3_%s.pth"%(ending))
+	checkpoint = torch.load("checkpoints/weak_supervision_epoch3_%s.pth"%(ending))
 	model.load_state_dict(checkpoint['model_state_dict'])
 	optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 	loaded_epoch = checkpoint['epoch']
 	print("loaded epoch = ",loaded_epoch)
-	#loss_function = checkpoint['loss']
-	#print("loaded loss = ",loss_function)
+	loss_function = checkpoint['loss']
+	print("loaded loss = ",loss_function)
 	train_val_losses = []
 	
 	with open("losses/train_val_losses_%s.txt"%ending,"r") as f:
@@ -169,12 +175,6 @@ else:
 	losses,val_losses = [],[]
 	
 
-
-print("train shape ",train.shape)
-print("val shape ",validate.shape)
-print("test shape ",test.shape)
-
-
 outputs = []
 test_losses = []
 
@@ -188,19 +188,18 @@ if not test_model:
 		i = 0
 		with tqdm(train_loader, unit="batch") as tepoch:
 			model.train()
-			for event in tepoch:
+			for vector in tepoch:
 				tepoch.set_description(f"Epoch {epoch}")
+				features, label = vector[:,:8],vector[:,8]
 				if gpu_boole:
-					event = event.cuda()
+					features,label = features.cuda(),label.cuda()
 
-			  	# Output of Autoencoder
-				reconstructed = model.forward(event)
+			  	# Output of NN
+				prediction = model.forward(features)
 
 			  	# Calculating the loss function
-				event = torch.reshape(event, (batch_size,228,3))
-				reconstructed = torch.reshape(reconstructed, (batch_size,228,3))
-				#loss = loss_function(reconstructed, event)
-				loss,_ = chamfer_distance(reconstructed, event)
+							
+				loss = loss_function(prediction, label.view(-1,1))
 			 
 				#if epoch > 0 and epoch != loaded_epoch:
 				optimizer.zero_grad()
@@ -219,30 +218,28 @@ if not test_model:
 			'epoch':epoch,
 			'model_state_dict': model.state_dict(),
 	            	'optimizer_state_dict': optimizer.state_dict(),
-	            	#'loss': loss_function
+	            	'loss': loss_function
 			},
-			"checkpoints/ae_epoch%i_%s.pth"%(epoch%5,ending))
+			"checkpoints/weak_supervision_epoch%i.pth"%(epoch%5))
 		losses.append(this_loss)
 		print("Train Loss: %f"%(this_loss))
 		
 		# VALIDATION
 
-		for event in val_loader:
+		for vector in val_loader:
 			model.eval()
+			features, label = vector[:,:8],vector[:,8]
 			if gpu_boole:
-				event = event.cuda()
+				features,label = features.cuda(),label.cuda()
 			
 			
-			reconstructed = model.forward(event)
-			event = torch.reshape(event, (batch_size,228,3))
-			reconstructed = torch.reshape(reconstructed, (batch_size,228,3))
-			#val_loss = loss_function(reconstructed, event)
+			prediction = model.forward(features)
 			
-			val_loss,_ = chamfer_distance(reconstructed, event)
+			val_loss = loss_function(prediction, label.view(-1,1))
 			val_loss_per_epoch += val_loss.cpu().data.numpy().item()
 
-		val_losses.append(val_loss_per_epoch/math.ceil(validate.shape[0]/batch_size))
-		print("Val Loss: %f"%(val_loss_per_epoch/math.ceil(validate.shape[0]/batch_size)))
+		val_losses.append(val_loss_per_epoch/math.ceil(val.shape[0]/batch_size))
+		print("Val Loss: %f"%(val_loss_per_epoch/math.ceil(val.shape[0]/batch_size)))
 		
 		# EARLY STOPPING
 		flag = 0
@@ -263,25 +260,13 @@ if not test_model:
 if test_model:
 
 	test_loss_per_epoch = 0.
-	input_list, output_list = np.zeros((1,228*3)), np.zeros((1,228*3))
-	for idx,event in enumerate(test_loader):
-		if idx==0: print(event.numpy())
+	for vector in enumerate(test_loader):
+		features, label = vector[:,:8],vector[:,8]
 		if gpu_boole:
-			event = event.cuda()
-
-	  
-		reconstructed = model.forward(event)
-		event = torch.reshape(event, (1,228,3))
-		reconstructed = torch.reshape(reconstructed, (1,228,3))
-		#test_loss = loss_function(reconstructed, event)
-		test_loss,_ = chamfer_distance(reconstructed,event)
+			features,label = features.cuda(),label.cuda()
+		prediction = model.forward(features)
+		test_loss = loss_function(prediction, label.view(1,1))
 		test_loss_per_epoch += test_loss.cpu().data.numpy().item()
-		if idx < 2000:
-			event = torch.reshape(event, (1,228*3))
-			reconstructed = torch.reshape(reconstructed, (1,228*3))			
-			#print("Loss for this input: ",test_loss.cpu().data.numpy().item())
-			input_list = np.vstack((input_list,(event.cpu().detach().numpy())))
-			output_list = np.vstack((output_list,(reconstructed.cpu().detach().numpy())))
-			if idx==0: print(event.cpu().detach().numpy())
+	
 	test_losses.append(test_loss_per_epoch/int(test.shape[0]))
 	print("Test Loss: %f"%(test_loss_per_epoch/int(test.shape[0])))

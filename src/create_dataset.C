@@ -10,9 +10,9 @@
 #include <cstdlib>
 #ifdef __CLING__
 R__LOAD_LIBRARY(libDelphes)
-#include "classes/DelphesClasses.h"
-#include "external/ExRootAnalysis/ExRootTreeReader.h"
-#include "external/ExRootAnalysis/ExRootResult.h"
+#include "../../classes/DelphesClasses.h"
+#include "../../external/ExRootAnalysis/ExRootTreeReader.h"
+#include "../../external/ExRootAnalysis/ExRootResult.h"
 #endif
 
 /*
@@ -34,7 +34,7 @@ int create_dataset(string file_n, int label) {
   int isSig = label;
 
   char infile[200], outfile[200];
-  string csv_path = "/uscms/home/ssekhar/nobackup/CATHODE_ditau/";
+  string csv_path = "/uscms/home/ssekhar/nobackup/CATHODE_ditau/Delphes/";
   string in_path = "root://cmseos.fnal.gov//store/user/tvami/diTauCathode/";
   //string file_name = "LQ_nonResScalarLQ-M1000_2J";
   string file_name = file_n.c_str();
@@ -116,7 +116,7 @@ int create_dataset(string file_n, int label) {
         }
       }
     }
-    if(filledTau) fprintf(fout,"%f %f %f %f %f %f %f %f %f %i\n", tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, tau2_m, m_tau1tau2, isSig);
+    if(filledTau) fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%i\n", tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, tau2_m, m_tau1tau2, isSig);
   }
 return 1;
 }
