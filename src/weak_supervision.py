@@ -53,7 +53,7 @@ print("Min, max m_tt in bkg2: ", bkg2['m_tau1tau2'].min(), bkg2['m_tau1tau2'].ma
 
 # Choose the m_tautau window in which to define 'data' and bkg regions
 # The max ditau inv mass is not the same in all samples
-m_tt_min = 100 
+m_tt_min = 700 
 m_tt_max = np.min([sig['m_tau1tau2'].max(), bkg1['m_tau1tau2'].max(), bkg2['m_tau1tau2'].max()])
 print(m_tt_min, m_tt_max)
 
