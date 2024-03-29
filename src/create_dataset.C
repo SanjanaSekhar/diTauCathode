@@ -48,7 +48,7 @@ int create_dataset(string file_n, int label) {
 
 	ExRootTreeReader *treeReader = new ExRootTreeReader(&chain);
 	Long64_t numberOfEntries = treeReader->GetEntries();
-	int n_frac = 10000;
+	int n_frac = 10;
 		// Get pointers to branches used in this analysis
 	
 	TClonesArray *branchJet = treeReader->UseBranch("Jet");
@@ -100,21 +100,27 @@ int create_dataset(string file_n, int label) {
 				if(found_gtau1 and found_gtau2) break;
 				GenParticle *p = (GenParticle*) branchParticle->At(m);
 				// only select final state electrons or muons
-				if(!p or p->Status!=1 or abs(p->PID)!=11 or abs(p->PID)!=13) continue;
-
+				//cout << "PID of p: " << p->PID << "\n";
+				if(!p or p->Status!=1) continue;
+				if(p->PID == 11 or p->PID == 13 or p->PID == -11 or p->PID == -13){
+				//cout << "PID of p: " << p->PID << "\n";
 				GenParticle *genMom = getMother(branchParticle, p);
 
 				if(genMom->PID == 15 and !found_gtau1) {
 						numGenTau1s++; 
 				  	found_gtau1=true;
-				  	printf("ID of tau- daughters: %i, %i\n",genMom->D1->PID,genMom->D2->PID);
+					GenParticle *d1 = (GenParticle*) branchParticle->At(genMom->D1);
+					GenParticle *d2 = (GenParticle*) branchParticle->At(genMom->D2);
+				  	cout << "ID of tau- daughters: " << d1->PID << " " << d2->PID << endl;
 
 				  }
-				else if(genMom->PID == -15 and !found_gtau2) {
+				if(genMom->PID == -15 and !found_gtau2) {
 						numGenTau2s++; 
 						found_gtau2=true;
-						printf("ID of tau+ daughters: %i, %i\n",genMom->D1->PID,genMom->D2->PID);
-					}
+						GenParticle *d1 = (GenParticle*) branchParticle->At(genMom->D1);
+                                        GenParticle *d2 = (GenParticle*) branchParticle->At(genMom->D2);
+                                        cout << "ID of tau- daughters: " << d1->PID << " " << d2->PID << endl;
+				}	}
 
 			}   
 		//printf("No. of gen tau- babies = %i, no. of gen tau+ babies = %i\n",numGenTau1s,numGenTau2s);
