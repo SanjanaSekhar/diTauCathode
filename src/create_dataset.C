@@ -48,43 +48,61 @@ int create_dataset(string file_n, int label) {
 
   ExRootTreeReader *treeReader = new ExRootTreeReader(&chain);
   Long64_t numberOfEntries = treeReader->GetEntries();
-
+  int n_frac = 10000;
     // Get pointers to branches used in this analysis
+  
   TClonesArray *branchJet = treeReader->UseBranch("Jet");
   TClonesArray *branchParticle = treeReader->UseBranch("Particle");
   TClonesArray *branchMET = treeReader->UseBranch("MissingET");
   TClonesArray *branchMu = treeReader->UseBranch("Muon");
   TClonesArray *branchEl = treeReader->UseBranch("Electron");
-  //TClonesArray *branchGenJet = treeReader->UseBranch("GenJet");
+  TClonesArray *branchGenJet = treeReader->UseBranch("GenJet");
 
   float tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, tau2_m, m_tau1tau2, met_met, met_eta, met_phi, tau1_d1, tau1_d2, tau2_d1, tau2_d2;
   Float_t n_subj[5];
   
-  std::cout << "Running on " << numberOfEntries << " events" << std::endl;
-  int numTauJet1s = 0, numTauJet2s = 0, numGenTau1s = 0, numGenTau2s = 0;
+  std::cout << "Running on " << n_frac << " out of " << numberOfEntries << " events" << std::endl;
+  int numTauJet1s = 0, numTauJet2s = 0, numGenTau1s = 0, numGenTau2s = 0, numGenTauJet1s = 0, numGenTauJet2s = 0;
   
 //  numberOfEntries = 1000;
-  for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
-    /*
-    if (entry % 2000 == 0) {
+  for (Long64_t entry = 0; entry < n_frac; ++entry) {
+    
+    if (entry % 20000 == 0) {
       std:cout << "Processing event " << entry << std::endl;
       printf("No. of events with at least 1 tagged tau jets = %i\n",numTauJet1s);
       printf("No. of events with at least 2 tagged tau jets = %i\n",numTauJet2s);
       printf("No. of events with 1 gen tau- jet = %i\n",numGenTau1s);
       printf("No. of events with 1 gen tau+ jet = %i\n",numGenTau2s);
-      }*/
+      printf("No. of events with at least 1 tagged gen tau jets = %i\n",numGenTauJet1s);               	    printf("No. of events with at least 2 tagged gen tau jets = %i\n",numGenTauJet2s);
+      }
     treeReader->ReadEntry(entry);
     bool filled = false;
-    bool filledTau = false;
-    // numGenTau1s = 0;
+    bool filledTau = false, filledGenTau = false;
+    bool found_gtau1 = false, found_gtau2 = false;
     int numJets = 0;
     //printf("No. of gen particles in this event: %i\n",branchParticle->GetEntries());
-  for (int m=0; m < branchParticle->GetEntries();++m){
+   for (int y=0; y < branchGenJet->GetEntries();++y){
+ 	Jet *gjet = (Jet*) branchGenJet->At(y); 
+	if (!gjet or gjet->TauTag != 1) continue;        
+	if (gjet->TauTag == 1 and !filledGenTau) ++numGenTauJet1s;
+        for (int z = 0; z < branchGenJet->GetEntries(); ++z) {
+        auto* gjet2 = static_cast<Jet*>(branchGenJet->At(z));
+        if (!gjet2 || gjet == gjet2) continue;
+        if (gjet2->TauTag == 1) {
+          if (!filledGenTau) {  
+		++numGenTauJet2s;
+		filledGenTau = true;
+	}}
+	}
+    }      
+
+   for (int m=0; m < branchParticle->GetEntries();++m){
+     if(found_gtau1 and found_gtau2) break;
      GenParticle *p = (GenParticle*) branchParticle->At(m);
      if(!p or p->Status!=1) continue;
      GenParticle *genMom = getMother(branchParticle, p);
-     if(genMom->PID == 15) numGenTau1s++; 
-     if(genMom->PID == -15) numGenTau2s++;
+     if(genMom->PID == 15 and !found_gtau1) {numGenTau1s++; found_gtau1=true;}
+     else if(genMom->PID == -15 and !found_gtau2) {numGenTau2s++; found_gtau2=true;}
 
     }   
     //printf("No. of gen tau- babies = %i, no. of gen tau+ babies = %i\n",numGenTau1s,numGenTau2s);
@@ -104,8 +122,8 @@ int create_dataset(string file_n, int label) {
       //if(isBkg) label = 0; 
       //else label = 1;
 
-      if (jet->TauTag == 1) {
-        ++numTauJet1s;
+      if (jet->TauTag == 1 and !filledTau) {
+         ++numTauJet1s;
         tau1_pt = jet->PT;
         tau1_eta = jet->Eta;
         tau1_phi = jet->Phi;
@@ -147,6 +165,8 @@ printf("No. of events with at least 1 tagged tau jets = %i\n",numTauJet1s);
 printf("No. of events with at least 2 tagged tau jets = %i\n",numTauJet2s);
 printf("No. of events with 1 gen tau- jet = %i\n",numGenTau1s);
 printf("No. of events with 1 gen tau+ jet = %i\n",numGenTau2s);
+printf("No. of events with at least 1 tagged gen tau jets = %i\n",numGenTauJet1s);               
+printf("No. of events with at least 2 tagged gen tau jets = %i\n",numGenTauJet2s);
 return 1;
 }
 // Taken from readDelphes.C
