@@ -21,10 +21,12 @@ import h5py
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import numpy as np 
+from sklearn.metrics import roc_curve
 
 ending = "041224"
 label = "PhivsDY"
-load_model = False
+load_model = True 
+train_model = False
 test_model = True
 early_stop = 5
 batch_size = 16
@@ -74,7 +76,7 @@ def make_loaders(train,test,val,batch_size):
 		shuffle = True)
 	test_loader = torch.utils.data.DataLoader(dataset = test_set,
 		batch_size = 1,
-		shuffle = True)
+		shuffle = False)
 	return train_loader, val_loader, test_loader
 
 def train_ws(train_loader,val_loader,losses,val_losses,loaded_epoch,label):
@@ -156,139 +158,160 @@ def train_ws(train_loader,val_loader,losses,val_losses,loaded_epoch,label):
 
 	print("========== TRAINING COMPLETE ===========")
 
-def test_ws(test_loader):
+def test_ws(test_loader_ws, test_true, label):
+	pred_list = []
+	print("================= Training %s ================="%label)
 	test_loss_per_epoch = 0.
 	test_losses = []
-	for vector in test_loader:
+	for vector in test_loader_ws:
 		features, label = vector[:,:23],vector[:,23]
 		if gpu_boole:
 			features,label = features.cuda(),label.cuda()
 		prediction = model.forward(features)
 		test_loss = loss_function(prediction, label.view(-1,1))
 		test_loss_per_epoch += test_loss.cpu().data.numpy().item()
+		pred_list.append(prediction.cpu().data.numpy().item())
 	
 	test_losses.append(test_loss_per_epoch/int(test.shape[0]))
 	print("Test Loss: %f"%(test_loss_per_epoch/int(test.shape[0])))
 
+	true_list = test_true[:,-1]
+	fpr, tpr, _ = roc_curve(true_list, pred_list)
+	bkg_rej = 1 / fpr
+	sic = tpr / np.sqrt(fpr)
+
+	random_tpr = np.linspace(0, 1, 300)
+	random_bkg_rej = 1 / random_tpr
+	random_sic = random_tpr / np.sqrt(random_tpr)
+
+	# ROC curve
+	plt.plot(tpr, bkg_rej, label="idealized AD")
+	plt.plot(random_tpr, random_bkg_rej, "w:", label="random")
+	plt.xlabel("True Positive Rate")
+	plt.ylabel("Background Rejection")
+	plt.yscale("log")
+	plt.legend(loc="upper right")
+	plt.show()
+	plt.savefig("ROC_%s.png"%label)
+
+	# SIC curve
+	plt.plot(tpr, sic, label="idealized AD")
+	plt.plot(random_tpr, random_sic, "w:", label="random")
+	plt.xlabel("True Positive Rate")
+	plt.ylabel("Significance Improvement")
+	plt.legend(loc="upper right")
+	plt.show()
+	plt.savefig("SIC_%s.png"%label)
+
+
+
+
+
+def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_injection = 0.2, bkg_sig_frac = 5, label = "PhivsDY")
+
+
+	# Format of csv file:
+	# tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, 
+	# tau2_m, m_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
+	# jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, isSig
+	print(sig.shape, bkg1.shape)
+	sig.columns = ["tau1_pt", "tau1_eta", "tau1_phi", "tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m",
+					"m_tau1tau2", "met_met", "met_eta", "met_phi", "n_jets", "n_bjets",
+					"jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", "bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef", "label"]
+	bkg1.columns = sig.columns
+
+
+	print("Min, max m_tt in sig: ", sig['m_tau1tau2'].min(), sig['m_tau1tau2'].max() )
+	print("Min, max m_tt in bkg1: ", bkg1['m_tau1tau2'].min(), bkg1['m_tau1tau2'].max() )
+
+	# Choose the m_tautau window in which to define 'data' and bkg regions
+	# The max ditau inv mass is not the same in all samples
+
+
+	# define "data" and "bkg" regions
+	sig_sigregion = sig[sig['m_tau1tau2'] >= m_tt_min] #and sig[sig['m_tau1tau2'] <= m_tt_max]
+	sig_sigregion = sig_sigregion[sig_sigregion['m_tau1tau2'] < m_tt_max]
+
+	bkg1_sigregion = bkg1[bkg1['m_tau1tau2'] >=  m_tt_min] #and bkg1[bkg1['m_tau1tau2'] <= m_tt_max]
+	bkg1_sigregion = bkg1_sigregion[bkg1_sigregion['m_tau1tau2'] < m_tt_max]
+
+	bkg1_bkgregion = pd.concat([bkg1[bkg1['m_tau1tau2']< m_tt_min], bkg1[bkg1['m_tau1tau2'] >= m_tt_max]])
+
+	print("No. of samples in SR in sig, bkg")
+	print(sig_sigregion.shape[0], bkg1_sigregion.shape[0])
+	print("No. of samples in SB in bkg")
+	print(bkg1_bkgregion.shape[0])
+
+	# We want to ensure that the sig/bkg ratio in the "data" is realistic and small
+	# choose at random signal samples to inject into the data 
+
+	n_sig_bkg1 = int((sig_injection/(1-sig_injection)) * (bkg1_sigregion.shape[0]))
+
+	print("No of signal samples to inject into bkg1 = ",n_sig_bkg1)
+
+	sig_bkg1_idxs = np.random.choice(range(0,sig_sigregion.shape[0]),size=n_sig_bkg1)
+	#print(sig_bkg1_idxs, sig_bkg2_idxs)
+	sig_to_inject_bkg1 = sig_sigregion.loc[sig_sigregion.index[sig_bkg1_idxs]]
+	print(sig_to_inject_bkg1.shape)
+
+	# define data and bkg vectors
+	# label data as 1 and bkg as 0
+	# bkg1_sigregion has label = 0 in the data region, bkg1_sigregion_ws has label = 1
+	bkg1_sigregion_ws = bkg1_sigregion.copy()
+	bkg1_sigregion_ws.loc[:,'label'] = 1
+
+	# sig_to_inject_bkg1 and sig_to_inject_bkg1_ws both have label = 1
+	sig_to_inject_bkg1_ws = sig_to_inject_bkg1.copy()
+
+	sig_to_inject_bkg1_ws = sig_to_inject_bkg1_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
+	bkg1_sigregion_ws = bkg1_sigregion_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
+	
+	# train val test split: 0.7, 0.1, 0.2
+	train_sig, val_sig, test_sig = np.split(sig_to_inject_bkg1, [int(.8*len(sig_to_inject_bkg1)), int(.9*len(sig_to_inject_bkg1))])
+	train_bkg1, val_bkg1, test_bkg1 = np.split(bkg1_sigregion, [int(.8*len(bkg1_sigregion)), int(.9*len(bkg1_sigregion))])
+	train_sig_ws, val_sig_ws, test_sig_ws = np.split(sig_to_inject_bkg1_ws, [int(.8*len(sig_to_inject_bkg1_ws)), int(.9*len(sig_to_inject_bkg1_ws))])
+	train_bkg1_ws, val_bkg1_ws, test_bkg1_ws = np.split(bkg1_sigregion_ws, [int(.8*len(bkg1_sigregion_ws)), int(.9*len(bkg1_sigregion_ws))])
+	
+	print("train_sig.shape, train_bkg1.shape, train_bkg1_ws.shape = ",train_sig.shape, train_bkg1.shape, train_bkg1_ws.shape)
+	
+	
+	# sets with all true labels for full supervision and ROC curve
+	train = np.vstack((train_sig,train_bkg1))
+	val = np.vstack((val_sig,val_bkg1))
+	test = np.vstack((test_sig,test_bkg1))
+	# sets with label = 0 for SB (bkg) and 1 for SR (data)
+	train_ws = np.vstack((train_sig_ws,train_bkg1_ws))
+	val_ws = np.vstack((val_sig_ws,val_bkg1_ws))
+	test_ws = np.vstack((test_sig_ws,test_bkg1_ws))
+
+
+	print("%s : Weak supervision -  train, val, test shapes: "%label,train.shape, val.shape, test.shape)
+
+	bkg1_idxs = np.random.choice(range(0,bkg1_bkgregion.shape[0]),size=(train.shape[0]+test.shape[0]+val.shape[0])*bkg_sig_frac)
+	# both bkg1_bkgregion and bkg1_bkgregion_ws have label = 0
+	bkg1_bkgregion_ws = bkg1_bkgregion.loc[bkg1_bkgregion.index[bkg1_idxs]]
+
+	bkg1_bkgregion_ws = bkg1_bkgregion_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
+
+	train_bkg1, val_bkg1, test_bkg1 = np.split(bkg1_bkgregion_ws, [int(.8*len(bkg1_bkgregion_ws)), int(.9*len(bkg1_bkgregion_ws))])
+	# sets with all true labels for full supervision and ROC curve
+	train = np.vstack((train,train_bkg1))
+	val = np.vstack((val,val_bkg1))
+	test = np.vstack((test,test_bkg1))
+	# sets with label = 0 for SB (bkg) and 1 for SR (data)
+	train_ws = np.vstack((train_ws,train_bkg1))
+	val_ws = np.vstack((val_ws,val_bkg1))
+	test_ws = np.vstack((test_ws,test_bkg1))
+
+
+	print("Final samples before training starts")
+	print("%s: train, val, test shapes: "%label,train_ws.shape, val_ws.shape, test_ws.shape)
+
+	return train, val, test, train_ws, val_ws, test_ws
 
 sig = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/2HDM-vbfPhiToTauTau-M750_2J_MinMass120_NoMisTag.csv", lineterminator='\n')
 bkg1 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/SM_dyToTauTau_0J1J2J_MinMass120_NoMisTag.csv",lineterminator='\n')
 bkg2 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv",lineterminator='\n')
-
-# Format of csv file:
-# tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, 
-# tau2_m, m_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
-# jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, isSig
-print(sig.shape, bkg1.shape, bkg2.shape)
-sig.columns = ["tau1_pt", "tau1_eta", "tau1_phi", "tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m",
-				"m_tau1tau2", "met_met", "met_eta", "met_phi", "n_jets", "n_bjets",
-				"jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", "bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef", "label"]
-bkg1.columns = sig.columns
-bkg2.columns = sig.columns
-
-
-print("Min, max m_tt in sig: ", sig['m_tau1tau2'].min(), sig['m_tau1tau2'].max() )
-print("Min, max m_tt in bkg1: ", bkg1['m_tau1tau2'].min(), bkg1['m_tau1tau2'].max() )
-print("Min, max m_tt in bkg2: ", bkg2['m_tau1tau2'].min(), bkg2['m_tau1tau2'].max() )
-
-# Choose the m_tautau window in which to define 'data' and bkg regions
-# The max ditau inv mass is not the same in all samples
-m_tt_min = 350 
-m_tt_max = 1000
-
-# define "data" and "bkg" regions
-sig_sigregion = sig[sig['m_tau1tau2'] >= m_tt_min] #and sig[sig['m_tau1tau2'] <= m_tt_max]
-sig_sigregion = sig_sigregion[sig_sigregion['m_tau1tau2'] < m_tt_max]
-
-bkg1_sigregion = bkg1[bkg1['m_tau1tau2'] >=  m_tt_min] #and bkg1[bkg1['m_tau1tau2'] <= m_tt_max]
-bkg1_sigregion = bkg1_sigregion[bkg1_sigregion['m_tau1tau2'] < m_tt_max]
-
-bkg2_sigregion = bkg2[bkg2['m_tau1tau2']>= m_tt_min] #and bkg2[bkg2['m_tau1tau2'] <= m_tt_max]
-bkg2_sigregion = bkg2_sigregion[bkg2_sigregion['m_tau1tau2'] < m_tt_max]
-
-bkg1_bkgregion = pd.concat([bkg1[bkg1['m_tau1tau2']< m_tt_min], bkg1[bkg1['m_tau1tau2'] >= m_tt_max]])
-bkg2_bkgregion = pd.concat([bkg2[bkg2['m_tau1tau2']< m_tt_min], bkg2[bkg2['m_tau1tau2'] >= m_tt_max]])
-
-print("No. of samples in SR in sig, bkg1 and bkg2")
-print(sig_sigregion.shape[0], bkg1_sigregion.shape[0], bkg2_sigregion.shape[0])
-print("No. of samples in SB in bkg1 and bkg2")
-print(bkg1_bkgregion.shape[0], bkg2_bkgregion.shape[0])
-
-# We want to ensure that the sig/bkg ratio in the "data" is realistic and small
-# choose at random signal samples to inject into the data 
-sig_injection = 0.20
-n_sig_bkg1 = int((sig_injection/(1-sig_injection)) * (bkg1_sigregion.shape[0]))
-n_sig_bkg2 = int((sig_injection/(1-sig_injection)) * (bkg2_sigregion.shape[0]))
-
-print("No of signal samples to inject into bkg1 = ",n_sig_bkg1)
-print("No of signal samples to inject into bkg2 = ",n_sig_bkg2)
-
-sig_bkg1_idxs = np.random.choice(range(0,sig_sigregion.shape[0]),size=n_sig_bkg1)
-sig_bkg2_idxs = np.random.choice(range(0,sig_sigregion.shape[0]),size=n_sig_bkg2) 
-#print(sig_bkg1_idxs, sig_bkg2_idxs)
-sig_to_inject_bkg1 = sig_sigregion.loc[sig_sigregion.index[sig_bkg1_idxs]]
-sig_to_inject_bkg2 = sig_sigregion.loc[sig_sigregion.index[sig_bkg2_idxs]]
-print(sig_to_inject_bkg1.shape,sig_to_inject_bkg2.shape)
-
-# define data and bkg vectors
-# label data as 1 and bkg as 0
-bkg1_sigregion_ws = bkg1_sigregion.copy()
-bkg2_sigregion_ws = bkg2_sigregion.copy()
-bkg1_sigregion_ws.loc[:,'label'] = 1
-bkg2_sigregion_ws.loc[:,'label'] = 1
-#print(bkg1_sigregion)
-
-sig_to_inject_bkg1_ws = sig_to_inject_bkg1.copy()
-sig_to_inject_bkg2_ws = sig_to_inject_bkg2.copy()
-
-sig_to_inject_bkg1_ws = sig_to_inject_bkg1_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
-sig_to_inject_bkg2_ws = sig_to_inject_bkg2_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
-bkg1_sigregion_ws = bkg1_sigregion_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
-bkg2_sigregion_ws = bkg2_sigregion_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
-
-# train val test split: 0.7, 0.1, 0.2
-train_sig_bkg1, val_sig_bkg1, test_sig_bkg1 = np.split(sig_to_inject_bkg1_ws, [int(.8*len(sig_to_inject_bkg1_ws)), int(.9*len(sig_to_inject_bkg1_ws))])
-train_sig_bkg2, val_sig_bkg2, test_sig_bkg2 = np.split(sig_to_inject_bkg2_ws, [int(.8*len(sig_to_inject_bkg2_ws)), int(.9*len(sig_to_inject_bkg2_ws))])
-train_bkg1, val_bkg1, test_bkg1 = np.split(bkg1_sigregion_ws, [int(.8*len(bkg1_sigregion_ws)), int(.9*len(bkg1_sigregion_ws))])
-train_bkg2, val_bkg2, test_bkg2 = np.split(bkg2_sigregion_ws, [int(.8*len(bkg2_sigregion_ws)), int(.9*len(bkg2_sigregion_ws))]) 
-
-print("train_sig_bkg1.shape, train_bkg1.shape = ",train_sig_bkg1.shape, train_bkg1.shape)
-
-train = np.vstack((train_sig_bkg1,train_bkg1))
-val = np.vstack((val_sig_bkg1,val_bkg1))
-test = np.vstack((test_sig_bkg1,test_bkg1))
-
-train2 = np.vstack((train_sig_bkg2,train_bkg2))
-val2 = np.vstack((val_sig_bkg2,val_bkg2))
-test2 = np.vstack((test_sig_bkg2,test_bkg2))
-
-print("DY : train, val, test shapes: ",train.shape, val.shape, test.shape)
-print("ttbar: train, val, test shapes: ",train2.shape, val2.shape, test2.shape)
-
-bkg1_idxs = np.random.choice(range(0,bkg1_bkgregion.shape[0]),size=(train.shape[0]+test.shape[0]+val.shape[0])*bkg_sig_frac)
-bkg2_idxs = np.random.choice(range(0,bkg2_bkgregion.shape[0]),size=(train2.shape[0]+test2.shape[0]+val2.shape[0])*bkg_sig_frac)
-
-bkg1_bkgregion_ws = bkg1_bkgregion.loc[bkg1_bkgregion.index[bkg1_idxs]]
-bkg2_bkgregion_ws = bkg2_bkgregion.loc[bkg2_bkgregion.index[bkg2_idxs]]
-
-bkg1_bkgregion_ws = bkg1_bkgregion_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
-bkg2_bkgregion_ws = bkg2_bkgregion_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
-
-train_bkg1, val_bkg1, test_bkg1 = np.split(bkg1_bkgregion_ws, [int(.8*len(bkg1_bkgregion_ws)), int(.9*len(bkg1_bkgregion_ws))])
-train_bkg2, val_bkg2, test_bkg2 = np.split(bkg2_bkgregion_ws, [int(.8*len(bkg2_bkgregion_ws)), int(.9*len(bkg2_bkgregion_ws))])
-
-train = np.vstack((train,train_bkg1))
-val = np.vstack((val,val_bkg1))
-test = np.vstack((test,test_bkg1))
-
-train2 = np.vstack((train2,train_bkg2))
-val2 = np.vstack((val2,val_bkg2))
-test2 = np.vstack((test2,test_bkg2))
-
-print("Final samples before training starts")
-print("DY: train, val, test shapes: ",train.shape, val.shape, test.shape)
-print("ttbar: train, val, test shapes: ",train2.shape, val2.shape, test2.shape)
-
 
 model = NN()
 if gpu_boole: model = model.cuda()
@@ -326,16 +349,21 @@ if load_model:
 else:
 	loaded_epoch = 0
 	losses,val_losses = [],[]
-	
 
+
+label = "PhivsDY"	
+train, val, test, train_ws, val_ws, test_ws = make_train_test_val_ws(sig,bkg1,m_tt_min = 350.,m_tt_max = 1000.,sig_injection = 0.2,bkg_sig_frac = 5,label = label)
+train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
 train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
-train_ws(train_loader,val_loader,losses,val_losses,loaded_epoch,label)
-if test_model: test_ws(test_loader)
+if train_model: train_ws(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,label)
+if test_model: test_ws(test_loader_ws, test, label)
 
 label = "Phivsttbar"
-train_loader, val_loader, test_loader = make_loaders(train2,test2,val2,batch_size)
-train_ws(train_loader,val_loader,losses,val_losses,loaded_epoch,label)
-if test_model: test_ws(test_loader)
+train, val, test, train_ws, val_ws, test_ws = make_train_test_val_ws(sig,bkg2,m_tt_min = 350.,m_tt_max = 1000.,sig_injection = 0.2,bkg_sig_frac = 5,label = label)
+train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
+train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
+if train_model: train_ws(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,label)
+if test_model: test_ws(test_loader_ws, test, label)
 
 
 
