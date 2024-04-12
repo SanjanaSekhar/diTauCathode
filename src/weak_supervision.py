@@ -177,36 +177,8 @@ def testing(test_loader_ws, test_true, name):
 
 	true_list = test_true[:,-1]
 	# print(np.vstack((true_list,pred_list)))
-	fpr, tpr, _ = roc_curve(true_list, pred_list)
-	print(fpr,tpr)
 	np.savetxt("fpr_tpr_%s.txt"%name,np.vstack((true_list,pred_list)))
-	'''
-	bkg_rej = 1 / fpr
-	sic = tpr / np.sqrt(fpr)
 	
-	random_tpr = np.linspace(0, 1, 300)
-	random_bkg_rej = 1 / random_tpr
-	random_sic = random_tpr / np.sqrt(random_tpr)
-
-	# ROC curve
-	plt.plot(tpr, bkg_rej, label="idealized AD")
-	plt.plot(random_tpr, random_bkg_rej, "w:", label="random")
-	plt.xlabel("True Positive Rate")
-	plt.ylabel("Background Rejection")
-	plt.yscale("log")
-	plt.legend(loc="upper right")
-	#plt.show()
-	plt.savefig("ROC_%s.png"%name)
-
-	# SIC curve
-	plt.plot(tpr, sic, label="idealized AD")
-	plt.plot(random_tpr, random_sic, "w:", label="random")
-	plt.xlabel("True Positive Rate")
-	plt.ylabel("Significance Improvement")
-	plt.legend(loc="upper right")
-	#plt.show()
-	plt.savefig("SIC_%s.png"%name)
-	'''
 
 
 
@@ -329,8 +301,8 @@ loss_function = torch.nn.BCELoss()
 
 
 # LOAD AN EXISTING MODEL 
-if load_model:
-	checkpoint = torch.load("checkpoints/weak_supervision_epoch3_%s.pth"%name)
+def load_trained_model(name, epoch):
+	checkpoint = torch.load("checkpoints/weak_supervision_epoch%i_%s.pth"%(epoch,name))
 	model.load_state_dict(checkpoint['model_state_dict'])
 	optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 	loaded_epoch = checkpoint['epoch']
@@ -349,13 +321,16 @@ if load_model:
 	'''
 	losses,val_losses = [],[]
 	'''
+	return loaded_epoch, losses, val_losses
 	
+
+
+
+name = "PhivsDY"
+if load_model:	loaded_epoch, losses, val_losses = load_trained_model(name, epoch = 3)
 else:
 	loaded_epoch = 0
 	losses,val_losses = [],[]
-
-
-name = "PhivsDY"	
 train, val, test, train_ws, val_ws, test_ws = make_train_test_val_ws(sig,bkg1,m_tt_min = 350.,m_tt_max = 1000.,sig_injection = 0.2,bkg_sig_frac = 5,name = name)
 train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
 train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
@@ -363,12 +338,18 @@ if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_
 if test_model: testing(test_loader_ws, test, name)
 
 name = "PhivsDY_fs"
-loaded_epoch = 0
-losses,val_losses = [],[]
+if load_model:	loaded_epoch, losses, val_losses = load_trained_model(name, epoch = 3)
+else:
+	loaded_epoch = 0
+	losses,val_losses = [],[]
 if train_model: training(train_loader,val_loader,losses,val_losses,loaded_epoch,name)
 if test_model: testing(test_loader, test, name)
 
 name = "Phivsttbar"
+if load_model:	loaded_epoch, losses, val_losses = load_trained_model(name, epoch = 3)
+else:
+	loaded_epoch = 0
+	losses,val_losses = [],[]
 train, val, test, train_ws, val_ws, test_ws = make_train_test_val_ws(sig,bkg2,m_tt_min = 350.,m_tt_max = 1000.,sig_injection = 0.2,bkg_sig_frac = 5,name = name)
 train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
 train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
@@ -376,7 +357,9 @@ if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_
 if test_model: testing(test_loader_ws, test, name)
 
 name = "Phivsttbar_fs"
-loaded_epoch = 0
-losses,val_losses = [],[]
+if load_model:	loaded_epoch, losses, val_losses = load_trained_model(name, epoch = 3)
+else:
+	loaded_epoch = 0
+	losses,val_losses = [],[]
 if train_model: training(train_loader,val_loader,losses,val_losses,loaded_epoch,name)
 if test_model: testing(test_loader, test, name)
