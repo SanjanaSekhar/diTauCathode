@@ -48,7 +48,7 @@ int create_dataset(string file_n, int label) {
 
 	ExRootTreeReader *treeReader = new ExRootTreeReader(&chain);
 	Long64_t numberOfEntries = treeReader->GetEntries();
-	int n_frac = 10;
+	int n_frac = 100;
 		// Get pointers to branches used in this analysis
 	
 	TClonesArray *branchJet = treeReader->UseBranch("Jet");
@@ -59,14 +59,17 @@ int create_dataset(string file_n, int label) {
 	TClonesArray *branchGenJet = treeReader->UseBranch("GenJet");
 
 	float tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, tau2_m, m_tau1tau2, met_met, met_eta, met_phi, tau1_d1, tau1_d2, tau2_d1, tau2_d2;
+        int n_jets, n_bjets;
+	float tau1_ncharged, tau1_nneutrals, tau1_ehadeem, tau2_ncharged, tau2_nneutrals, tau2_ehadeem;
+	float jet1_pt, jet1_eta, jet1_phi, bjet1_pt, bjet1_eta, bjet1_phi, jet1_ehadeem, bjet1_ehadeem;
 	Float_t n_subj[5];
 	
 	std::cout << "Running on " << n_frac << " out of " << numberOfEntries << " events" << std::endl;
 	int numTauJet1s = 0, numTauJet2s = 0, numGenTau1s = 0, numGenTau2s = 0, numGenTauJet1s = 0, numGenTauJet2s = 0;
 	
 //  numberOfEntries = 1000;
-	for (Long64_t entry = 0; entry < n_frac; ++entry) {
-		
+	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
+	//for (Long64_t entry = 0; entry < n_frac; ++entry) {	
 		if (entry % 20000 == 0) {
 			std:cout << "Processing event " << entry << std::endl;
 			printf("No. of events with at least 1 tagged hadronic tau jets = %i\n",numTauJet1s);
@@ -74,12 +77,16 @@ int create_dataset(string file_n, int label) {
 			printf("No. of events with 1 gen tau- jet = %i\n",numGenTau1s);
 			printf("No. of events with 1 gen tau+ jet = %i\n",numGenTau2s);
 
+		
 		}
 		treeReader->ReadEntry(entry);
 		bool filled = false;
 		bool filledTau = false, filledGenTau = false;
 		bool found_gtau1 = false, found_gtau2 = false;
 		int numJets = 0;
+		n_jets = 0; n_bjets = 0;
+		jet1_pt = 9999999.; bjet1_pt = 9999999.;
+		jet1_eta = 0., jet1_phi = 0., bjet1_eta = 0., bjet1_phi = 0.,jet1_ehadeem = 0, bjet1_ehadeem = 0.;
 		//printf("No. of gen particles in this event: %i\n",branchParticle->GetEntries());
 		// for (int y=0; y < branchGenJet->GetEntries();++y){
 		// 	Jet *gjet = (Jet*) branchGenJet->At(y); 
@@ -100,52 +107,104 @@ int create_dataset(string file_n, int label) {
 				  
 		//printf("No. of gen tau- babies = %i, no. of gen tau+ babies = %i\n",numGenTau1s,numGenTau2s);
 
-				for (int i = 0; i < branchJet->GetEntries(); ++i) {
+		/*
+			for (int m=0; m < branchParticle->GetEntries();++m){
+				if(found_gtau1 and found_gtau2) break;
+				GenParticle *p = (GenParticle*) branchParticle->At(m);
+				// only select final state electrons or muons
+				//cout << "PID of p: " << p->PID << "\n";
+				if(!p or p->Status!=1) continue;
+				if(p->PID == 11 or p->PID == 13 or p->PID == -11 or p->PID == -13){
+				//cout << "PID of p: " << p->PID << "\n";
+				GenParticle *genMom = getMother(branchParticle, p);
+
+				if(genMom->PID == 15 and !found_gtau1) {
+						numGenTau1s++; 
+				  	found_gtau1=true;
+					GenParticle *d1 = (GenParticle*) branchParticle->At(genMom->D1);
+					GenParticle *d2 = (GenParticle*) branchParticle->At(genMom->D2);
+				  	//cout << "ID of tau- daughters: " << d1->PID << " " << d2->PID << endl;
+
+				  }
+				if(genMom->PID == -15 and !found_gtau2) {
+						numGenTau2s++; 
+						found_gtau2=true;
+						GenParticle *d1 = (GenParticle*) branchParticle->At(genMom->D1);
+                                        GenParticle *d2 = (GenParticle*) branchParticle->At(genMom->D2);
+                                        //cout << "ID of tau- daughters: " << d1->PID << " " << d2->PID << endl;
+				}	}
+
+			}   
+		//printf("No. of gen tau- babies = %i, no. of gen tau+ babies = %i\n",numGenTau1s,numGenTau2s);
+		*/
+			for (int i = 0; i < branchJet->GetEntries(); ++i) {
 
 					Jet *jet = (Jet*) branchJet->At(i);
 
-					if (!jet or jet->TauTag != 1) continue;
-			 //printf("No. of MET in this event: %i\n",branchMET->GetEntries());
-					MissingET *met = (MissingET*) branchMET->At(0);
-			//if(isBkg) label = 0; 
-			//else label = 1;
-
-					if (jet->TauTag == 1 and !filledTau) {
-						++numTauJet1s;
-						tau1_pt = jet->PT;
-						tau1_eta = jet->Eta;
-						tau1_phi = jet->Phi;
-						tau1_m = (jet->P4()).M();
-						for(int i=0; i<5; i++) n_subj[i] = (jet->Tau)[i];
-							met_met = met->MET;
-						met_eta = met->Eta;
-						met_phi = met->Phi;
+				if (!jet) continue;
+				if (jet->BTag == 1) {
+					n_bjets ++;
+					if(bjet1_pt > jet->PT) {
+						bjet1_pt = jet->PT;
+						bjet1_eta = jet->Eta;
+						bjet1_phi = jet->Phi;
+						bjet1_ehadeem = jet->EhadOverEem;
+						}
 					}
+				if (jet->TauTag == 0) {
+					n_jets ++;
+					if(jet1_pt > jet->PT) {
+						jet1_pt = jet->PT;
+						jet1_eta = jet->Eta;
+						jet1_phi = jet->Phi;
+						jet1_ehadeem = jet->EhadOverEem;
+						}
+					}
+				if (jet->TauTag == 1 and !filledTau) {
+					++numTauJet1s;
+					tau1_pt = jet->PT;
+					tau1_eta = jet->Eta;
+					tau1_phi = jet->Phi;
+					tau1_m = (jet->P4()).M();
+					//for(int i=0; i<5; i++) n_subj[i] = (jet->Tau)[i];
+					met_met = met->MET;
+					met_eta = met->Eta;
+					met_phi = met->Phi;
+					tau1_ncharged = jet->NCharged;
+					tau1_nneutrals = jet->NNeutrals;
+					tau1_ehadeem = jet->EhadOverEem;
+				
 
 					for (int j = 0; j < branchJet->GetEntries(); ++j) {
 						auto* jet2 = static_cast<Jet*>(branchJet->At(j));
 						if (!jet2 || jet == jet2) continue;
 
 
-						if (jet2->TauTag == 1) {
-							if (!filledTau) {
-								m_tau1tau2 = (jet->P4() + jet2->P4()).M();
-								tau2_pt = jet2->PT;
-								tau2_eta = jet2->Eta;
-								tau2_phi = jet2->Phi;
-								tau2_m = (jet2->P4()).M();
-						//tau2_d1 = p->D1;
-						//tau2_d2 = p->D2;   
-								numTauJet2s++;	
+					if (jet2->TauTag == 1 and !filledTau) {
+							m_tau1tau2 = (jet->P4() + jet2->P4()).M();
+							tau2_pt = jet2->PT;
+							tau2_eta = jet2->Eta;
+							tau2_phi = jet2->Phi;
+							tau2_m = (jet2->P4()).M();
+							tau2_ncharged = jet2->NCharged;
+                                        		tau2_nneutrals = jet2->NNeutrals;
+                                        		tau2_ehadeem = jet2->EhadOverEem; 
+							numTauJet2s++;	
 
-								filledTau = true;
-							}
+							filledTau = true;
+							
 						}
 					}
 				}
-				if(filledTau) {
-					fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i\n", tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, tau2_m, m_tau1tau2, 
-						n_subj[0],n_subj[1],n_subj[2], n_subj[3],n_subj[4],met_met, met_eta, met_phi, isSig);
+			}
+			if(filledTau) {
+				//printf("n_jets = %i,jet1_pt = %.2f, jet1_eta = %.2f, jet1_phi = %.2f, n_bjets = %i, bjet1_pt = %.2f, bjet1_eta = %.2f, bjet1_phi = %.2f\n",n_jets,jet1_pt, jet1_eta, jet1_phi,bjet1_pt, bjet1_eta, bjet1_phi, n_bjets);
+				if (n_jets == 0) {jet1_pt = 0., jet1_eta = 0., jet1_phi = 0., jet1_ehadeem = 0.;}
+				if (n_bjets == 0) {bjet1_pt = 0., bjet1_eta = 0., bjet1_phi = 0., bjet1_ehadeem = 0.;}
+				//printf("tau1_ncharged, tau1_nneutrals, tau1_ehadeem, tau1_ncharged, tau1_nneutrals, tau2_ehadeem = %f,%f,%f,%f,%f,%f\n",tau1_ncharged, tau1_nneutrals, tau1_ehadeem, tau1_ncharged, tau1_nneutrals, tau2_ehadeem);	
+				fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%i\n", tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, tau1_ehadeem, 
+					tau2_m,tau2_ehadeem, m_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
+					jet1_pt, jet1_eta, jet1_phi, jet1_ehadeem, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_ehadeem, isSig);
 	//printf("No. of tau jets = %i\n",numTauJets);  
 				}
 				/*

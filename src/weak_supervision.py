@@ -35,7 +35,7 @@ if load_model: print("Loading model... ")
 
 
 sig = pd.read_csv("csv_files/LQ_nonResScalarLQ-M1000_2J.csv", lineterminator='\n')
-bkg1 = pd.read_csv("csv_files/SM_dyToTauTau_0J1J2J_wPU.csv")
+bkg1 = pd.read_csv("csv_files/SM_dyToTauTau_0J1J2J_MinMass120.csv")
 bkg2 = pd.read_csv("csv_files/SM_ttbarTo2Tau2Nu_2J.csv")
 
 # Format of csv file:
