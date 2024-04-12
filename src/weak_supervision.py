@@ -23,6 +23,7 @@ from sklearn.model_selection import train_test_split
 import numpy as np 
 
 ending = "041224"
+label = "PhivsDY"
 load_model = True
 test_model = True
 early_stop = 5
@@ -33,6 +34,140 @@ epochs = 20
 gpu_boole = torch.cuda.is_available()
 print("Is GPU available? ",gpu_boole)
 if load_model: print("Loading model... ")
+
+# NN
+
+class NN(torch.nn.Module):
+	def __init__(self):
+		super().__init__()
+
+		self.classifier = torch.nn.Sequential(
+			torch.nn.Linear(23,32),
+			torch.nn.ReLU(),
+                        torch.nn.Linear(32,64),
+                        torch.nn.ReLU(),
+			torch.nn.Linear(64,32),
+			torch.nn.ReLU(),
+			torch.nn.Linear(32,1),
+			torch.nn.Sigmoid()
+			)
+
+		
+                         
+	def forward(self, x):
+		label = self.classifier(x)
+		return label
+
+def make_loaders(train,test,val,batch_size):
+	train_set = torch.tensor(train, dtype=torch.float32)
+	val_set = torch.tensor(val, dtype=torch.float32)
+	test_set = torch.tensor(test, dtype=torch.float32)
+
+
+
+	train_loader = torch.utils.data.DataLoader(dataset = train_set,
+		batch_size = batch_size,
+		shuffle = True)
+	val_loader = torch.utils.data.DataLoader(dataset = val_set,
+		batch_size = batch_size,
+		shuffle = True)
+	test_loader = torch.utils.data.DataLoader(dataset = test_set,
+		batch_size = 1,
+		shuffle = True)
+	return train_loader, val_loader, test_loader
+
+def train_ws(train_loader,val_loader,losses,val_losses,loaded_epoch,label):
+
+	print("================= Training %s ================="%ending)
+	outputs = []
+	
+	for epoch in range(loaded_epoch,epochs):
+
+		loss_per_epoch, val_loss_per_epoch = 0,0
+		i = 0
+		with tqdm(train_loader, unit="batch") as tepoch:
+			model.train()
+			for vector in tepoch:
+				tepoch.set_description(f"Epoch {epoch}")
+				features, label = vector[:,:23],vector[:,23]
+				if gpu_boole:
+					features,label = features.cuda(),label.cuda()
+
+			  	# Output of NN
+				prediction = model.forward(features)
+
+			  	# Calculating the loss function
+							
+				loss = loss_function(prediction, label.view(-1,1))
+			 
+				#if epoch > 0 and epoch != loaded_epoch:
+				optimizer.zero_grad()
+				loss.backward()
+				optimizer.step()
+
+			 	 # Adding up all losses in a batch
+				#i+=1
+				#print("loss %i = "%i,loss)
+				#print("loss.cpu().data.numpy().item() = ",loss.cpu().data.numpy().item())
+				loss_per_epoch += loss.cpu().data.numpy().item()
+				sleep(0.1)
+		
+		this_loss = loss_per_epoch/math.ceil(train.shape[0]/batch_size)
+		torch.save({
+			'epoch':epoch,
+			'model_state_dict': model.state_dict(),
+	            	'optimizer_state_dict': optimizer.state_dict(),
+	            	'loss': loss_function
+			},
+			"checkpoints/weak_supervision_epoch%i_%s.pth"%(epoch%5,label))
+		losses.append(this_loss)
+		print("Train Loss: %f"%(this_loss))
+		
+		# VALIDATION
+
+		for vector in val_loader:
+			model.eval()
+			features, label = vector[:,:23],vector[:,23]
+			if gpu_boole:
+				features,label = features.cuda(),label.cuda()
+			
+			
+			prediction = model.forward(features)
+			
+			val_loss = loss_function(prediction, label.view(-1,1))
+			val_loss_per_epoch += val_loss.cpu().data.numpy().item()
+
+		val_losses.append(val_loss_per_epoch/math.ceil(val.shape[0]/batch_size))
+		print("Val Loss: %f"%(val_loss_per_epoch/math.ceil(val.shape[0]/batch_size)))
+		
+		# EARLY STOPPING
+		flag = 0
+		if early_stop > 0 and epoch > loaded_epoch + early_stop:
+			for e in range(early_stop):
+				if val_losses[-e] > val_losses[-e-1]: flag += 1
+			if flag == early_stop:
+				print("STOPPING TRAINING EARLY, VAL LOSS HAS BEEN INCREASING FOR THE LAST %i EPOCHS"%early_stop)
+				break
+
+		with open("losses/train_val_losses_%s.txt"%ending,"w") as f:
+			for loss, val_loss in zip(losses, val_losses):
+				f.write(str(loss)+" "+str(val_loss)+"\n")
+
+	print("========== TRAINING COMPLETE ===========")
+
+def test_ws(test_loader):
+	test_loss_per_epoch = 0.
+	test_losses = []
+	for vector in test_loader:
+		features, label = vector[:,:23],vector[:,23]
+		if gpu_boole:
+			features,label = features.cuda(),label.cuda()
+		prediction = model.forward(features)
+		test_loss = loss_function(prediction, label.view(-1,1))
+		test_loss_per_epoch += test_loss.cpu().data.numpy().item()
+	
+	test_losses.append(test_loss_per_epoch/int(test.shape[0]))
+	print("Test Loss: %f"%(test_loss_per_epoch/int(test.shape[0])))
 
 
 sig = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/2HDM-vbfPhiToTauTau-M750_2J_MinMass120_NoMisTag.csv", lineterminator='\n')
@@ -153,47 +288,6 @@ print("Final samples before training starts")
 print("DY: train, val, test shapes: ",train.shape, val.shape, test.shape)
 print("ttbar: train, val, test shapes: ",train2.shape, val2.shape, test2.shape)
 
-print("================= Training Phi vs DY =================")
-
-train_set = torch.tensor(train, dtype=torch.float32)
-val_set = torch.tensor(val, dtype=torch.float32)
-test_set = torch.tensor(test, dtype=torch.float32)
-
-batch_size = 16
-epochs = 20
-
-train_loader = torch.utils.data.DataLoader(dataset = train_set,
-	batch_size = batch_size,
-	shuffle = True)
-val_loader = torch.utils.data.DataLoader(dataset = val_set,
-	batch_size = batch_size,
-	shuffle = True)
-test_loader = torch.utils.data.DataLoader(dataset = test_set,
-	batch_size = 1,
-	shuffle = True)
-
-# NN
-
-class NN(torch.nn.Module):
-	def __init__(self):
-		super().__init__()
-
-		self.classifier = torch.nn.Sequential(
-			torch.nn.Linear(23,32),
-			torch.nn.ReLU(),
-                        torch.nn.Linear(32,64),
-                        torch.nn.ReLU(),
-			torch.nn.Linear(64,32),
-			torch.nn.ReLU(),
-			torch.nn.Linear(32,1),
-			torch.nn.Sigmoid()
-			)
-
-		
-                         
-	def forward(self, x):
-		label = self.classifier(x)
-		return label
 
 model = NN()
 if gpu_boole: model = model.cuda()
@@ -205,9 +299,10 @@ optimizer = torch.optim.Adam(model.parameters(),
 loss_function = torch.nn.BCELoss()
 #loss_function = chamfer_distance()
 
+
 # LOAD AN EXISTING MODEL 
 if load_model:
-	checkpoint = torch.load("checkpoints/weak_supervision_epoch2.pth")
+	checkpoint = torch.load("checkpoints/weak_supervision_epoch2_%s.pth"%label)
 	model.load_state_dict(checkpoint['model_state_dict'])
 	optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 	loaded_epoch = checkpoint['epoch']
@@ -232,98 +327,15 @@ else:
 	losses,val_losses = [],[]
 	
 
-outputs = []
-test_losses = []
+train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
+train_ws(train_loader,val_loader,losses,val_losses,loaded_epoch,label)
+test_ws(test_loader)
 
-# TRAINING & VALIDATION LOOP
+label = "Phivsttbar"
+train_loader, val_loader, test_loader = make_loaders(train2,test2,val2,batch_size)
+train_ws(train_loader,val_loader,losses,val_losses,loaded_epoch,label)
+test_ws(test_loader)
 
-if not test_model:
+
+
 	
-	for epoch in range(loaded_epoch,epochs):
-
-		loss_per_epoch, val_loss_per_epoch = 0,0
-		i = 0
-		with tqdm(train_loader, unit="batch") as tepoch:
-			model.train()
-			for vector in tepoch:
-				tepoch.set_description(f"Epoch {epoch}")
-				features, label = vector[:,:23],vector[:,23]
-				if gpu_boole:
-					features,label = features.cuda(),label.cuda()
-
-			  	# Output of NN
-				prediction = model.forward(features)
-
-			  	# Calculating the loss function
-							
-				loss = loss_function(prediction, label.view(-1,1))
-			 
-				#if epoch > 0 and epoch != loaded_epoch:
-				optimizer.zero_grad()
-				loss.backward()
-				optimizer.step()
-
-			 	 # Adding up all losses in a batch
-				#i+=1
-				#print("loss %i = "%i,loss)
-				#print("loss.cpu().data.numpy().item() = ",loss.cpu().data.numpy().item())
-				loss_per_epoch += loss.cpu().data.numpy().item()
-				sleep(0.1)
-		
-		this_loss = loss_per_epoch/math.ceil(train.shape[0]/batch_size)
-		torch.save({
-			'epoch':epoch,
-			'model_state_dict': model.state_dict(),
-	            	'optimizer_state_dict': optimizer.state_dict(),
-	            	'loss': loss_function
-			},
-			"checkpoints/weak_supervision_epoch%i.pth"%(epoch%5))
-		losses.append(this_loss)
-		print("Train Loss: %f"%(this_loss))
-		
-		# VALIDATION
-
-		for vector in val_loader:
-			model.eval()
-			features, label = vector[:,:23],vector[:,23]
-			if gpu_boole:
-				features,label = features.cuda(),label.cuda()
-			
-			
-			prediction = model.forward(features)
-			
-			val_loss = loss_function(prediction, label.view(-1,1))
-			val_loss_per_epoch += val_loss.cpu().data.numpy().item()
-
-		val_losses.append(val_loss_per_epoch/math.ceil(val.shape[0]/batch_size))
-		print("Val Loss: %f"%(val_loss_per_epoch/math.ceil(val.shape[0]/batch_size)))
-		
-		# EARLY STOPPING
-		flag = 0
-		if early_stop > 0 and epoch > loaded_epoch + early_stop:
-			for e in range(early_stop):
-				if val_losses[-e] > val_losses[-e-1]: flag += 1
-			if flag == early_stop:
-				print("STOPPING TRAINING EARLY, VAL LOSS HAS BEEN INCREASING FOR THE LAST %i EPOCHS"%early_stop)
-				break
-
-		with open("losses/train_val_losses_%s.txt"%ending,"w") as f:
-			for loss, val_loss in zip(losses, val_losses):
-				f.write(str(loss)+" "+str(val_loss)+"\n")
-
-	print("========== TRAINING COMPLETE ===========")
-
-# TESTING
-if test_model:
-
-	test_loss_per_epoch = 0.
-	for vector in test_loader:
-		features, label = vector[:,:23],vector[:,23]
-		if gpu_boole:
-			features,label = features.cuda(),label.cuda()
-		prediction = model.forward(features)
-		test_loss = loss_function(prediction, label.view(-1,1))
-		test_loss_per_epoch += test_loss.cpu().data.numpy().item()
-	
-	test_losses.append(test_loss_per_epoch/int(test.shape[0]))
-	print("Test Loss: %f"%(test_loss_per_epoch/int(test.shape[0])))
