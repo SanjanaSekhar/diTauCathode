@@ -20,6 +20,7 @@ from torch.autograd import Variable
 import h5py
 import pandas as pd
 from sklearn.model_selection import train_test_split
+import numpy as np 
 
 ending = "030124"
 load_model = False
@@ -34,19 +35,22 @@ print("Is GPU available? ",gpu_boole)
 if load_model: print("Loading model... ")
 
 
-sig = pd.read_csv("csv_files/LQ_nonResScalarLQ-M1000_2J.csv", lineterminator='\n')
-bkg1 = pd.read_csv("csv_files/SM_dyToTauTau_0J1J2J_MinMass120.csv")
-bkg2 = pd.read_csv("csv_files/SM_ttbarTo2Tau2Nu_2J.csv")
+sig = pd.read_csv("csv_files/2HDM-vbfPhiToTauTau-M750_2J_MinMass120_NoMisTag.csv", lineterminator='\n')
+bkg1 = pd.read_csv("csv_files/SM_dyToTauTau_0J1J2J_MinMass120_NoMisTag.csv",lineterminator='\n')
+bkg2 = pd.read_csv("csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv",lineterminator='\n')
 
 # Format of csv file:
-# tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, tau2_m, m_tau1tau2, isSig
+# tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, 
+# tau2_m, m_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
+# jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, isSig
 print(sig.shape, bkg1.shape, bkg2.shape)
-sig.columns = ["pt_tau1", "eta_tau1", "phi_tau1", "pt_tau2", "eta_tau2", "phi_tau2", "m_tau1", "m_tau2", "m_tau1tau2", "label"]
-bkg1.columns = ["pt_tau1", "eta_tau1", "phi_tau1", "pt_tau2", "eta_tau2", "phi_tau2", "m_tau1", "m_tau2", "m_tau1tau2", "label"]
-bkg2.columns = ["pt_tau1", "eta_tau1", "phi_tau1", "pt_tau2", "eta_tau2", "phi_tau2", "m_tau1", "m_tau2", "m_tau1tau2", "label"]
+sig.columns = ["tau1_pt", "tau1_eta", "tau1_phi", "tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m",
+				"m_tau1tau2", "met_met", "met_eta", "met_phi", "n_jets", "n_bjets",
+				"jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", "bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef", "label"]
+bkg1.columns = sig.columns
+bkg2.columns = sig.columns
 
-print(sig.shape, bkg1.shape, bkg2.shape)
-print(sig)
+
 print("Min, max m_tt in sig: ", sig['m_tau1tau2'].min(), sig['m_tau1tau2'].max() )
 print("Min, max m_tt in bkg1: ", bkg1['m_tau1tau2'].min(), bkg1['m_tau1tau2'].max() )
 print("Min, max m_tt in bkg2: ", bkg2['m_tau1tau2'].min(), bkg2['m_tau1tau2'].max() )
