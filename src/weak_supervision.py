@@ -177,7 +177,7 @@ def testing(test_loader_ws, test_true, name):
 
 	true_list = test_true[:,-1]
 	# print(np.vstack((true_list,pred_list)))
-	np.savetxt("fpr_tpr_%s.txt"%name,np.vstack((true_list,pred_list)))
+	np.savetxt("losses/fpr_tpr_%s.txt"%name,np.vstack((true_list,pred_list)))
 	
 
 
