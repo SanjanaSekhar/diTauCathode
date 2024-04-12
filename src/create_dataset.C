@@ -48,7 +48,7 @@ int create_dataset(string file_n, int label) {
 
 	ExRootTreeReader *treeReader = new ExRootTreeReader(&chain);
 	Long64_t numberOfEntries = treeReader->GetEntries();
-	int n_frac = 100;
+	int n_frac = 200;
 		// Get pointers to branches used in this analysis
 	
 	TClonesArray *branchJet = treeReader->UseBranch("Jet");
@@ -61,7 +61,7 @@ int create_dataset(string file_n, int label) {
 	float tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, tau2_m, m_tau1tau2, met_met, met_eta, met_phi, tau1_d1, tau1_d2, tau2_d1, tau2_d2;
         int n_jets, n_bjets;
 	float tau1_ncharged, tau1_nneutrals, tau1_ehadeem, tau2_ncharged, tau2_nneutrals, tau2_ehadeem;
-	float jet1_pt, jet1_eta, jet1_phi, bjet1_pt, bjet1_eta, bjet1_phi, jet1_ehadeem, bjet1_ehadeem;
+	float jet1_pt, jet1_eta, jet1_phi, bjet1_pt, bjet1_eta, bjet1_phi, jet1_ehadeem, bjet1_ehadeem, jet1_cef, jet1_nef, bjet1_cef, bjet1_nef;
 	Float_t n_subj[5];
 	
 	std::cout << "Running on " << n_frac << " out of " << numberOfEntries << " events" << std::endl;
@@ -86,6 +86,7 @@ int create_dataset(string file_n, int label) {
 		n_jets = 0; n_bjets = 0;
 		jet1_pt = 9999999.; bjet1_pt = 9999999.;
 		jet1_eta = 0., jet1_phi = 0., bjet1_eta = 0., bjet1_phi = 0.,jet1_ehadeem = 0, bjet1_ehadeem = 0.;
+		jet1_cef = 0., jet1_nef = 0.,bjet1_cef = 0., bjet1_nef = 0.; 
 		//printf("No. of gen particles in this event: %i\n",branchParticle->GetEntries());
 		// for (int y=0; y < branchGenJet->GetEntries();++y){
 		// 	Jet *gjet = (Jet*) branchGenJet->At(y); 
@@ -143,15 +144,19 @@ int create_dataset(string file_n, int label) {
 						bjet1_eta = jet->Eta;
 						bjet1_phi = jet->Phi;
 						bjet1_ehadeem = jet->EhadOverEem;
+						bjet1_nef = jet->NeutralEnergyFraction;
+						bjet1_cef = jet->ChargedEnergyFraction;
 						}
 					}
-				if (jet->TauTag == 0) {
+				else if (jet->TauTag == 0) {
 					n_jets ++;
 					if(jet1_pt > jet->PT) {
 						jet1_pt = jet->PT;
 						jet1_eta = jet->Eta;
 						jet1_phi = jet->Phi;
 						jet1_ehadeem = jet->EhadOverEem;
+						jet1_nef = jet->NeutralEnergyFraction;	
+						jet1_cef = jet->ChargedEnergyFraction;	
 						}
 					}
 			 //printf("No. of MET in this event: %i\n",branchMET->GetEntries());
@@ -200,10 +205,12 @@ int create_dataset(string file_n, int label) {
 				//printf("n_jets = %i,jet1_pt = %.2f, jet1_eta = %.2f, jet1_phi = %.2f, n_bjets = %i, bjet1_pt = %.2f, bjet1_eta = %.2f, bjet1_phi = %.2f\n",n_jets,jet1_pt, jet1_eta, jet1_phi,bjet1_pt, bjet1_eta, bjet1_phi, n_bjets);
 				if (n_jets == 0) {jet1_pt = 0., jet1_eta = 0., jet1_phi = 0., jet1_ehadeem = 0.;}
 				if (n_bjets == 0) {bjet1_pt = 0., bjet1_eta = 0., bjet1_phi = 0., bjet1_ehadeem = 0.;}
+				//if (jet1_ehadeem > 900) printf("jet1_pt, jet1_eta, jet1_phi, jet1_ehadeem, jet1_nef, jet1_cef = %f, %f, %f, %f, %f, %f\n",jet1_pt, jet1_eta, jet1_phi, jet1_ehadeem,jet1_nef, jet1_cef);
+				//if (bjet1_ehadeem > 900) printf("bjet1_pt, bjet1_eta, bjet1_phi, bjet1_ehadeem, bjet1_nef, bjet1_cef = %f, %f, %f, %f, %f, %f\n",bjet1_pt, bjet1_eta, bjet1_phi, bjet1_ehadeem,bjet1_nef, bjet1_cef);
 				//printf("tau1_ncharged, tau1_nneutrals, tau1_ehadeem, tau1_ncharged, tau1_nneutrals, tau2_ehadeem = %f,%f,%f,%f,%f,%f\n",tau1_ncharged, tau1_nneutrals, tau1_ehadeem, tau1_ncharged, tau1_nneutrals, tau2_ehadeem);	
-				fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%i\n", tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, tau1_ehadeem, 
-					tau2_m,tau2_ehadeem, m_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
-					jet1_pt, jet1_eta, jet1_phi, jet1_ehadeem, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_ehadeem, isSig);
+				fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i\n", tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, 
+					tau2_m, m_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
+					jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, isSig);
 	//printf("No. of tau jets = %i\n",numTauJets);  
 			}
 		}
