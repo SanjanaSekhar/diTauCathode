@@ -38,18 +38,19 @@ def plot_features(sig,bkg1,bkg2):
 
 def plot_ROC_SIC(true_list1, pred_list1,name1,true_list2, pred_list2,name2):
 	fpr, tpr, _ = roc_curve(true_list1, pred_list1)
-	bkg_rej = 1 / fpr
-	sic = tpr / np.sqrt(fpr)
+	bkg_rej = 1 / (fpr+0.001)
+	sic = tpr / np.sqrt(fpr+0.001)
 
 	fpr2, tpr2, _ = roc_curve(true_list2, pred_list2)
-	bkg_rej2 = 1 / fpr2
-	sic2 = tpr2 / np.sqrt(fpr2)
+	bkg_rej2 = 1 / (fpr2+0.001)
+	sic2 = tpr2 / np.sqrt(fpr2+0.001)
 
 	random_tpr = np.linspace(0, 1, len(fpr))
-	random_bkg_rej = 1 / random_tpr
-	random_sic = random_tpr / np.sqrt(random_tpr)
+	random_bkg_rej = 1 / (random_tpr+0.001)
+	random_sic = random_tpr / np.sqrt(random_tpr+0.001)
 
 	# ROC curve
+	plt.figure(figsize=(6,4))
 	plt.plot(tpr, bkg_rej, label=name1)
 	plt.plot(tpr2, bkg_rej2, label=name2)
 	plt.plot(random_tpr, random_bkg_rej, label="random")
@@ -62,6 +63,7 @@ def plot_ROC_SIC(true_list1, pred_list1,name1,true_list2, pred_list2,name2):
 	plt.close()
 
 	# SIC curve
+	plt.figure(figsize=(6,4))
 	plt.plot(tpr, sic, label=name1)
 	plt.plot(tpr2, sic2, label=name2)
 	plt.plot(random_tpr, random_sic, label="random")

@@ -236,6 +236,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
 	bkg1_sigregion_ws = bkg1_sigregion.copy()
 	bkg1_sigregion_ws.loc[:,'label'] = 1
 
+	feature_select(pd.concat([bkg1_sigregion,sig_to_inject_bkg1]), k = 10)
 	# sig_to_inject_bkg1 and sig_to_inject_bkg1_ws both have label = 1
 	sig_to_inject_bkg1_ws = sig_to_inject_bkg1.copy()
 	sig_to_inject_bkg1 = sig_to_inject_bkg1.drop(['m_tau1tau2'],axis=1).to_numpy()
@@ -323,7 +324,21 @@ def load_trained_model(name, epoch):
 	'''
 	return loaded_epoch, losses, val_losses
 	
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import chi2
 
+def feature_select(vector,k = 7):
+	vector = vector.drop(['m_tau1tau2'],axis=1)
+	x = vector.iloc[:,0:24]
+	y = vector.iloc[:,24]
+	bestfeatures = SelectKBest(score_func=chi2, k = k)
+	fit = bestfeatures.fit(x,y)
+	dfscores = pd.DataFrame(fit.scores_)
+	dfcolumns = pd.DataFrame(x.columns)
+	#concat two dataframes for better visualization 
+	featureScores = pd.concat([dfcolumns,dfscores],axis=1)
+	featureScores.columns = ['Specs','Score']  #naming the dataframe columns
+	print(featureScores.nlargest(10,'Score')) 
 
 
 name = "PhivsDY"
