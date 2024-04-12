@@ -57,36 +57,45 @@ print("Min, max m_tt in bkg2: ", bkg2['m_tau1tau2'].min(), bkg2['m_tau1tau2'].ma
 
 # Choose the m_tautau window in which to define 'data' and bkg regions
 # The max ditau inv mass is not the same in all samples
-m_tt_min = 700 
-m_tt_max = np.min([sig['m_tau1tau2'].max(), bkg1['m_tau1tau2'].max(), bkg2['m_tau1tau2'].max()])
-print(m_tt_min, m_tt_max)
+m_tt_min = 450 
+m_tt_max = 900
 
 # define "data" and "bkg" regions
 sig_sigregion = sig[sig['m_tau1tau2'] >= m_tt_min] #and sig[sig['m_tau1tau2'] <= m_tt_max]
-bkg1_sigregion = bkg1[bkg1['m_tau1tau2']>=  m_tt_min] #and bkg1[bkg1['m_tau1tau2'] <= m_tt_max]
-bkg2_sigregion = bkg2[bkg2['m_tau1tau2']>= m_tt_min] #and bkg2[bkg2['m_tau1tau2'] <= m_tt_max]
-bkg1_bkgregion = bkg1[bkg1['m_tau1tau2']< m_tt_min]
-bkg2_bkgregion = bkg2[bkg2['m_tau1tau2']< m_tt_min]
+sig_sigregion = sig_sigregion[sig_sigregion['m_tau1tau2'] < m_tt_max]
 
-print("Percent of samples with m_tt > %f GeV in sig, bkg1 and bkg2"%m_tt_min)
+bkg1_sigregion = bkg1[bkg1['m_tau1tau2']>=  m_tt_min] #and bkg1[bkg1['m_tau1tau2'] <= m_tt_max]
+bkg1_sigregion = bkg1_sigregion[bkg1_sigregion['m_tau1tau2'] < m_tt_max]
+
+bkg2_sigregion = bkg2[bkg2['m_tau1tau2']>= m_tt_min] #and bkg2[bkg2['m_tau1tau2'] <= m_tt_max]
+bkg2_sigregion = bkg2_sigregion[bkg2_sigregion['m_tau1tau2'] < m_tt_max]
+
+bkg1_bkgregion = pd.concat([bkg1[bkg1['m_tau1tau2']< m_tt_min], bkg1[bkg1['m_tau1tau2'] >= m_tt_max]])
+bkg2_bkgregion = pd.concat([bkg2[bkg2['m_tau1tau2']< m_tt_min], bkg2[bkg2['m_tau1tau2'] >= m_tt_max]])
+
+print("Percent of samples in SR in sig, bkg1 and bkg2"%m_tt_min)
 print(sig_sigregion.shape[0]/sig.shape[0], bkg1_sigregion.shape[0]/bkg1.shape[0], bkg2_sigregion.shape[0]/bkg2.shape[0])
-print("Percent of samples with m_tt < %f GeV in bkg1 and bkg2"%m_tt_min)
+print("Percent of samples in SB in bkg1 and bkg2"%m_tt_min)
 print(bkg1_bkgregion.shape[0]/bkg1.shape[0], bkg2_bkgregion.shape[0]/bkg2.shape[0])
 
 # We want to ensure that the sig/bkg ratio in the "data" is realistic and small
 # choose at random signal samples to inject into the data 
 sig_injection = 0.006
-n_sig = int((sig_injection/(1-sig_injection)) * (bkg1_sigregion.shape[0]+bkg2_sigregion.shape[0]))
-sig_idxs = np.random.choice(range(0,sig_sigregion.shape[0]),size=n_sig) 
-print(sig_idxs)
-sig_to_inject = sig_sigregion.loc[sig_sigregion.index[sig_idxs]]
-print(sig_to_inject.shape)
+n_sig_bkg1 = int((sig_injection/(1-sig_injection)) * (bkg1_sigregion.shape[0]))
+n_sig_bkg2 = int((sig_injection/(1-sig_injection)) * (bkg2_sigregion.shape[0]))
+sig_bkg1_idxs = np.random.choice(range(0,sig_sigregion.shape[0]),size=n_sig_bkg1)
+sig_bkg2_idxs = np.random.choice(range(0,sig_sigregion.shape[0]),size=n_sig_bkg2) 
+print(sig_bkg1_idxs, sig_bkg2_idxs)
+sig_to_inject_bkg1 = sig_sigregion.loc[sig_sigregion.index[sig_bkg1_idxs]]
+sig_to_inject_bkg2 = sig_sigregion.loc[sig_sigregion.index[sig_bkg2_idxs]]
+print(sig_to_inject_bkg1.shape,sig_to_inject_bkg2.shape)
 # define data and bkg vectors
 # label data as 1 and bkg as 0
 bkg1_sigregion.loc[:,'label'] = 1
 bkg2_sigregion.loc[:,'label'] = 1
 print(bkg1_sigregion)
-sig_to_inject = sig_to_inject.drop(['m_tau1tau2'],axis=1).to_numpy()
+sig_to_inject_bkg1 = sig_to_inject_bkg1.drop(['m_tau1tau2'],axis=1).to_numpy()
+sig_to_inject_bkg2 = sig_to_inject_bkg2.drop(['m_tau1tau2'],axis=1).to_numpy()
 bkg1_sigregion = bkg1_sigregion.drop(['m_tau1tau2'],axis=1).to_numpy()
 bkg2_sigregion = bkg2_sigregion.drop(['m_tau1tau2'],axis=1).to_numpy()
 
@@ -95,11 +104,12 @@ train_sig, val_sig, test_sig = np.split(sig_to_inject, [int(.8*len(sig_to_inject
 train_bkg1, val_bkg1, test_bkg1 = np.split(bkg1_sigregion, [int(.8*len(bkg1_sigregion)), int(.9*len(bkg1_sigregion))])
 train_bkg2, val_bkg2, test_bkg2 = np.split(bkg2_sigregion, [int(.8*len(bkg2_sigregion)), int(.9*len(bkg2_sigregion))]) 
 
-train = np.vstack((train_sig,train_bkg1,train_bkg2))
-val = np.vstack((val_sig,val_bkg1,val_bkg2))
-test = np.vstack((test_sig,test_bkg1,test_bkg2))
+train = np.vstack((train_sig,train_bkg1))
+val = np.vstack((val_sig,val_bkg1))
+test = np.vstack((test_sig,test_bkg1))
 
 print("train, val, test shapes: ",train.shape, val.shape, test.shape)
+print(train[:20])
 
 
 train_set = torch.tensor(train, dtype=torch.float32)
