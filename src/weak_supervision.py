@@ -22,9 +22,9 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 import numpy as np 
 
-ending = "030124"
-load_model = False
-test_model = False
+ending = "041224"
+load_model = True
+test_model = True
 early_stop = 5
 batch_size = 16
 epochs = 20
@@ -35,9 +35,9 @@ print("Is GPU available? ",gpu_boole)
 if load_model: print("Loading model... ")
 
 
-sig = pd.read_csv("csv_files/2HDM-vbfPhiToTauTau-M750_2J_MinMass120_NoMisTag.csv", lineterminator='\n')
-bkg1 = pd.read_csv("csv_files/SM_dyToTauTau_0J1J2J_MinMass120_NoMisTag.csv",lineterminator='\n')
-bkg2 = pd.read_csv("csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv",lineterminator='\n')
+sig = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/2HDM-vbfPhiToTauTau-M750_2J_MinMass120_NoMisTag.csv", lineterminator='\n')
+bkg1 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/SM_dyToTauTau_0J1J2J_MinMass120_NoMisTag.csv",lineterminator='\n')
+bkg2 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv",lineterminator='\n')
 
 # Format of csv file:
 # tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, 
@@ -57,8 +57,8 @@ print("Min, max m_tt in bkg2: ", bkg2['m_tau1tau2'].min(), bkg2['m_tau1tau2'].ma
 
 # Choose the m_tautau window in which to define 'data' and bkg regions
 # The max ditau inv mass is not the same in all samples
-m_tt_min = 450 
-m_tt_max = 900
+m_tt_min = 350 
+m_tt_max = 1000
 
 # define "data" and "bkg" regions
 sig_sigregion = sig[sig['m_tau1tau2'] >= m_tt_min] #and sig[sig['m_tau1tau2'] <= m_tt_max]
@@ -73,44 +73,87 @@ bkg2_sigregion = bkg2_sigregion[bkg2_sigregion['m_tau1tau2'] < m_tt_max]
 bkg1_bkgregion = pd.concat([bkg1[bkg1['m_tau1tau2']< m_tt_min], bkg1[bkg1['m_tau1tau2'] >= m_tt_max]])
 bkg2_bkgregion = pd.concat([bkg2[bkg2['m_tau1tau2']< m_tt_min], bkg2[bkg2['m_tau1tau2'] >= m_tt_max]])
 
-print("Percent of samples in SR in sig, bkg1 and bkg2"%m_tt_min)
-print(sig_sigregion.shape[0]/sig.shape[0], bkg1_sigregion.shape[0]/bkg1.shape[0], bkg2_sigregion.shape[0]/bkg2.shape[0])
-print("Percent of samples in SB in bkg1 and bkg2"%m_tt_min)
-print(bkg1_bkgregion.shape[0]/bkg1.shape[0], bkg2_bkgregion.shape[0]/bkg2.shape[0])
+print("No. of samples in SR in sig, bkg1 and bkg2")
+print(sig_sigregion.shape[0], bkg1_sigregion.shape[0], bkg2_sigregion.shape[0])
+print("No. of samples in SB in bkg1 and bkg2")
+print(bkg1_bkgregion.shape[0], bkg2_bkgregion.shape[0])
 
 # We want to ensure that the sig/bkg ratio in the "data" is realistic and small
 # choose at random signal samples to inject into the data 
-sig_injection = 0.006
+sig_injection = 0.20
 n_sig_bkg1 = int((sig_injection/(1-sig_injection)) * (bkg1_sigregion.shape[0]))
 n_sig_bkg2 = int((sig_injection/(1-sig_injection)) * (bkg2_sigregion.shape[0]))
+
+print("No of signal samples to inject into bkg1 = ",n_sig_bkg1)
+print("No of signal samples to inject into bkg2 = ",n_sig_bkg2)
+
 sig_bkg1_idxs = np.random.choice(range(0,sig_sigregion.shape[0]),size=n_sig_bkg1)
 sig_bkg2_idxs = np.random.choice(range(0,sig_sigregion.shape[0]),size=n_sig_bkg2) 
-print(sig_bkg1_idxs, sig_bkg2_idxs)
+#print(sig_bkg1_idxs, sig_bkg2_idxs)
 sig_to_inject_bkg1 = sig_sigregion.loc[sig_sigregion.index[sig_bkg1_idxs]]
 sig_to_inject_bkg2 = sig_sigregion.loc[sig_sigregion.index[sig_bkg2_idxs]]
 print(sig_to_inject_bkg1.shape,sig_to_inject_bkg2.shape)
+
 # define data and bkg vectors
 # label data as 1 and bkg as 0
-bkg1_sigregion.loc[:,'label'] = 1
-bkg2_sigregion.loc[:,'label'] = 1
-print(bkg1_sigregion)
-sig_to_inject_bkg1 = sig_to_inject_bkg1.drop(['m_tau1tau2'],axis=1).to_numpy()
-sig_to_inject_bkg2 = sig_to_inject_bkg2.drop(['m_tau1tau2'],axis=1).to_numpy()
-bkg1_sigregion = bkg1_sigregion.drop(['m_tau1tau2'],axis=1).to_numpy()
-bkg2_sigregion = bkg2_sigregion.drop(['m_tau1tau2'],axis=1).to_numpy()
+bkg1_sigregion_ws = bkg1_sigregion.copy()
+bkg2_sigregion_ws = bkg2_sigregion.copy()
+bkg1_sigregion_ws.loc[:,'label'] = 1
+bkg2_sigregion_ws.loc[:,'label'] = 1
+#print(bkg1_sigregion)
+
+sig_to_inject_bkg1_ws = sig_to_inject_bkg1.copy()
+sig_to_inject_bkg2_ws = sig_to_inject_bkg2.copy()
+
+sig_to_inject_bkg1_ws = sig_to_inject_bkg1_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
+sig_to_inject_bkg2_ws = sig_to_inject_bkg2_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
+bkg1_sigregion_ws = bkg1_sigregion_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
+bkg2_sigregion_ws = bkg2_sigregion_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
 
 # train val test split: 0.7, 0.1, 0.2
-train_sig, val_sig, test_sig = np.split(sig_to_inject, [int(.8*len(sig_to_inject)), int(.9*len(sig_to_inject))])
-train_bkg1, val_bkg1, test_bkg1 = np.split(bkg1_sigregion, [int(.8*len(bkg1_sigregion)), int(.9*len(bkg1_sigregion))])
-train_bkg2, val_bkg2, test_bkg2 = np.split(bkg2_sigregion, [int(.8*len(bkg2_sigregion)), int(.9*len(bkg2_sigregion))]) 
+train_sig_bkg1, val_sig_bkg1, test_sig_bkg1 = np.split(sig_to_inject_bkg1_ws, [int(.8*len(sig_to_inject_bkg1_ws)), int(.9*len(sig_to_inject_bkg1_ws))])
+train_sig_bkg2, val_sig_bkg2, test_sig_bkg2 = np.split(sig_to_inject_bkg2_ws, [int(.8*len(sig_to_inject_bkg2_ws)), int(.9*len(sig_to_inject_bkg2_ws))])
+train_bkg1, val_bkg1, test_bkg1 = np.split(bkg1_sigregion_ws, [int(.8*len(bkg1_sigregion_ws)), int(.9*len(bkg1_sigregion_ws))])
+train_bkg2, val_bkg2, test_bkg2 = np.split(bkg2_sigregion_ws, [int(.8*len(bkg2_sigregion_ws)), int(.9*len(bkg2_sigregion_ws))]) 
 
-train = np.vstack((train_sig,train_bkg1))
-val = np.vstack((val_sig,val_bkg1))
-test = np.vstack((test_sig,test_bkg1))
+print("train_sig_bkg1.shape, train_bkg1.shape = ",train_sig_bkg1.shape, train_bkg1.shape)
 
-print("train, val, test shapes: ",train.shape, val.shape, test.shape)
-print(train[:20])
+train = np.vstack((train_sig_bkg1,train_bkg1))
+val = np.vstack((val_sig_bkg1,val_bkg1))
+test = np.vstack((test_sig_bkg1,test_bkg1))
 
+train2 = np.vstack((train_sig_bkg2,train_bkg2))
+val2 = np.vstack((val_sig_bkg2,val_bkg2))
+test2 = np.vstack((test_sig_bkg2,test_bkg2))
+
+print("DY : train, val, test shapes: ",train.shape, val.shape, test.shape)
+print("ttbar: train, val, test shapes: ",train2.shape, val2.shape, test2.shape)
+
+bkg1_idxs = np.random.choice(range(0,bkg1_bkgregion.shape[0]),size=(train.shape[0]+test.shape[0]+val.shape[0])*5)
+bkg2_idxs = np.random.choice(range(0,bkg2_bkgregion.shape[0]),size=(train2.shape[0]+test2.shape[0]+val2.shape[0])*5)
+
+bkg1_bkgregion_ws = bkg1_bkgregion.loc[bkg1_bkgregion.index[bkg1_idxs]]
+bkg2_bkgregion_ws = bkg2_bkgregion.loc[bkg2_bkgregion.index[bkg2_idxs]]
+
+bkg1_bkgregion_ws = bkg1_bkgregion_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
+bkg2_bkgregion_ws = bkg2_bkgregion_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
+
+train_bkg1, val_bkg1, test_bkg1 = np.split(bkg1_bkgregion_ws, [int(.8*len(bkg1_bkgregion_ws)), int(.9*len(bkg1_bkgregion_ws))])
+train_bkg2, val_bkg2, test_bkg2 = np.split(bkg2_bkgregion_ws, [int(.8*len(bkg2_bkgregion_ws)), int(.9*len(bkg2_bkgregion_ws))])
+
+train = np.vstack((train,train_bkg1))
+val = np.vstack((val,val_bkg1))
+test = np.vstack((test,test_bkg1))
+
+train2 = np.vstack((train2,train_bkg2))
+val2 = np.vstack((val2,val_bkg2))
+test2 = np.vstack((test2,test_bkg2))
+
+print("Final samples before training starts")
+print("DY: train, val, test shapes: ",train.shape, val.shape, test.shape)
+print("ttbar: train, val, test shapes: ",train2.shape, val2.shape, test2.shape)
+
+print("================= Training Phi vs DY =================")
 
 train_set = torch.tensor(train, dtype=torch.float32)
 val_set = torch.tensor(val, dtype=torch.float32)
@@ -126,7 +169,7 @@ val_loader = torch.utils.data.DataLoader(dataset = val_set,
 	batch_size = batch_size,
 	shuffle = True)
 test_loader = torch.utils.data.DataLoader(dataset = test_set,
-	batch_size = batch_size,
+	batch_size = 1,
 	shuffle = True)
 
 # NN
@@ -136,11 +179,11 @@ class NN(torch.nn.Module):
 		super().__init__()
 
 		self.classifier = torch.nn.Sequential(
-			torch.nn.Linear(8,32),
+			torch.nn.Linear(23,32),
 			torch.nn.ReLU(),
                         torch.nn.Linear(32,64),
                         torch.nn.ReLU(),
-			torch.nn.Linear(64, 32),
+			torch.nn.Linear(64,32),
 			torch.nn.ReLU(),
 			torch.nn.Linear(32,1),
 			torch.nn.Sigmoid()
@@ -156,7 +199,7 @@ model = NN()
 if gpu_boole: model = model.cuda()
 
 optimizer = torch.optim.Adam(model.parameters(),
-        lr = 2e-3,
+        lr = 1e-3,
         weight_decay = 1e-8)
 
 loss_function = torch.nn.BCELoss()
@@ -164,7 +207,7 @@ loss_function = torch.nn.BCELoss()
 
 # LOAD AN EXISTING MODEL 
 if load_model:
-	checkpoint = torch.load("checkpoints/weak_supervision_epoch3_%s.pth"%(ending))
+	checkpoint = torch.load("checkpoints/weak_supervision_epoch2.pth")
 	model.load_state_dict(checkpoint['model_state_dict'])
 	optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 	loaded_epoch = checkpoint['epoch']
@@ -204,7 +247,7 @@ if not test_model:
 			model.train()
 			for vector in tepoch:
 				tepoch.set_description(f"Epoch {epoch}")
-				features, label = vector[:,:8],vector[:,8]
+				features, label = vector[:,:23],vector[:,23]
 				if gpu_boole:
 					features,label = features.cuda(),label.cuda()
 
@@ -242,7 +285,7 @@ if not test_model:
 
 		for vector in val_loader:
 			model.eval()
-			features, label = vector[:,:8],vector[:,8]
+			features, label = vector[:,:23],vector[:,23]
 			if gpu_boole:
 				features,label = features.cuda(),label.cuda()
 			
@@ -274,12 +317,12 @@ if not test_model:
 if test_model:
 
 	test_loss_per_epoch = 0.
-	for vector in enumerate(test_loader):
-		features, label = vector[:,:8],vector[:,8]
+	for vector in test_loader:
+		features, label = vector[:,:23],vector[:,23]
 		if gpu_boole:
 			features,label = features.cuda(),label.cuda()
 		prediction = model.forward(features)
-		test_loss = loss_function(prediction, label.view(1,1))
+		test_loss = loss_function(prediction, label.view(-1,1))
 		test_loss_per_epoch += test_loss.cpu().data.numpy().item()
 	
 	test_losses.append(test_loss_per_epoch/int(test.shape[0]))
