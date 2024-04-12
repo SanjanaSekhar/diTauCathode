@@ -24,13 +24,13 @@ import numpy as np
 from sklearn.metrics import roc_curve
 
 ending = "041224"
-label = "PhivsDY"
-load_model = True 
+name = "PhivsDY"
+load_model = True
 train_model = False
 test_model = True
 early_stop = 5
 batch_size = 16
-epochs = 20
+epochs = 50
 sig_injection = 0.2
 bkg_sig_frac = 5
 
@@ -79,9 +79,9 @@ def make_loaders(train,test,val,batch_size):
 		shuffle = False)
 	return train_loader, val_loader, test_loader
 
-def train_ws(train_loader,val_loader,losses,val_losses,loaded_epoch,label):
+def training(train_loader,val_loader,losses,val_losses,loaded_epoch,name):
 
-	print("================= Training %s ================="%label)
+	print("================= Training %s ================="%name)
 	outputs = []
 	
 	for epoch in range(loaded_epoch,epochs):
@@ -122,7 +122,7 @@ def train_ws(train_loader,val_loader,losses,val_losses,loaded_epoch,label):
 	            	'optimizer_state_dict': optimizer.state_dict(),
 	            	'loss': loss_function
 			},
-			"checkpoints/weak_supervision_epoch%i_%s.pth"%(epoch%5,label))
+			"checkpoints/weak_supervision_epoch%i_%s.pth"%(epoch%5,name))
 		losses.append(this_loss)
 		print("Train Loss: %f"%(this_loss))
 		
@@ -158,9 +158,9 @@ def train_ws(train_loader,val_loader,losses,val_losses,loaded_epoch,label):
 
 	print("========== TRAINING COMPLETE ===========")
 
-def test_ws(test_loader_ws, test_true, label):
+def testing(test_loader_ws, test_true, name):
 	pred_list = []
-	print("================= Training %s ================="%label)
+	print("================= Training %s ================="%name)
 	test_loss_per_epoch = 0.
 	test_losses = []
 	for vector in test_loader_ws:
@@ -176,10 +176,14 @@ def test_ws(test_loader_ws, test_true, label):
 	print("Test Loss: %f"%(test_loss_per_epoch/int(test.shape[0])))
 
 	true_list = test_true[:,-1]
+	# print(np.vstack((true_list,pred_list)))
 	fpr, tpr, _ = roc_curve(true_list, pred_list)
+	print(fpr,tpr)
+	np.savetxt("fpr_tpr_%s.txt"%name,np.vstack((true_list,pred_list)))
+	'''
 	bkg_rej = 1 / fpr
 	sic = tpr / np.sqrt(fpr)
-
+	
 	random_tpr = np.linspace(0, 1, 300)
 	random_bkg_rej = 1 / random_tpr
 	random_sic = random_tpr / np.sqrt(random_tpr)
@@ -191,8 +195,8 @@ def test_ws(test_loader_ws, test_true, label):
 	plt.ylabel("Background Rejection")
 	plt.yscale("log")
 	plt.legend(loc="upper right")
-	plt.show()
-	plt.savefig("ROC_%s.png"%label)
+	#plt.show()
+	plt.savefig("ROC_%s.png"%name)
 
 	# SIC curve
 	plt.plot(tpr, sic, label="idealized AD")
@@ -200,14 +204,14 @@ def test_ws(test_loader_ws, test_true, label):
 	plt.xlabel("True Positive Rate")
 	plt.ylabel("Significance Improvement")
 	plt.legend(loc="upper right")
-	plt.show()
-	plt.savefig("SIC_%s.png"%label)
+	#plt.show()
+	plt.savefig("SIC_%s.png"%name)
+	'''
 
 
 
 
-
-def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_injection = 0.2, bkg_sig_frac = 5, label = "PhivsDY")
+def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_injection = 0.2, bkg_sig_frac = 5, name = "PhivsDY"):
 
 
 	# Format of csv file:
@@ -262,10 +266,10 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
 
 	# sig_to_inject_bkg1 and sig_to_inject_bkg1_ws both have label = 1
 	sig_to_inject_bkg1_ws = sig_to_inject_bkg1.copy()
-
+	sig_to_inject_bkg1 = sig_to_inject_bkg1.drop(['m_tau1tau2'],axis=1).to_numpy()
 	sig_to_inject_bkg1_ws = sig_to_inject_bkg1_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
 	bkg1_sigregion_ws = bkg1_sigregion_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
-	
+	bkg1_sigregion = bkg1_sigregion.drop(['m_tau1tau2'],axis=1).to_numpy()	
 	# train val test split: 0.7, 0.1, 0.2
 	train_sig, val_sig, test_sig = np.split(sig_to_inject_bkg1, [int(.8*len(sig_to_inject_bkg1)), int(.9*len(sig_to_inject_bkg1))])
 	train_bkg1, val_bkg1, test_bkg1 = np.split(bkg1_sigregion, [int(.8*len(bkg1_sigregion)), int(.9*len(bkg1_sigregion))])
@@ -285,7 +289,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
 	test_ws = np.vstack((test_sig_ws,test_bkg1_ws))
 
 
-	print("%s : Weak supervision -  train, val, test shapes: "%label,train.shape, val.shape, test.shape)
+	print("%s : Weak supervision -  train, val, test shapes: "%name,train.shape, val.shape, test.shape)
 
 	bkg1_idxs = np.random.choice(range(0,bkg1_bkgregion.shape[0]),size=(train.shape[0]+test.shape[0]+val.shape[0])*bkg_sig_frac)
 	# both bkg1_bkgregion and bkg1_bkgregion_ws have label = 0
@@ -305,7 +309,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
 
 
 	print("Final samples before training starts")
-	print("%s: train, val, test shapes: "%label,train_ws.shape, val_ws.shape, test_ws.shape)
+	print("%s: train, val, test shapes: "%name,train_ws.shape, val_ws.shape, test_ws.shape)
 
 	return train, val, test, train_ws, val_ws, test_ws
 
@@ -326,7 +330,7 @@ loss_function = torch.nn.BCELoss()
 
 # LOAD AN EXISTING MODEL 
 if load_model:
-	checkpoint = torch.load("checkpoints/weak_supervision_epoch2_%s.pth"%label)
+	checkpoint = torch.load("checkpoints/weak_supervision_epoch3_%s.pth"%name)
 	model.load_state_dict(checkpoint['model_state_dict'])
 	optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 	loaded_epoch = checkpoint['epoch']
@@ -351,20 +355,28 @@ else:
 	losses,val_losses = [],[]
 
 
-label = "PhivsDY"	
-train, val, test, train_ws, val_ws, test_ws = make_train_test_val_ws(sig,bkg1,m_tt_min = 350.,m_tt_max = 1000.,sig_injection = 0.2,bkg_sig_frac = 5,label = label)
+name = "PhivsDY"	
+train, val, test, train_ws, val_ws, test_ws = make_train_test_val_ws(sig,bkg1,m_tt_min = 350.,m_tt_max = 1000.,sig_injection = 0.2,bkg_sig_frac = 5,name = name)
 train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
 train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
-if train_model: train_ws(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,label)
-if test_model: test_ws(test_loader_ws, test, label)
+if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
+if test_model: testing(test_loader_ws, test, name)
 
-label = "Phivsttbar"
-train, val, test, train_ws, val_ws, test_ws = make_train_test_val_ws(sig,bkg2,m_tt_min = 350.,m_tt_max = 1000.,sig_injection = 0.2,bkg_sig_frac = 5,label = label)
+name = "PhivsDY_fs"
+loaded_epoch = 0
+losses,val_losses = [],[]
+if train_model: training(train_loader,val_loader,losses,val_losses,loaded_epoch,name)
+if test_model: testing(test_loader, test, name)
+
+name = "Phivsttbar"
+train, val, test, train_ws, val_ws, test_ws = make_train_test_val_ws(sig,bkg2,m_tt_min = 350.,m_tt_max = 1000.,sig_injection = 0.2,bkg_sig_frac = 5,name = name)
 train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
 train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
-if train_model: train_ws(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,label)
-if test_model: test_ws(test_loader_ws, test, label)
+if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
+if test_model: testing(test_loader_ws, test, name)
 
-
-
-	
+name = "Phivsttbar_fs"
+loaded_epoch = 0
+losses,val_losses = [],[]
+if train_model: training(train_loader,val_loader,losses,val_losses,loaded_epoch,name)
+if test_model: testing(test_loader, test, name)
