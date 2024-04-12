@@ -24,12 +24,13 @@ import numpy as np
 
 ending = "041224"
 label = "PhivsDY"
-load_model = True
+load_model = False
 test_model = True
 early_stop = 5
 batch_size = 16
 epochs = 20
-
+sig_injection = 0.2
+bkg_sig_frac = 5
 
 gpu_boole = torch.cuda.is_available()
 print("Is GPU available? ",gpu_boole)
@@ -78,7 +79,7 @@ def make_loaders(train,test,val,batch_size):
 
 def train_ws(train_loader,val_loader,losses,val_losses,loaded_epoch,label):
 
-	print("================= Training %s ================="%ending)
+	print("================= Training %s ================="%label)
 	outputs = []
 	
 	for epoch in range(loaded_epoch,epochs):
@@ -199,7 +200,7 @@ m_tt_max = 1000
 sig_sigregion = sig[sig['m_tau1tau2'] >= m_tt_min] #and sig[sig['m_tau1tau2'] <= m_tt_max]
 sig_sigregion = sig_sigregion[sig_sigregion['m_tau1tau2'] < m_tt_max]
 
-bkg1_sigregion = bkg1[bkg1['m_tau1tau2']>=  m_tt_min] #and bkg1[bkg1['m_tau1tau2'] <= m_tt_max]
+bkg1_sigregion = bkg1[bkg1['m_tau1tau2'] >=  m_tt_min] #and bkg1[bkg1['m_tau1tau2'] <= m_tt_max]
 bkg1_sigregion = bkg1_sigregion[bkg1_sigregion['m_tau1tau2'] < m_tt_max]
 
 bkg2_sigregion = bkg2[bkg2['m_tau1tau2']>= m_tt_min] #and bkg2[bkg2['m_tau1tau2'] <= m_tt_max]
@@ -264,8 +265,8 @@ test2 = np.vstack((test_sig_bkg2,test_bkg2))
 print("DY : train, val, test shapes: ",train.shape, val.shape, test.shape)
 print("ttbar: train, val, test shapes: ",train2.shape, val2.shape, test2.shape)
 
-bkg1_idxs = np.random.choice(range(0,bkg1_bkgregion.shape[0]),size=(train.shape[0]+test.shape[0]+val.shape[0])*5)
-bkg2_idxs = np.random.choice(range(0,bkg2_bkgregion.shape[0]),size=(train2.shape[0]+test2.shape[0]+val2.shape[0])*5)
+bkg1_idxs = np.random.choice(range(0,bkg1_bkgregion.shape[0]),size=(train.shape[0]+test.shape[0]+val.shape[0])*bkg_sig_frac)
+bkg2_idxs = np.random.choice(range(0,bkg2_bkgregion.shape[0]),size=(train2.shape[0]+test2.shape[0]+val2.shape[0])*bkg_sig_frac)
 
 bkg1_bkgregion_ws = bkg1_bkgregion.loc[bkg1_bkgregion.index[bkg1_idxs]]
 bkg2_bkgregion_ws = bkg2_bkgregion.loc[bkg2_bkgregion.index[bkg2_idxs]]
@@ -329,12 +330,12 @@ else:
 
 train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
 train_ws(train_loader,val_loader,losses,val_losses,loaded_epoch,label)
-test_ws(test_loader)
+if test_model: test_ws(test_loader)
 
 label = "Phivsttbar"
 train_loader, val_loader, test_loader = make_loaders(train2,test2,val2,batch_size)
 train_ws(train_loader,val_loader,losses,val_losses,loaded_epoch,label)
-test_ws(test_loader)
+if test_model: test_ws(test_loader)
 
 
 
