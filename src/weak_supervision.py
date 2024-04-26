@@ -22,21 +22,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 import numpy as np 
 from sklearn.metrics import roc_curve
-
-ending = "042524"
-name = "Phi250vsDY"
-load_model = False
-train_model = True
-test_model = True
-early_stop = 5
-batch_size = 16
-epochs = 50
-sig_injection = 0.2
-bkg_sig_frac = 5
-
-gpu_boole = torch.cuda.is_available()
-print("Is GPU available? ",gpu_boole)
-if load_model: print("Loading model... ")
+from argparse import ArgumentParser
 
 # NN
 
@@ -290,9 +276,49 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
 
 	return train, val, test, train_ws, val_ws, test_ws
 
-sig = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag.csv", lineterminator='\n')
-bkg1 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/SM_dyToTauTau_0J1J2J_MinMass120_NoMisTag.csv",lineterminator='\n')
-bkg2 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv",lineterminator='\n')
+parser = ArgumentParser(description='Train sig vs bkg for identifying CATHODE vars')
+parser.add_argument("--name",  default="Phi250vsDY", help="file name extension for residuals and pulls")
+parser.add_argument("--sig", default="2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag", help = "name of the .csv file for the signal")
+parser.add_argument("--bkg",  default="SM_dyToTauTau_0J1J2J_MinMass120_NoMisTag", help="name of the .csv file for the bkg")
+parser.add_argument("--early_stop",  default=5, type = int, help="early stopping patience (no. of epochs)")
+parser.add_argument("--batch_size",  default=16, type = int, help="batch size for training")
+parser.add_argument("--n_epochs",  default=20, type = int, help="no. of epochs to train for")
+parser.add_argument("--ending",  default="042624", help="date")
+parser.add_argument("--load_model",  default=False, help="load saved model")
+parser.add_argument("--epoch_to_load",  default=3, type = int, help="load checkpoint corresponding to this epoch")
+parser.add_argument("--train_model",  default=False, help="train and save model")
+parser.add_argument("--test_model",  default=False, help="test model")
+parser.add_argument("--full_supervision",  default=False, help="Run fully supervised")
+parser.add_argument("--sig_injection",  default=0.2, type=float , help="percent of signal to inject into data")
+parser.add_argument("--bkg_frac",  default=5, type=float, help="n_bkg/n_sig")
+parser.add_argument("--m_tt_min",  default=120., type=float, help="lower boundary for sig region in ditau inv mass")
+parser.add_argument("--m_tt_max",  default=500., type=float, help="upper boundary for sig region in ditau inv mass")
+
+options = parser.parse_args()
+
+
+ending = options.ending
+name = options.name
+load_model = options.load_model
+train_model = options.train_model
+test_model = options.test_model
+early_stop = options.early_stop
+batch_size = options.batch_size
+epochs = options.n_epochs
+sig_injection = options.sig_injection
+bkg_sig_frac = options.bkg_frac
+m_tt_min = options.m_tt_min
+m_tt_max = options.m_tt_max
+epoch_to_load = options.epoch_to_load
+
+gpu_boole = torch.cuda.is_available()
+print("Is GPU available? ",gpu_boole)
+if load_model: print("Loading model... ")
+
+
+sig = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.sig, lineterminator='\n')
+bkg1 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.bkg,lineterminator='\n')
+#bkg2 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv",lineterminator='\n')
 
 model = NN()
 if gpu_boole: model = model.cuda()
@@ -346,17 +372,24 @@ def feature_select(vector,k = 7):
 	print(featureScores.nlargest(k,'Score')) 
 
 
-name = "Phi250vsDY"
-if load_model:	loaded_epoch, losses, val_losses = load_trained_model(name, epoch = 3)
+
+if load_model:	loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load)
 else:
 	loaded_epoch = 0
 	losses,val_losses = [],[]
-train, val, test, train_ws, val_ws, test_ws = make_train_test_val_ws(sig,bkg1,m_tt_min = 120.,m_tt_max = 400.,sig_injection = 0.2,bkg_sig_frac = 5,name = name)
+
+train, val, test, train_ws, val_ws, test_ws = make_train_test_val_ws(sig, bkg1, m_tt_min, m_tt_max, sig_injection, bkg_sig_frac, name)
 train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
 train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
-if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
-if test_model: testing(test_loader_ws, test, name)
 
+if not options.full_supervision:
+	if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
+	if test_model: testing(test_loader_ws, test, name)
+else:
+	if train_model: training(train_loader,val_loader,losses,val_losses,loaded_epoch,name)
+	if test_model: testing(test_loader, test, name)
+
+'''
 name = "Phi250vsDY_fs"
 if load_model:	loaded_epoch, losses, val_losses = load_trained_model(name, epoch = 3)
 else:
@@ -383,3 +416,4 @@ else:
 	losses,val_losses = [],[]
 if train_model: training(train_loader,val_loader,losses,val_losses,loaded_epoch,name)
 if test_model: testing(test_loader, test, name)
+'''
