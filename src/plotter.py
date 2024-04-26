@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import os 
 import pandas as pd 
 from sklearn.metrics import roc_curve
+from matplotlib.backends.backend_pdf import PdfPages
 
 def plot_features(sig,bkg1,bkg2):
 
@@ -78,12 +79,13 @@ def plot_ROC_SIC(true_list1, pred_list1,name1,true_list2, pred_list2,name2):
 	plt.close()
 
 
-sig = pd.read_csv("csv_files/2HDM-vbfPhiToTauTau-M750_2J_MinMass120_NoMisTag.csv", lineterminator='\n')
+sig = pd.read_csv("csv_files/2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag.csv", lineterminator='\n')
 bkg1 = pd.read_csv("csv_files/SM_dyToTauTau_0J1J2J_MinMass120_NoMisTag.csv")
 bkg2 = pd.read_csv("csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv")
 
-# plot_features(sig, bkg1, bkg2)
+plot_features(sig, bkg1, bkg2)
 
+'''
 lists = np.loadtxt("losses/fpr_tpr_Phivsttbar.txt")
 lists2 = np.loadtxt("losses/fpr_tpr_Phivsttbar_fs.txt")
 plot_ROC_SIC(lists[0],lists[1], "Phivsttbar-weak_sup",lists2[0],lists2[1], "Phivsttbar-full_sup")
@@ -91,3 +93,4 @@ plot_ROC_SIC(lists[0],lists[1], "Phivsttbar-weak_sup",lists2[0],lists2[1], "Phiv
 lists = np.loadtxt("losses/fpr_tpr_PhivsDY.txt")
 lists2 = np.loadtxt("losses/fpr_tpr_PhivsDY_fs.txt")
 plot_ROC_SIC(lists[0],lists[1], "PhivsDY-weak_sup",lists2[0],lists2[1],"PhivsDY-full_sup")
+'''

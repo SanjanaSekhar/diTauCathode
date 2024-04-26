@@ -84,15 +84,17 @@ int create_dataset(string file_n, int label) {
 		treeReader->ReadEntry(entry);
 		bool filled = false;
 		bool filledTau = false, filledGenTau = false;
+		bool filledJet1 = false, filledJet2 = false;
+		bool filledBjet1 = false, filledBjet2 = false;
 		bool found_gtau1 = false, found_gtau2 = false;
 		int numJets = 0;
 		n_jets = 0; n_bjets = 0;
-		jet1_pt = 9999999.; bjet1_pt = 9999999.;
+		jet1_pt = 0.; bjet1_pt = 0.;
 		jet1_eta = 0., jet1_phi = 0., bjet1_eta = 0., bjet1_phi = 0.,jet1_ehadeem = 0, bjet1_ehadeem = 0.;
 		jet1_cef = 0., jet1_nef = 0.,bjet1_cef = 0., bjet1_nef = 0.; 
-		jet2_pt = 9999999.; bjet2_pt = 9999999.;
-                jet2_eta = 0., jet2_phi = 0., bjet2_eta = 0., bjet2_phi = 0.,jet2_ehadeem = 0, bjet2_ehadeem = 0.;
-                jet2_cef = 0., jet2_nef = 0.,bjet2_cef = 0., bjet2_nef = 0.;
+		jet2_pt = 0.; bjet2_pt = 0.;
+        jet2_eta = 0., jet2_phi = 0., bjet2_eta = 0., bjet2_phi = 0.,jet2_ehadeem = 0, bjet2_ehadeem = 0.;
+        jet2_cef = 0., jet2_nef = 0.,bjet2_cef = 0., bjet2_nef = 0.;
 		
 			
 			
@@ -102,85 +104,98 @@ int create_dataset(string file_n, int label) {
 				else {if (jet->TauTag == 0) n_jets++;}
 			}
 			cout << "n_jets = " << n_jets << " n_bjets = " << n_bjets<< endl;
-			if(n_jets > 0) {
-			Double_t jet_pt[n_jets];
+			// if(n_jets > 0) {
+			// Double_t jet_pt[n_jets];
 
-			int j = 0, k = 0;
-			for (int i = 0; i < branchJet->GetEntries(); i++){
-				 Jet *jet = (Jet*) branchJet->At(i);
-                                //if (jet->BTag == 1) {bjet_pt[j] = jet->PT; j++;}
-                                if (jet->TauTag == 0) {jet_pt[k] = jet->PT; k++;}
-                        }
-			Int_t sorted_jet_idx[n_jets];
-			if(n_jets > 1) {
-				TMath::Sort(n_jets, jet_pt, sorted_jet_idx);
-				//if(n_bjets > 1) TMath::Sort(n_bjets, bjet_pt, sorted_bjet_idx);
-				for(int i = 0; i < n_jets; i++)
-					cout << sorted_jet_idx[i] << " ";
-				}
-			}
-			if(n_bjets > 0){
-			Double_t bjet_pt[n_bjets];
+			// int j = 0, k = 0;
+			// for (int i = 0; i < branchJet->GetEntries(); i++){
+			// 	 Jet *jet = (Jet*) branchJet->At(i);
+            //                     //if (jet->BTag == 1) {bjet_pt[j] = jet->PT; j++;}
+            //                     if (jet->TauTag == 0) {jet_pt[k] = jet->PT; k++;}
+            //             }
+			// Int_t sorted_jet_idx[n_jets];
+			// if(n_jets > 1) {
+			// 	TMath::Sort(n_jets, jet_pt, sorted_jet_idx);
+			// 	//if(n_bjets > 1) TMath::Sort(n_bjets, bjet_pt, sorted_bjet_idx);
+			// 	for(int i = 0; i < n_jets; i++)
+			// 		cout << sorted_jet_idx[i] << " ";
+			// 	}
+			// }
+			// if(n_bjets > 0){
+			// Double_t bjet_pt[n_bjets];
 
-                        int j = 0, k = 0;
-                        for (int i = 0; i < branchJet->GetEntries(); i++){
-                                 Jet *jet = (Jet*) branchJet->At(i);
-                                if (jet->BTag == 1) {bjet_pt[j] = jet->PT; j++;}
-                                //else {if (jet->TauTag == 0) {jet_pt[k] = jet->PT; k++;}}
-                        }
-                        Int_t sorted_bjet_idx[n_bjets];
-                        //if(n_jets > 1) TMath::Sort(n_jets, jet_pt, sorted_jet_idx);
-                        if(n_bjets > 1) {
-				TMath::Sort(n_bjets, bjet_pt, sorted_bjet_idx);
-				for(int i = 0; i < n_bjets; i++)
-					cout << sorted_bjet_idx[i] << " ";
-				}
-			}
+            //             int j = 0, k = 0;
+            //             for (int i = 0; i < branchJet->GetEntries(); i++){
+            //                      Jet *jet = (Jet*) branchJet->At(i);
+            //                     if (jet->BTag == 1) {bjet_pt[j] = jet->PT; j++;}
+            //                     //else {if (jet->TauTag == 0) {jet_pt[k] = jet->PT; k++;}}
+            //             }
+            //             Int_t sorted_bjet_idx[n_bjets];
+            //             //if(n_jets > 1) TMath::Sort(n_jets, jet_pt, sorted_jet_idx);
+            //             if(n_bjets > 1) {
+			// 	TMath::Sort(n_bjets, bjet_pt, sorted_bjet_idx);
+			// 	for(int i = 0; i < n_bjets; i++)
+			// 		cout << sorted_bjet_idx[i] << " ";
+			// 	}
+			// }
 
 			for (int i = 0; i < branchJet->GetEntries(); ++i) {
 
 					Jet *jet = (Jet*) branchJet->At(i);
 					MissingET *met = (MissingET*) branchMET->At(0);
 				if (!jet) continue;
-				if (jet->BTag == 1){
-					if(n_bjets > 0 and jet->PT == bjet_pt[sorted_bjet_idx[0]]) {
-					
-						bjet1_pt = jet->PT;
-						bjet1_eta = jet->Eta;
-						bjet1_phi = jet->Phi;
-						bjet1_ehadeem = jet->EhadOverEem;
-						bjet1_nef = jet->NeutralEnergyFraction;
-						bjet1_cef = jet->ChargedEnergyFraction;
-					}
-					else{ if(n_bjets > 1 and jet->PT == bjet_pt[sorted_bjet_idx[1]]) {
-
-                                                bjet2_pt = jet->PT;
-                                                bjet2_eta = jet->Eta;
-                                                bjet2_phi = jet->Phi;
-                                                bjet2_ehadeem = jet->EhadOverEem;
-                                                bjet2_nef = jet->NeutralEnergyFraction;
-                                                bjet2_cef = jet->ChargedEnergyFraction;
-                                        }}
+				if(n_bjets > 0){
+					if (jet->BTag == 1){
+						if(!filledBjet1){
+						
+							bjet1_pt = jet->PT;
+							bjet1_eta = jet->Eta;
+							bjet1_phi = jet->Phi;
+							bjet1_ehadeem = jet->EhadOverEem;
+							bjet1_nef = jet->NeutralEnergyFraction;
+							bjet1_cef = jet->ChargedEnergyFraction;
+							filledBjet1 = true;
+						}
+						else{
+							
+							if(filledBjet1 and n_bjets > 1){
+								bjet2_pt = jet->PT;
+								bjet2_eta = jet->Eta;
+								bjet2_phi = jet->Phi;
+								bjet2_ehadeem = jet->EhadOverEem;
+								bjet2_nef = jet->NeutralEnergyFraction;
+								bjet2_cef = jet->ChargedEnergyFraction;
+								filledBjet2 = true;
+							}
+						}
+					}		
 				}
-				else{ if(jet->TauTag == 0) {
-					
-					if(n_jets > 0 and jet->PT == jet_pt[sorted_jet_idx[0]]) {
-						jet1_pt = jet->PT;
-						jet1_eta = jet->Eta;
-						jet1_phi = jet->Phi;
-						jet1_ehadeem = jet->EhadOverEem;
-						jet1_nef = jet->NeutralEnergyFraction;	
-						jet1_cef = jet->ChargedEnergyFraction;	
-					}
-					else{ if(n_jets > 1 and jet->PT == jet_pt[sorted_jet_idx[1]]) {
-                                                jet2_pt = jet->PT;
-                                                jet2_eta = jet->Eta;
-                                                jet2_phi = jet->Phi;
-                                                jet2_ehadeem = jet->EhadOverEem;
-                                                jet2_nef = jet->NeutralEnergyFraction;
-                                                jet2_cef = jet->ChargedEnergyFraction;
-					}}
-				}}
+				if(n_jets > 0){
+					if (jet->TauTag == 0 and jet->BTag == 0){
+						if(!filledJet1){
+						
+							jet1_pt = jet->PT;
+							jet1_eta = jet->Eta;
+							jet1_phi = jet->Phi;
+							jet1_ehadeem = jet->EhadOverEem;
+							jet1_nef = jet->NeutralEnergyFraction;
+							jet1_cef = jet->ChargedEnergyFraction;
+							filledJet1 = true;
+						}
+						else{
+							if(filledJet1 and n_jets > 1){
+								jet2_pt = jet->PT;
+								jet2_eta = jet->Eta;
+								jet2_phi = jet->Phi;
+								jet2_ehadeem = jet->EhadOverEem;
+								jet2_nef = jet->NeutralEnergyFraction;
+								jet2_cef = jet->ChargedEnergyFraction;
+								filledJet2 = true;
+							}
+						
+						}
+					}		
+				}
 				if(jet->TauTag == 1 and !filledTau) {
 					++numTauJet1s;
 					tau1_pt = jet->PT;
@@ -202,15 +217,15 @@ int create_dataset(string file_n, int label) {
 					
 						
 
-					if (jet2->TauTag == 1 and jet!=jet2) {
+						if (jet2->TauTag == 1 and jet!=jet2) {
 							m_tau1tau2 = (jet->P4() + jet2->P4()).M();
 							tau2_pt = jet2->PT;
 							tau2_eta = jet2->Eta;
 							tau2_phi = jet2->Phi;
 							tau2_m = (jet2->P4()).M();
 							tau2_ncharged = jet2->NCharged;
-                                        		tau2_nneutrals = jet2->NNeutrals;
-                                        		tau2_ehadeem = jet2->EhadOverEem; 
+                            tau2_nneutrals = jet2->NNeutrals;
+                            tau2_ehadeem = jet2->EhadOverEem; 
 							numTauJet2s++;	
 
 							filledTau = true;
@@ -225,7 +240,7 @@ int create_dataset(string file_n, int label) {
 				if (n_jets == 0) {jet1_pt = 0., jet1_eta = 0., jet1_phi = 0., jet1_ehadeem = 0.;}
 				if (n_bjets == 0) {bjet1_pt = 0., bjet1_eta = 0., bjet1_phi = 0., bjet1_ehadeem = 0.;}
 				if (n_jets < 2) {jet2_pt = 0., jet2_eta = 0., jet2_phi = 0., jet2_ehadeem = 0.;}
-                                if (n_bjets < 2) {bjet2_pt = 0., bjet2_eta = 0., bjet2_phi = 0., bjet2_ehadeem = 0.;}
+                if (n_bjets < 2) {bjet2_pt = 0., bjet2_eta = 0., bjet2_phi = 0., bjet2_ehadeem = 0.;}
 				//if (jet1_ehadeem > 900) printf("jet1_pt, jet1_eta, jet1_phi, jet1_ehadeem, jet1_nef, jet1_cef = %f, %f, %f, %f, %f, %f\n",jet1_pt, jet1_eta, jet1_phi, jet1_ehadeem,jet1_nef, jet1_cef);
 				//if (bjet1_ehadeem > 900) printf("bjet1_pt, bjet1_eta, bjet1_phi, bjet1_ehadeem, bjet1_nef, bjet1_cef = %f, %f, %f, %f, %f, %f\n",bjet1_pt, bjet1_eta, bjet1_phi, bjet1_ehadeem,bjet1_nef, bjet1_cef);
 				//printf("tau1_ncharged, tau1_nneutrals, tau1_ehadeem, tau1_ncharged, tau1_nneutrals, tau2_ehadeem = %f,%f,%f,%f,%f,%f\n",tau1_ncharged, tau1_nneutrals, tau1_ehadeem, tau1_ncharged, tau1_nneutrals, tau2_ehadeem);	
