@@ -174,11 +174,14 @@ def testing(test_loader_ws, test_true, name):
 
 def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_injection = 0.2, bkg_sig_frac = 5, name = "PhivsDY"):
 
+	# CREATE an IDEAL Anomaly Detector
+	# Train pure bkg vs sig+bkg in the SR only
 
 	# Format of csv file:
 	# tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, 
 	# tau2_m, m_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
-	# jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, isSig
+	# jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef,
+	# jet2_pt, jet2_eta, jet2_phi, jet2_cef, jet2_nef, bjet2_pt, bjet2_eta, bjet2_phi, bjet2_cef, bjet2_nef, isSig
 	print(sig.shape, bkg1.shape)
 	sig.columns = ["tau1_pt", "tau1_eta", "tau1_phi", "tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m",
 			"m_tau1tau2", "met_met", "met_eta", "met_phi", "n_jets", "n_bjets",
@@ -200,13 +203,13 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
 
 	bkg1_sigregion = bkg1[bkg1['m_tau1tau2'] >=  m_tt_min] #and bkg1[bkg1['m_tau1tau2'] <= m_tt_max]
 	bkg1_sigregion = bkg1_sigregion[bkg1_sigregion['m_tau1tau2'] < m_tt_max]
-
-	bkg1_bkgregion = pd.concat([bkg1[bkg1['m_tau1tau2']< m_tt_min], bkg1[bkg1['m_tau1tau2'] >= m_tt_max]])
-
 	print("No. of samples in SR in sig, bkg")
 	print(sig_sigregion.shape[0], bkg1_sigregion.shape[0])
-	print("No. of samples in SB in bkg")
-	print(bkg1_bkgregion.shape[0])
+	bkg1_bkgregion = bkg1_sigregion[0:int(bkg1_sigregion.shape[0]/2)]
+	bkg1_sigregion = bkg1_sigregion[int(bkg1_sigregion.shape[0]/2):]
+	#bkg1_bkgregion = pd.concat([bkg1[bkg1['m_tau1tau2']< m_tt_min], bkg1[bkg1['m_tau1tau2'] >= m_tt_max]])
+	print("No. of bkg samples in data and pure bkg")
+	print(bkg1_sigregion.shape[0], bkg1_bkgregion.shape[0])
 
 	# We want to ensure that the sig/bkg ratio in the "data" is realistic and small
 	# choose at random signal samples to inject into the data 
@@ -221,7 +224,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
 	print(sig_to_inject_bkg1.shape)
 
 	# define data and bkg vectors
-	# label data as 1 and bkg as 0
+	# label data as 1 and pure bkg as 0
 	# bkg1_sigregion has label = 0 in the data region, bkg1_sigregion_ws has label = 1
 	bkg1_sigregion_ws = bkg1_sigregion.copy()
 	bkg1_sigregion_ws.loc[:,'label'] = 1
@@ -254,9 +257,10 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
 
 	print("%s : Weak supervision -  train, val, test shapes: "%name,train.shape, val.shape, test.shape)
 
-	bkg1_idxs = np.random.choice(range(0,bkg1_bkgregion.shape[0]),size=(train.shape[0]+test.shape[0]+val.shape[0])*bkg_sig_frac)
+	#bkg1_idxs = np.random.choice(range(0,bkg1_bkgregion.shape[0]),size=(train.shape[0]+test.shape[0]+val.shape[0])*bkg_sig_frac)
 	# both bkg1_bkgregion and bkg1_bkgregion_ws have label = 0
-	bkg1_bkgregion_ws = bkg1_bkgregion.loc[bkg1_bkgregion.index[bkg1_idxs]]
+	#bkg1_bkgregion_ws = bkg1_bkgregion.loc[bkg1_bkgregion.index[bkg1_idxs]]
+	bkg1_bkgregion_ws = bkg1_bkgregion.copy()
 
 	bkg1_bkgregion_ws = bkg1_bkgregion_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
 
@@ -265,7 +269,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
 	train = np.vstack((train,train_bkg1))
 	val = np.vstack((val,val_bkg1))
 	test = np.vstack((test,test_bkg1))
-	# sets with label = 0 for SB (bkg) and 1 for SR (data)
+	# sets with label = 0 for pure bkg and 1 for data
 	train_ws = np.vstack((train_ws,train_bkg1))
 	val_ws = np.vstack((val_ws,val_bkg1))
 	test_ws = np.vstack((test_ws,test_bkg1))
@@ -281,7 +285,7 @@ parser.add_argument("--name",  default="Phi250vsDY", help="file name extension f
 parser.add_argument("--sig", default="2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag", help = "name of the .csv file for the signal")
 parser.add_argument("--bkg",  default="SM_dyToTauTau_0J1J2J_MinMass120_NoMisTag", help="name of the .csv file for the bkg")
 parser.add_argument("--early_stop",  default=5, type = int, help="early stopping patience (no. of epochs)")
-parser.add_argument("--batch_size",  default=16, type = int, help="batch size for training")
+parser.add_argument("--batch_size",  default=64, type = int, help="batch size for training")
 parser.add_argument("--n_epochs",  default=20, type = int, help="no. of epochs to train for")
 parser.add_argument("--ending",  default="042624", help="date")
 parser.add_argument("--load_model",  default=False, help="load saved model")
