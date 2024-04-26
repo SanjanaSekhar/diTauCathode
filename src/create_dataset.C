@@ -70,8 +70,8 @@ int create_dataset(string file_n, int label) {
 	int numTauJet1s = 0, numTauJet2s = 0, numGenTau1s = 0, numGenTau2s = 0, numGenTauJet1s = 0, numGenTauJet2s = 0;
 	
 //  numberOfEntries = 1000;
-	//for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
-	for (Long64_t entry = 0; entry < n_frac; ++entry) {	
+	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
+	//for (Long64_t entry = 0; entry < n_frac; ++entry) {	
 		if (entry % 20000 == 0) {
 			std:cout << "Processing event " << entry << std::endl;
 			printf("No. of events with at least 1 tagged hadronic tau jets = %i\n",numTauJet1s);
@@ -103,7 +103,7 @@ int create_dataset(string file_n, int label) {
 				if (jet->BTag == 1) n_bjets++;
 				else {if (jet->TauTag == 0) n_jets++;}
 			}
-			cout << "n_jets = " << n_jets << " n_bjets = " << n_bjets<< endl;
+			//cout << "n_jets = " << n_jets << " n_bjets = " << n_bjets<< endl;
 			// if(n_jets > 0) {
 			// Double_t jet_pt[n_jets];
 
