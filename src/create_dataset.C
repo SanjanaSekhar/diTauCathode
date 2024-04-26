@@ -64,7 +64,8 @@ int create_dataset(string file_n, int label) {
 	float jet1_pt, jet1_eta, jet1_phi, bjet1_pt, bjet1_eta, bjet1_phi, jet1_ehadeem, bjet1_ehadeem, jet1_cef, jet1_nef, bjet1_cef, bjet1_nef;
 	float jet2_pt, jet2_eta, jet2_phi, bjet2_pt, bjet2_eta, bjet2_phi, jet2_ehadeem, bjet2_ehadeem, jet2_cef, jet2_nef, bjet2_cef, bjet2_nef;
 	Float_t n_subj[5];
-	
+	Double_t jet_pt[5], bjet_pt[5];
+	Int_t sorted_jet_idx[5], sorted_bjet_idx[5];	
 	std::cout << "Running on " << n_frac << " out of " << numberOfEntries << " events" << std::endl;
 	int numTauJet1s = 0, numTauJet2s = 0, numGenTau1s = 0, numGenTau2s = 0, numGenTauJet1s = 0, numGenTauJet2s = 0;
 	
@@ -100,17 +101,33 @@ int create_dataset(string file_n, int label) {
 				if (jet->BTag == 1) n_bjets++;
 				else {if (jet->TauTag == 0) n_jets++;}
 			}
-			Double_t jet_pt[n_jets], bjet_pt[n_bjets];
+			if(n_jets > 0) {
+			Double_t jet_pt[n_jets];
 
 			int j = 0, k = 0;
 			for (int i = 0; i < branchJet->GetEntries(); i++){
 				 Jet *jet = (Jet*) branchJet->At(i);
-                                if (jet->BTag == 1) {bjet_pt[j] = jet->PT; j++;}
-                                else {if (jet->TauTag == 0) {jet_pt[k] = jet->PT; k++;}}
+                                //if (jet->BTag == 1) {bjet_pt[j] = jet->PT; j++;}
+                                if (jet->TauTag == 0) {jet_pt[k] = jet->PT; k++;}
                         }
-			Int_t sorted_jet_idx[n_jets], sorted_bjet_idx[n_bjets];
+			Int_t sorted_jet_idx[n_jets];
 			if(n_jets > 1) TMath::Sort(n_jets, jet_pt, sorted_jet_idx);
-			if(n_bjets > 1) TMath::Sort(n_bjets, bjet_pt, sorted_bjet_idx);
+			//if(n_bjets > 1) TMath::Sort(n_bjets, bjet_pt, sorted_bjet_idx);
+			}
+			if(n_bjets > 0){
+			Double_t bjet_pt[n_bjets];
+
+                        int j = 0, k = 0;
+                        for (int i = 0; i < branchJet->GetEntries(); i++){
+                                 Jet *jet = (Jet*) branchJet->At(i);
+                                if (jet->BTag == 1) {bjet_pt[j] = jet->PT; j++;}
+                                //else {if (jet->TauTag == 0) {jet_pt[k] = jet->PT; k++;}}
+                        }
+                        Int_t sorted_bjet_idx[n_bjets];
+                        //if(n_jets > 1) TMath::Sort(n_jets, jet_pt, sorted_jet_idx);
+                        if(n_bjets > 1) TMath::Sort(n_bjets, bjet_pt, sorted_bjet_idx);
+			}
+
 			for (int i = 0; i < branchJet->GetEntries(); ++i) {
 
 					Jet *jet = (Jet*) branchJet->At(i);
@@ -155,7 +172,7 @@ int create_dataset(string file_n, int label) {
                                                 jet2_cef = jet->ChargedEnergyFraction;
 					}}
 				}}
-				else{ if(jet->TauTag == 1 and !filledTau) {
+				if(jet->TauTag == 1 and !filledTau) {
 					++numTauJet1s;
 					tau1_pt = jet->PT;
 					tau1_eta = jet->Eta;
@@ -193,7 +210,7 @@ int create_dataset(string file_n, int label) {
 					}
 				}
 			}
-		}}
+		
 			if(filledTau) {
 				//printf("n_jets = %i,jet1_pt = %.2f, jet1_eta = %.2f, jet1_phi = %.2f, n_bjets = %i, bjet1_pt = %.2f, bjet1_eta = %.2f, bjet1_phi = %.2f\n",n_jets,jet1_pt, jet1_eta, jet1_phi,bjet1_pt, bjet1_eta, bjet1_phi, n_bjets);
 				if (n_jets == 0) {jet1_pt = 0., jet1_eta = 0., jet1_phi = 0., jet1_ehadeem = 0.;}
