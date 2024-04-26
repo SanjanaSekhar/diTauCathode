@@ -31,11 +31,11 @@ class NN(torch.nn.Module):
                 super().__init__()
 
                 self.classifier = torch.nn.Sequential(
-                        torch.nn.Linear(33,64),
+                        torch.nn.Linear(24,200),
                         torch.nn.ReLU(),
-                        torch.nn.Linear(64,64),
+                        torch.nn.Linear(200,200),
                         torch.nn.ReLU(),
-                        torch.nn.Linear(64,32),
+                        torch.nn.Linear(200,32),
                         torch.nn.ReLU(),
                         torch.nn.Linear(32,1),
                         torch.nn.Sigmoid()
@@ -80,7 +80,7 @@ def training(train_loader,val_loader,losses,val_losses,loaded_epoch,name):
                                 tepoch.set_description(f"Epoch {epoch}")
                                 n_features = vector.size()[1]-1
                                 features, label = vector[:,:n_features],vector[:,n_features]
-                                print(features.size(),label.size())
+                                #print(features.size(),label.size())
                                 if gpu_boole:
                                         features,label = features.cuda(),label.cuda()
 
@@ -189,8 +189,9 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
                         "jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", "bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef",
                         "jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef", "label"]
         bkg1.columns = sig.columns
-
-
+        sig.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
+        bkg1.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
+        print(sig.shape, bkg1.shape)
         print("Min, max m_tt in sig: ", sig['m_tau1tau2'].min(), sig['m_tau1tau2'].max() )
         print("Min, max m_tt in bkg1: ", bkg1['m_tau1tau2'].min(), bkg1['m_tau1tau2'].max() )
 
@@ -211,7 +212,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         #bkg1_bkgregion = pd.concat([bkg1[bkg1['m_tau1tau2']< m_tt_min], bkg1[bkg1['m_tau1tau2'] >= m_tt_max]])
         print("No. of bkg samples in data and pure bkg")
         print(bkg1_sigregion.shape[0], bkg1_bkgregion.shape[0])
-        print("bkg1_sigregion",bkg1_sigregion,"bkg1_bkgregion",bkg1_bkgregion)
+        #print("bkg1_sigregion",bkg1_sigregion,"bkg1_bkgregion",bkg1_bkgregion)
         # We want to ensure that the sig/bkg ratio in the "data" is realistic and small
         # choose at random signal samples to inject into the data 
 
@@ -278,7 +279,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
 
         print("Final samples before training starts")
         print("%s: train, val, test shapes: "%name,train_ws.shape, val_ws.shape, test_ws.shape)
-
+        print(train, train_ws)
         return train, val, test, train_ws, val_ws, test_ws
 
 parser = ArgumentParser(description='Train sig vs bkg for identifying CATHODE vars')
@@ -315,6 +316,8 @@ bkg_sig_frac = options.bkg_frac
 m_tt_min = options.m_tt_min
 m_tt_max = options.m_tt_max
 epoch_to_load = options.epoch_to_load
+
+ 
 
 gpu_boole = torch.cuda.is_available()
 print("Is GPU available? ",gpu_boole)
