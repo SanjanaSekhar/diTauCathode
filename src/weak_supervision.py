@@ -317,7 +317,7 @@ m_tt_min = options.m_tt_min
 m_tt_max = options.m_tt_max
 epoch_to_load = options.epoch_to_load
 
- 
+if options.full_supervision: name += "_fs" 
 
 gpu_boole = torch.cuda.is_available()
 print("Is GPU available? ",gpu_boole)
