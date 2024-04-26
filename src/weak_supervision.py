@@ -23,10 +23,10 @@ from sklearn.model_selection import train_test_split
 import numpy as np 
 from sklearn.metrics import roc_curve
 
-ending = "041224"
-name = "PhivsDY"
-load_model = True
-train_model = False
+ending = "042524"
+name = "Phi250vsDY"
+load_model = False
+train_model = True
 test_model = True
 early_stop = 5
 batch_size = 16
@@ -45,9 +45,9 @@ class NN(torch.nn.Module):
 		super().__init__()
 
 		self.classifier = torch.nn.Sequential(
-			torch.nn.Linear(23,32),
+			torch.nn.Linear(33,64),
 			torch.nn.ReLU(),
-                        torch.nn.Linear(32,64),
+                        torch.nn.Linear(64,64),
                         torch.nn.ReLU(),
 			torch.nn.Linear(64,32),
 			torch.nn.ReLU(),
@@ -92,7 +92,8 @@ def training(train_loader,val_loader,losses,val_losses,loaded_epoch,name):
 			model.train()
 			for vector in tepoch:
 				tepoch.set_description(f"Epoch {epoch}")
-				features, label = vector[:,:23],vector[:,23]
+				n_features = vector.size()[1]-1
+				features, label = vector[:,:n_features],vector[:,n_features]
 				if gpu_boole:
 					features,label = features.cuda(),label.cuda()
 
@@ -130,7 +131,8 @@ def training(train_loader,val_loader,losses,val_losses,loaded_epoch,name):
 
 		for vector in val_loader:
 			model.eval()
-			features, label = vector[:,:23],vector[:,23]
+			n_features = vector.size()[1]-1
+			features, label = vector[:,:n_features],vector[:,n_features]
 			if gpu_boole:
 				features,label = features.cuda(),label.cuda()
 			
@@ -164,7 +166,8 @@ def testing(test_loader_ws, test_true, name):
 	test_loss_per_epoch = 0.
 	test_losses = []
 	for vector in test_loader_ws:
-		features, label = vector[:,:23],vector[:,23]
+		n_features = vector.size()[1]-1
+		features, label = vector[:,:n_features],vector[:,n_features]
 		if gpu_boole:
 			features,label = features.cuda(),label.cuda()
 		prediction = model.forward(features)
@@ -192,8 +195,9 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
 	# jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, isSig
 	print(sig.shape, bkg1.shape)
 	sig.columns = ["tau1_pt", "tau1_eta", "tau1_phi", "tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m",
-					"m_tau1tau2", "met_met", "met_eta", "met_phi", "n_jets", "n_bjets",
-					"jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", "bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef", "label"]
+			"m_tau1tau2", "met_met", "met_eta", "met_phi", "n_jets", "n_bjets",
+			"jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", "bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef",
+			"jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef", "label"]
 	bkg1.columns = sig.columns
 
 
@@ -236,7 +240,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
 	bkg1_sigregion_ws = bkg1_sigregion.copy()
 	bkg1_sigregion_ws.loc[:,'label'] = 1
 
-	feature_select(pd.concat([bkg1_sigregion,sig_to_inject_bkg1]), k = 7)
+	#feature_select(pd.concat([bkg1_sigregion,sig_to_inject_bkg1]), k = 7)
 	# sig_to_inject_bkg1 and sig_to_inject_bkg1_ws both have label = 1
 	sig_to_inject_bkg1_ws = sig_to_inject_bkg1.copy()
 	sig_to_inject_bkg1 = sig_to_inject_bkg1.drop(['m_tau1tau2'],axis=1).to_numpy()
@@ -286,7 +290,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
 
 	return train, val, test, train_ws, val_ws, test_ws
 
-sig = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/2HDM-vbfPhiToTauTau-M750_2J_MinMass120_NoMisTag.csv", lineterminator='\n')
+sig = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag.csv", lineterminator='\n')
 bkg1 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/SM_dyToTauTau_0J1J2J_MinMass120_NoMisTag.csv",lineterminator='\n')
 bkg2 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv",lineterminator='\n')
 
@@ -329,8 +333,9 @@ from sklearn.feature_selection import chi2
 
 def feature_select(vector,k = 7):
 	vector = vector.drop(['m_tau1tau2'],axis=1)
-	x = vector.iloc[:,0:23]
-	y = vector.iloc[:,23]
+	n_features = len(vector.columns)-1
+	x = vector.iloc[:,0:n_features]
+	y = vector.iloc[:,n_features]
 	bestfeatures = SelectKBest(score_func=chi2, k = k)
 	fit = bestfeatures.fit(x,y)
 	dfscores = pd.DataFrame(fit.scores_)
@@ -338,21 +343,21 @@ def feature_select(vector,k = 7):
 	#concat two dataframes for better visualization 
 	featureScores = pd.concat([dfcolumns,dfscores],axis=1)
 	featureScores.columns = ['Specs','Score']  #naming the dataframe columns
-	print(featureScores.nlargest(10,'Score')) 
+	print(featureScores.nlargest(k,'Score')) 
 
 
-name = "PhivsDY"
+name = "Phi250vsDY"
 if load_model:	loaded_epoch, losses, val_losses = load_trained_model(name, epoch = 3)
 else:
 	loaded_epoch = 0
 	losses,val_losses = [],[]
-train, val, test, train_ws, val_ws, test_ws = make_train_test_val_ws(sig,bkg1,m_tt_min = 350.,m_tt_max = 1000.,sig_injection = 0.2,bkg_sig_frac = 5,name = name)
+train, val, test, train_ws, val_ws, test_ws = make_train_test_val_ws(sig,bkg1,m_tt_min = 120.,m_tt_max = 400.,sig_injection = 0.2,bkg_sig_frac = 5,name = name)
 train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
 train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
 if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
 if test_model: testing(test_loader_ws, test, name)
 
-name = "PhivsDY_fs"
+name = "Phi250vsDY_fs"
 if load_model:	loaded_epoch, losses, val_losses = load_trained_model(name, epoch = 3)
 else:
 	loaded_epoch = 0
@@ -360,7 +365,7 @@ else:
 if train_model: training(train_loader,val_loader,losses,val_losses,loaded_epoch,name)
 if test_model: testing(test_loader, test, name)
 
-name = "Phivsttbar"
+name = "Phi250vsttbar"
 if load_model:	loaded_epoch, losses, val_losses = load_trained_model(name, epoch = 3)
 else:
 	loaded_epoch = 0
