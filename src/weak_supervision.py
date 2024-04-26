@@ -80,6 +80,7 @@ def training(train_loader,val_loader,losses,val_losses,loaded_epoch,name):
 				tepoch.set_description(f"Epoch {epoch}")
 				n_features = vector.size()[1]-1
 				features, label = vector[:,:n_features],vector[:,n_features]
+				print(features.size(),label.size())
 				if gpu_boole:
 					features,label = features.cuda(),label.cuda()
 
