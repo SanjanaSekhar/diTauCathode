@@ -62,6 +62,7 @@ int create_dataset(string file_n, int label) {
         int n_jets, n_bjets;
 	float tau1_ncharged, tau1_nneutrals, tau1_ehadeem, tau2_ncharged, tau2_nneutrals, tau2_ehadeem;
 	float jet1_pt, jet1_eta, jet1_phi, bjet1_pt, bjet1_eta, bjet1_phi, jet1_ehadeem, bjet1_ehadeem, jet1_cef, jet1_nef, bjet1_cef, bjet1_nef;
+	float jet2_pt, jet2_eta, jet2_phi, bjet2_pt, bjet2_eta, bjet2_phi, jet2_ehadeem, bjet2_ehadeem, jet2_cef, jet2_nef, bjet2_cef, bjet2_nef;
 	Float_t n_subj[5];
 	
 	std::cout << "Running on " << n_frac << " out of " << numberOfEntries << " events" << std::endl;
@@ -74,8 +75,8 @@ int create_dataset(string file_n, int label) {
 			std:cout << "Processing event " << entry << std::endl;
 			printf("No. of events with at least 1 tagged hadronic tau jets = %i\n",numTauJet1s);
 			printf("No. of events with at least 2 tagged hadronic tau jets = %i\n",numTauJet2s);
-			printf("No. of events with 1 gen tau- jet = %i\n",numGenTau1s);
-			printf("No. of events with 1 gen tau+ jet = %i\n",numGenTau2s);
+			//printf("No. of events with 1 gen tau- jet = %i\n",numGenTau1s);
+			//printf("No. of events with 1 gen tau+ jet = %i\n",numGenTau2s);
 
 		
 		}
@@ -88,84 +89,73 @@ int create_dataset(string file_n, int label) {
 		jet1_pt = 9999999.; bjet1_pt = 9999999.;
 		jet1_eta = 0., jet1_phi = 0., bjet1_eta = 0., bjet1_phi = 0.,jet1_ehadeem = 0, bjet1_ehadeem = 0.;
 		jet1_cef = 0., jet1_nef = 0.,bjet1_cef = 0., bjet1_nef = 0.; 
-		//printf("No. of gen particles in this event: %i\n",branchParticle->GetEntries());
-		// for (int y=0; y < branchGenJet->GetEntries();++y){
-		// 	Jet *gjet = (Jet*) branchGenJet->At(y); 
-		// 	if (!gjet or gjet->TauTag != 1) continue;        
-		// 	if (gjet->TauTag == 1 and !filledGenTau) ++numGenTauJet1s;
-		// 	for (int z = 0; z < branchGenJet->GetEntries(); ++z) {
-		// 		auto* gjet2 = static_cast<Jet*>(branchGenJet->At(z));
-		// 		if (!gjet2 || gjet == gjet2) continue;
-		// 		if (gjet2->TauTag == 1) {
-		// 			if (!filledGenTau) {  
-		// 				++numGenTauJet2s;
-		// 				filledGenTau = true;
-		// 			}}
-		// 		}
-		// 	}      
+		jet2_pt = 9999999.; bjet2_pt = 9999999.;
+                jet2_eta = 0., jet2_phi = 0., bjet2_eta = 0., bjet2_phi = 0.,jet2_ehadeem = 0, bjet2_ehadeem = 0.;
+                jet2_cef = 0., jet2_nef = 0.,bjet2_cef = 0., bjet2_nef = 0.;
 		
+			
+			
+			for (int i = 0; i < branchJet->GetEntries(); i++){
+				 Jet *jet = (Jet*) branchJet->At(i);
+				if (jet->BTag == 1) n_bjets++;
+				else {if (jet->TauTag == 0) n_jets++;}
+			}
+			Double_t jet_pt[n_jets], bjet_pt[n_bjets];
 
-				  
-		//printf("No. of gen tau- babies = %i, no. of gen tau+ babies = %i\n",numGenTau1s,numGenTau2s);
-
-		/*
-			for (int m=0; m < branchParticle->GetEntries();++m){
-				if(found_gtau1 and found_gtau2) break;
-				GenParticle *p = (GenParticle*) branchParticle->At(m);
-				// only select final state electrons or muons
-				//cout << "PID of p: " << p->PID << "\n";
-				if(!p or p->Status!=1) continue;
-				if(p->PID == 11 or p->PID == 13 or p->PID == -11 or p->PID == -13){
-				//cout << "PID of p: " << p->PID << "\n";
-				GenParticle *genMom = getMother(branchParticle, p);
-
-				if(genMom->PID == 15 and !found_gtau1) {
-						numGenTau1s++; 
-				  	found_gtau1=true;
-					GenParticle *d1 = (GenParticle*) branchParticle->At(genMom->D1);
-					GenParticle *d2 = (GenParticle*) branchParticle->At(genMom->D2);
-				  	//cout << "ID of tau- daughters: " << d1->PID << " " << d2->PID << endl;
-
-				  }
-				if(genMom->PID == -15 and !found_gtau2) {
-						numGenTau2s++; 
-						found_gtau2=true;
-						GenParticle *d1 = (GenParticle*) branchParticle->At(genMom->D1);
-                                        GenParticle *d2 = (GenParticle*) branchParticle->At(genMom->D2);
-                                        //cout << "ID of tau- daughters: " << d1->PID << " " << d2->PID << endl;
-				}	}
-
-			}   
-		//printf("No. of gen tau- babies = %i, no. of gen tau+ babies = %i\n",numGenTau1s,numGenTau2s);
-		*/
+			int j = 0, k = 0;
+			for (int i = 0; i < branchJet->GetEntries(); i++){
+				 Jet *jet = (Jet*) branchJet->At(i);
+                                if (jet->BTag == 1) {bjet_pt[j] = jet->PT; j++;}
+                                else {if (jet->TauTag == 0) {jet_pt[k] = jet->PT; k++;}}
+                        }
+			Int_t sorted_jet_idx[n_jets], sorted_bjet_idx[n_bjets];
+			if(n_jets > 1) TMath::Sort(n_jets, jet_pt, sorted_jet_idx);
+			if(n_bjets > 1) TMath::Sort(n_bjets, bjet_pt, sorted_bjet_idx);
 			for (int i = 0; i < branchJet->GetEntries(); ++i) {
 
 					Jet *jet = (Jet*) branchJet->At(i);
-
+					MissingET *met = (MissingET*) branchMET->At(0);
 				if (!jet) continue;
-				if (jet->BTag == 1) {
-					n_bjets ++;
-					if(bjet1_pt > jet->PT) {
+				if (jet->BTag == 1){
+					if(n_bjets > 0 and jet->PT == bjet_pt[sorted_bjet_idx[0]]) {
+					
 						bjet1_pt = jet->PT;
 						bjet1_eta = jet->Eta;
 						bjet1_phi = jet->Phi;
 						bjet1_ehadeem = jet->EhadOverEem;
 						bjet1_nef = jet->NeutralEnergyFraction;
 						bjet1_cef = jet->ChargedEnergyFraction;
-						}
 					}
-				else if (jet->TauTag == 0) {
-					n_jets ++;
-					if(jet1_pt > jet->PT) {
+					else{ if(n_bjets > 1 and jet->PT == bjet_pt[sorted_bjet_idx[1]]) {
+
+                                                bjet2_pt = jet->PT;
+                                                bjet2_eta = jet->Eta;
+                                                bjet2_phi = jet->Phi;
+                                                bjet2_ehadeem = jet->EhadOverEem;
+                                                bjet2_nef = jet->NeutralEnergyFraction;
+                                                bjet2_cef = jet->ChargedEnergyFraction;
+                                        }}
+				}
+				else{ if(jet->TauTag == 0) {
+					
+					if(n_jets > 0 and jet->PT == jet_pt[sorted_jet_idx[0]]) {
 						jet1_pt = jet->PT;
 						jet1_eta = jet->Eta;
 						jet1_phi = jet->Phi;
 						jet1_ehadeem = jet->EhadOverEem;
 						jet1_nef = jet->NeutralEnergyFraction;	
 						jet1_cef = jet->ChargedEnergyFraction;	
-						}
 					}
-				if (jet->TauTag == 1 and !filledTau) {
+					else{ if(n_jets > 1 and jet->PT == jet_pt[sorted_jet_idx[1]]) {
+                                                jet2_pt = jet->PT;
+                                                jet2_eta = jet->Eta;
+                                                jet2_phi = jet->Phi;
+                                                jet2_ehadeem = jet->EhadOverEem;
+                                                jet2_nef = jet->NeutralEnergyFraction;
+                                                jet2_cef = jet->ChargedEnergyFraction;
+					}}
+				}}
+				else{ if(jet->TauTag == 1 and !filledTau) {
 					++numTauJet1s;
 					tau1_pt = jet->PT;
 					tau1_eta = jet->Eta;
@@ -182,10 +172,11 @@ int create_dataset(string file_n, int label) {
 
 					for (int j = 0; j < branchJet->GetEntries(); ++j) {
 						auto* jet2 = static_cast<Jet*>(branchJet->At(j));
-						if (!jet2 || jet == jet2) continue;
+						if (!jet2) continue;
+					
+						
 
-
-					if (jet2->TauTag == 1 and !filledTau) {
+					if (jet2->TauTag == 1 and jet!=jet2) {
 							m_tau1tau2 = (jet->P4() + jet2->P4()).M();
 							tau2_pt = jet2->PT;
 							tau2_eta = jet2->Eta;
@@ -202,16 +193,21 @@ int create_dataset(string file_n, int label) {
 					}
 				}
 			}
+		}}
 			if(filledTau) {
 				//printf("n_jets = %i,jet1_pt = %.2f, jet1_eta = %.2f, jet1_phi = %.2f, n_bjets = %i, bjet1_pt = %.2f, bjet1_eta = %.2f, bjet1_phi = %.2f\n",n_jets,jet1_pt, jet1_eta, jet1_phi,bjet1_pt, bjet1_eta, bjet1_phi, n_bjets);
 				if (n_jets == 0) {jet1_pt = 0., jet1_eta = 0., jet1_phi = 0., jet1_ehadeem = 0.;}
 				if (n_bjets == 0) {bjet1_pt = 0., bjet1_eta = 0., bjet1_phi = 0., bjet1_ehadeem = 0.;}
+				if (n_jets == 1) {jet2_pt = 0., jet2_eta = 0., jet2_phi = 0., jet2_ehadeem = 0.;}
+                                if (n_bjets == 1) {bjet2_pt = 0., bjet2_eta = 0., bjet2_phi = 0., bjet2_ehadeem = 0.;}
 				//if (jet1_ehadeem > 900) printf("jet1_pt, jet1_eta, jet1_phi, jet1_ehadeem, jet1_nef, jet1_cef = %f, %f, %f, %f, %f, %f\n",jet1_pt, jet1_eta, jet1_phi, jet1_ehadeem,jet1_nef, jet1_cef);
 				//if (bjet1_ehadeem > 900) printf("bjet1_pt, bjet1_eta, bjet1_phi, bjet1_ehadeem, bjet1_nef, bjet1_cef = %f, %f, %f, %f, %f, %f\n",bjet1_pt, bjet1_eta, bjet1_phi, bjet1_ehadeem,bjet1_nef, bjet1_cef);
 				//printf("tau1_ncharged, tau1_nneutrals, tau1_ehadeem, tau1_ncharged, tau1_nneutrals, tau2_ehadeem = %f,%f,%f,%f,%f,%f\n",tau1_ncharged, tau1_nneutrals, tau1_ehadeem, tau1_ncharged, tau1_nneutrals, tau2_ehadeem);	
-				fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i\n", tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, 
+				fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i\n", 
+					tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, 
 					tau2_m, m_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
-					jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, isSig);
+					jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, 
+					jet2_pt, jet2_eta, jet2_phi, jet2_cef, jet2_nef, bjet2_pt, bjet2_eta, bjet2_phi, bjet2_cef, bjet2_nef, isSig);
 	//printf("No. of tau jets = %i\n",numTauJets);  
 				}
 				/*
@@ -333,8 +329,8 @@ int create_dataset(string file_n, int label) {
 			}
 			printf("No. of events with at least 1 tagged tau jets = %i\n",numTauJet1s);
 			printf("No. of events with at least 2 tagged tau jets = %i\n",numTauJet2s);
-			printf("No. of events with 1 gen tau- jet = %i\n",numGenTau1s);
-			printf("No. of events with 1 gen tau+ jet = %i\n",numGenTau2s);
+			//printf("No. of events with 1 gen tau- jet = %i\n",numGenTau1s);
+			//printf("No. of events with 1 gen tau+ jet = %i\n",numGenTau2s);
 			return 1;
 		}
 // Taken from readDelphes.C
