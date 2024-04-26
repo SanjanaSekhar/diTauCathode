@@ -70,8 +70,8 @@ int create_dataset(string file_n, int label) {
 	int numTauJet1s = 0, numTauJet2s = 0, numGenTau1s = 0, numGenTau2s = 0, numGenTauJet1s = 0, numGenTauJet2s = 0;
 	
 //  numberOfEntries = 1000;
-	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
-	//for (Long64_t entry = 0; entry < n_frac; ++entry) {	
+	//for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
+	for (Long64_t entry = 0; entry < n_frac; ++entry) {	
 		if (entry % 20000 == 0) {
 			std:cout << "Processing event " << entry << std::endl;
 			printf("No. of events with at least 1 tagged hadronic tau jets = %i\n",numTauJet1s);
@@ -101,6 +101,7 @@ int create_dataset(string file_n, int label) {
 				if (jet->BTag == 1) n_bjets++;
 				else {if (jet->TauTag == 0) n_jets++;}
 			}
+			cout << "n_jets = " << n_jets << " n_bjets = " << n_bjets<< endl;
 			if(n_jets > 0) {
 			Double_t jet_pt[n_jets];
 
@@ -111,8 +112,12 @@ int create_dataset(string file_n, int label) {
                                 if (jet->TauTag == 0) {jet_pt[k] = jet->PT; k++;}
                         }
 			Int_t sorted_jet_idx[n_jets];
-			if(n_jets > 1) TMath::Sort(n_jets, jet_pt, sorted_jet_idx);
-			//if(n_bjets > 1) TMath::Sort(n_bjets, bjet_pt, sorted_bjet_idx);
+			if(n_jets > 1) {
+				TMath::Sort(n_jets, jet_pt, sorted_jet_idx);
+				//if(n_bjets > 1) TMath::Sort(n_bjets, bjet_pt, sorted_bjet_idx);
+				for(int i = 0; i < n_jets; i++)
+					cout << sorted_jet_idx[i] << " ";
+				}
 			}
 			if(n_bjets > 0){
 			Double_t bjet_pt[n_bjets];
@@ -125,7 +130,11 @@ int create_dataset(string file_n, int label) {
                         }
                         Int_t sorted_bjet_idx[n_bjets];
                         //if(n_jets > 1) TMath::Sort(n_jets, jet_pt, sorted_jet_idx);
-                        if(n_bjets > 1) TMath::Sort(n_bjets, bjet_pt, sorted_bjet_idx);
+                        if(n_bjets > 1) {
+				TMath::Sort(n_bjets, bjet_pt, sorted_bjet_idx);
+				for(int i = 0; i < n_bjets; i++)
+					cout << sorted_bjet_idx[i] << " ";
+				}
 			}
 
 			for (int i = 0; i < branchJet->GetEntries(); ++i) {
@@ -215,8 +224,8 @@ int create_dataset(string file_n, int label) {
 				//printf("n_jets = %i,jet1_pt = %.2f, jet1_eta = %.2f, jet1_phi = %.2f, n_bjets = %i, bjet1_pt = %.2f, bjet1_eta = %.2f, bjet1_phi = %.2f\n",n_jets,jet1_pt, jet1_eta, jet1_phi,bjet1_pt, bjet1_eta, bjet1_phi, n_bjets);
 				if (n_jets == 0) {jet1_pt = 0., jet1_eta = 0., jet1_phi = 0., jet1_ehadeem = 0.;}
 				if (n_bjets == 0) {bjet1_pt = 0., bjet1_eta = 0., bjet1_phi = 0., bjet1_ehadeem = 0.;}
-				if (n_jets == 1) {jet2_pt = 0., jet2_eta = 0., jet2_phi = 0., jet2_ehadeem = 0.;}
-                                if (n_bjets == 1) {bjet2_pt = 0., bjet2_eta = 0., bjet2_phi = 0., bjet2_ehadeem = 0.;}
+				if (n_jets < 2) {jet2_pt = 0., jet2_eta = 0., jet2_phi = 0., jet2_ehadeem = 0.;}
+                                if (n_bjets < 2) {bjet2_pt = 0., bjet2_eta = 0., bjet2_phi = 0., bjet2_ehadeem = 0.;}
 				//if (jet1_ehadeem > 900) printf("jet1_pt, jet1_eta, jet1_phi, jet1_ehadeem, jet1_nef, jet1_cef = %f, %f, %f, %f, %f, %f\n",jet1_pt, jet1_eta, jet1_phi, jet1_ehadeem,jet1_nef, jet1_cef);
 				//if (bjet1_ehadeem > 900) printf("bjet1_pt, bjet1_eta, bjet1_phi, bjet1_ehadeem, bjet1_nef, bjet1_cef = %f, %f, %f, %f, %f, %f\n",bjet1_pt, bjet1_eta, bjet1_phi, bjet1_ehadeem,bjet1_nef, bjet1_cef);
 				//printf("tau1_ncharged, tau1_nneutrals, tau1_ehadeem, tau1_ncharged, tau1_nneutrals, tau2_ehadeem = %f,%f,%f,%f,%f,%f\n",tau1_ncharged, tau1_nneutrals, tau1_ehadeem, tau1_ncharged, tau1_nneutrals, tau2_ehadeem);	
