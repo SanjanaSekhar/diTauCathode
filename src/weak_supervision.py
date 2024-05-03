@@ -384,9 +384,12 @@ def feature_select(vector,name,k = 7):
         x = vector[:,0:n_features]
         y = vector[:,n_features]
         bestfeatures = SelectKBest(score_func=f_classif, k = k)
-        fit = bestfeatures.fit(x,y)
-        scores = -np.log10(bestfeatures.pvalues_)
-        scores /= scores.max()
+        bestfeatures.fit(x,y)
+        print(bestfeatures.pvalues_)
+        scores = [ 0 if pvalue == 0 else -np.log10(pvalue) for pvalue in bestfeatures.pvalues_] 
+        #scores = -np.log10(bestfeatures.pvalues_)
+        print(scores)
+        scores /= max(scores)
         plt.bar(range(0,n_features), scores, width=0.2)
         plt.title("Feature univariate score")
         plt.xlabel("Feature number")
