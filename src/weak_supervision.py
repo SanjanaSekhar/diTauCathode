@@ -387,7 +387,7 @@ def feature_select(vector,name,k = 7):
         fit = bestfeatures.fit(x,y)
         scores = -np.log10(bestfeatures.pvalues_)
         scores /= scores.max()
-        plt.bar(np.range(0,n_features+1), scores, width=0.2)
+        plt.bar(range(0,n_features), scores, width=0.2)
         plt.title("Feature univariate score")
         plt.xlabel("Feature number")
         plt.ylabel(r"Univariate score ($-Log(p_{value})$)")
