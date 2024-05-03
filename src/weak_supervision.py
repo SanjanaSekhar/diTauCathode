@@ -234,7 +234,9 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         
         # sig_to_inject_bkg1 and sig_to_inject_bkg1_ws both have label = 1
         sig_to_inject_bkg1_ws = sig_to_inject_bkg1.copy()
-        sig_to_inject_bkg1 = sig_to_inject_bkg1.drop(['m_tau1tau2'],axis=1).to_numpy()
+        sig_to_inject_bkg1 = sig_to_inject_bkg1.drop(['m_tau1tau2'],axis=1)
+        feature_list = sig_to_inject_bkg1.columns
+        sig_to_inject_bkg1 = sig_to_inject_bkg1.to_numpy()
         sig_to_inject_bkg1_ws = sig_to_inject_bkg1_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
         bkg1_sigregion_ws = bkg1_sigregion_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
         bkg1_sigregion = bkg1_sigregion.drop(['m_tau1tau2'],axis=1).to_numpy()  
@@ -280,7 +282,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         print("Final samples before training starts")
         print("%s: train, val, test shapes: "%name,train_ws.shape, val_ws.shape, test_ws.shape)
         print(train, train_ws)
-        return train, val, test, train_ws, val_ws, test_ws
+        return train, val, test, train_ws, val_ws, test_ws, feature_list
 
 parser = ArgumentParser(description='Train sig vs bkg for identifying CATHODE vars')
 parser.add_argument("--name",  default="Phi250vsDY", help="file name extension for residuals and pulls")
@@ -378,7 +380,7 @@ def load_trained_model(name, epoch):
 from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.feature_selection import chi2
 
-def feature_select(vector,name,k = 7):
+def feature_select(vector, name, feature_list, k = 7):
         #vector = vector.drop(['m_tau1tau2'],axis=1)
         n_features = vector.shape[1]-1
         x = vector[:,0:n_features]
@@ -390,9 +392,11 @@ def feature_select(vector,name,k = 7):
         #scores = -np.log10(bestfeatures.pvalues_)
         print(scores)
         scores /= max(scores)
-        plt.bar(range(0,n_features), scores, width=0.2)
+        print(feature_list)
+        plt.bar(feature_list, scores, width=0.2)
         plt.title("Feature univariate score")
-        plt.xlabel("Feature number")
+        plt.xlabel("Features")
+        plt.xticks(rotation=90)
         plt.ylabel(r"Univariate score ($-Log(p_{value})$)")
         plt.savefig("feature_importance_%s.png"%name)
         plt.close()
@@ -411,12 +415,12 @@ else:
         loaded_epoch = 0
         losses,val_losses = [],[]
 
-train, val, test, train_ws, val_ws, test_ws = make_train_test_val_ws(sig, bkg1, m_tt_min, m_tt_max, sig_injection, bkg_sig_frac, name)
+train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(sig, bkg1, m_tt_min, m_tt_max, sig_injection, bkg_sig_frac, name)
 train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
 train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
 
 if options.feature_imp:
-        feature_select(train, name, k = options.choose_n_features)
+        feature_select(train, name, feature_list, k = options.choose_n_features)
 
 if not options.full_supervision:
         if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
