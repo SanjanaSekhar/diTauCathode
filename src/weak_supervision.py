@@ -330,12 +330,12 @@ if "DY" in name:
 	options.bkg = "SM_dyToTauTau_0J1J2J_MinMass120_NoMisTag"
 if "Phi250" in name:
 	options.sig = "2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag"
-	m_tt_min = 120.
-	m_tt_max = 500.
+	m_tt_min = 0.
+	m_tt_max = 2500.
 if "Phi750" in name:
 	options.sig = "2HDM-vbfPhiToTauTau-M750_2J_MinMass120_NoMisTag"
-	m_tt_min = 350.
-	m_tt_max = 1000.
+	m_tt_min = 0.
+	m_tt_max = 2500.
 
 sig = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.sig, lineterminator='\n')
 bkg1 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.bkg,lineterminator='\n')
