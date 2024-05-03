@@ -282,7 +282,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         print("Final samples before training starts")
         print("%s: train, val, test shapes: "%name,train_ws.shape, val_ws.shape, test_ws.shape)
         print(train, train_ws)
-        return train, val, test, train_ws, val_ws, test_ws, feature_list
+        return train, val, test, train_ws, val_ws, test_ws, feature_list.to_list()
 
 parser = ArgumentParser(description='Train sig vs bkg for identifying CATHODE vars')
 parser.add_argument("--name",  default="Phi250vsDY", help="file name extension for residuals and pulls")
@@ -392,6 +392,8 @@ def feature_select(vector, name, feature_list, k = 7):
         #scores = -np.log10(bestfeatures.pvalues_)
         print(scores)
         scores /= max(scores)
+    
+        del feature_list[-1]
         print(feature_list)
         plt.bar(feature_list, scores, width=0.2)
         plt.title("Feature univariate score")
