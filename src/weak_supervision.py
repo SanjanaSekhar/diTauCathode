@@ -31,7 +31,7 @@ class NN(torch.nn.Module):
                 super().__init__()
 
                 self.classifier = torch.nn.Sequential(
-                        torch.nn.Linear(27,200),
+                        torch.nn.Linear(9,200),
                         torch.nn.ReLU(),
                         torch.nn.Linear(200,200),
                         torch.nn.ReLU(),
@@ -189,8 +189,11 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
                         "jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", "bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef",
                         "jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef", "label"]
         bkg1.columns = sig.columns
-        sig.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
-        bkg1.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
+        #sig.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
+        #bkg1.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
+        
+        sig = sig[["pt_tau1tau2","met_met","jet1_pt","jet1_cef", "jet1_nef","bjet1_pt","jet2_pt","jet2_cef", "jet2_nef","m_tau1tau2","label"]]
+        bkg1 = bkg1[["pt_tau1tau2","met_met","jet1_pt","jet1_cef", "jet1_nef","bjet1_pt","jet2_pt","jet2_cef", "jet2_nef","m_tau1tau2","label"]]
         print(sig.shape, bkg1.shape)
         print("Min, max m_tt in sig: ", sig['m_tau1tau2'].min(), sig['m_tau1tau2'].max() )
         print("Min, max m_tt in bkg1: ", bkg1['m_tau1tau2'].min(), bkg1['m_tau1tau2'].max() )
@@ -301,7 +304,7 @@ parser.add_argument("--sig_injection",  default=0.2, type=float , help="percent 
 parser.add_argument("--bkg_frac",  default=5, type=float, help="n_bkg/n_sig")
 parser.add_argument("--m_tt_min",  default=120., type=float, help="lower boundary for sig region in ditau inv mass")
 parser.add_argument("--m_tt_max",  default=500., type=float, help="upper boundary for sig region in ditau inv mass")
-parser.add_argument("--feature_imp",  default=True, help="Plot feature_importance_")
+parser.add_argument("--feature_imp",  default=False, help="Plot feature_importance_")
 parser.add_argument("--choose_n_features",  default=6, type = int, help="extract n best features")
 options = parser.parse_args()
 

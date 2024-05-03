@@ -1,0 +1,13 @@
+usage: weak_supervision.py [-h] [--name NAME] [--sig SIG] [--bkg BKG]
+                           [--early_stop EARLY_STOP] [--batch_size BATCH_SIZE]
+                           [--n_epochs N_EPOCHS] [--ending ENDING]
+                           [--load_model LOAD_MODEL]
+                           [--epoch_to_load EPOCH_TO_LOAD]
+                           [--train_model TRAIN_MODEL]
+                           [--test_model TEST_MODEL]
+                           [--full_supervision FULL_SUPERVISION]
+                           [--sig_injection SIG_INJECTION]
+                           [--bkg_frac BKG_FRAC] [--m_tt_min M_TT_MIN]
+                           [--m_tt_max M_TT_MAX] [--feature_imp FEATURE_IMP]
+                           [--choose_n_features CHOOSE_N_FEATURES]
+weak_supervision.py: error: argument --n_epochs: expected one argument
