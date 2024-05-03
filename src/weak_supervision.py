@@ -395,6 +395,7 @@ def feature_select(vector, name, feature_list, k = 7):
     
         del feature_list[-1]
         print(feature_list)
+        plt.figure(figsize=(10,10))
         plt.bar(feature_list, scores, width=0.2)
         plt.title("Feature univariate score")
         plt.xlabel("Features")
