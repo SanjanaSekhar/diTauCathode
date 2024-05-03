@@ -21,14 +21,14 @@ def plot_features(sig,bkg1,bkg2):
 					"jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef", "label"]
 	bkg1.columns = sig.columns
 	bkg2.columns = sig.columns
-	pp = PdfPages('plots/Phi250_ttbar_DY_features.pdf')
+	pp = PdfPages('plots/Phi750_ttbar_DY_features.pdf')
 
 	for col in sig.columns:
 
 		plt.figure(figsize=(10,7))
 		plt.hist(bkg1[col], label = "DY + 0/1/2 jets", bins = 30, histtype = "step")
 		plt.hist(bkg2[col], label = "ttbar + 2 jets", bins = 30, histtype = "step")
-		plt.hist(sig[col], label = "VBF Phi + 2 jets, mass = 250 GeV", bins = 30, histtype = "step")
+		plt.hist(sig[col], label = "VBF Phi + 2 jets, mass = 750 GeV", bins = 30, histtype = "step")
 		plt.legend()
 		plt.title("Distribution of %s"%col)
 		plt.xlabel(col)
@@ -79,18 +79,25 @@ def plot_ROC_SIC(true_list1, pred_list1,name1,true_list2, pred_list2,name2):
 	plt.close()
 
 
-sig = pd.read_csv("csv_files/2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag.csv", lineterminator='\n')
+sig = pd.read_csv("csv_files/2HDM-vbfPhiToTauTau-M750_2J_MinMass120_NoMisTag.csv", lineterminator='\n')
 bkg1 = pd.read_csv("csv_files/SM_dyToTauTau_0J1J2J_MinMass120_NoMisTag.csv")
 bkg2 = pd.read_csv("csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv")
 
-plot_features(sig, bkg1, bkg2)
+#plot_features(sig, bkg1, bkg2)
 
-'''
-lists = np.loadtxt("losses/fpr_tpr_Phivsttbar.txt")
-lists2 = np.loadtxt("losses/fpr_tpr_Phivsttbar_fs.txt")
-plot_ROC_SIC(lists[0],lists[1], "Phivsttbar-weak_sup",lists2[0],lists2[1], "Phivsttbar-full_sup")
 
-lists = np.loadtxt("losses/fpr_tpr_PhivsDY.txt")
-lists2 = np.loadtxt("losses/fpr_tpr_PhivsDY_fs.txt")
-plot_ROC_SIC(lists[0],lists[1], "PhivsDY-weak_sup",lists2[0],lists2[1],"PhivsDY-full_sup")
-'''
+lists = np.loadtxt("losses/fpr_tpr_Phi250vsttbar.txt")
+lists2 = np.loadtxt("losses/fpr_tpr_Phi250vsttbar_fs.txt")
+plot_ROC_SIC(lists[0],lists[1], "Phi250vsttbar-IAD",lists2[0],lists2[1], "Phi250vsttbar-full_sup")
+
+lists = np.loadtxt("losses/fpr_tpr_Phi250vsDY.txt")
+lists2 = np.loadtxt("losses/fpr_tpr_Phi250vsDY_fs.txt")
+plot_ROC_SIC(lists[0],lists[1], "Phi250vsDY-IAD",lists2[0],lists2[1],"Phi250vsDY-full_sup")
+
+lists = np.loadtxt("losses/fpr_tpr_Phi750vsttbar.txt")
+lists2 = np.loadtxt("losses/fpr_tpr_Phi750vsttbar_fs.txt")
+plot_ROC_SIC(lists[0],lists[1], "Phi750vsttbar-IAD",lists2[0],lists2[1], "Phi750vsttbar-full_sup")
+
+lists = np.loadtxt("losses/fpr_tpr_Phi750vsDY.txt")
+lists2 = np.loadtxt("losses/fpr_tpr_Phi750vsDY_fs.txt")
+plot_ROC_SIC(lists[0],lists[1], "Phi750vsDY-IAD",lists2[0],lists2[1],"Phi750vsDY-full_sup")

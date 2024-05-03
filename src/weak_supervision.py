@@ -231,7 +231,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         bkg1_sigregion_ws = bkg1_sigregion.copy()
         bkg1_sigregion_ws.loc[:,'label'] = 1
 
-        #feature_select(pd.concat([bkg1_sigregion,sig_to_inject_bkg1]), k = 7)
+        
         # sig_to_inject_bkg1 and sig_to_inject_bkg1_ws both have label = 1
         sig_to_inject_bkg1_ws = sig_to_inject_bkg1.copy()
         sig_to_inject_bkg1 = sig_to_inject_bkg1.drop(['m_tau1tau2'],axis=1).to_numpy()
@@ -276,7 +276,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         val_ws = np.vstack((val_ws,val_bkg1))
         test_ws = np.vstack((test_ws,test_bkg1))
 
-
+        
         print("Final samples before training starts")
         print("%s: train, val, test shapes: "%name,train_ws.shape, val_ws.shape, test_ws.shape)
         print(train, train_ws)
@@ -299,7 +299,8 @@ parser.add_argument("--sig_injection",  default=0.2, type=float , help="percent 
 parser.add_argument("--bkg_frac",  default=5, type=float, help="n_bkg/n_sig")
 parser.add_argument("--m_tt_min",  default=120., type=float, help="lower boundary for sig region in ditau inv mass")
 parser.add_argument("--m_tt_max",  default=500., type=float, help="upper boundary for sig region in ditau inv mass")
-
+parser.add_argument("--feature_imp",  default=True, help="Plot feature_importance_")
+parser.add_argument("--choose_n_features",  default=6, type = int, help="extract n best features")
 options = parser.parse_args()
 
 
@@ -374,23 +375,32 @@ def load_trained_model(name, epoch):
         '''
         return loaded_epoch, losses, val_losses
         
-from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.feature_selection import chi2
 
-def feature_select(vector,k = 7):
-        vector = vector.drop(['m_tau1tau2'],axis=1)
-        n_features = len(vector.columns)-1
-        x = vector.iloc[:,0:n_features]
-        y = vector.iloc[:,n_features]
-        bestfeatures = SelectKBest(score_func=chi2, k = k)
+def feature_select(vector,name,k = 7):
+        #vector = vector.drop(['m_tau1tau2'],axis=1)
+        n_features = vector.shape[1]-1
+        x = vector[:,0:n_features]
+        y = vector[:,n_features]
+        bestfeatures = SelectKBest(score_func=f_classif, k = k)
         fit = bestfeatures.fit(x,y)
+        scores = -np.log10(bestfeatures.pvalues_)
+        scores /= scores.max()
+        plt.bar(np.range(0,n_features+1), scores, width=0.2)
+        plt.title("Feature univariate score")
+        plt.xlabel("Feature number")
+        plt.ylabel(r"Univariate score ($-Log(p_{value})$)")
+        plt.savefig("feature_importance_%s.png"%name)
+        plt.close()
+        '''
         dfscores = pd.DataFrame(fit.scores_)
         dfcolumns = pd.DataFrame(x.columns)
         #concat two dataframes for better visualization 
         featureScores = pd.concat([dfcolumns,dfscores],axis=1)
         featureScores.columns = ['Specs','Score']  #naming the dataframe columns
         print(featureScores.nlargest(k,'Score')) 
-
+        '''
 
 
 if load_model:  loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load)
@@ -401,6 +411,9 @@ else:
 train, val, test, train_ws, val_ws, test_ws = make_train_test_val_ws(sig, bkg1, m_tt_min, m_tt_max, sig_injection, bkg_sig_frac, name)
 train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
 train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
+
+if options.feature_imp:
+        feature_select(train, name, k = options.choose_n_features)
 
 if not options.full_supervision:
         if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
