@@ -412,7 +412,7 @@ def feature_select(vector, name, feature_list, k = 7):
         print(featureScores.nlargest(k,'Score')) 
         '''
 
-
+if test_model: load_model = True
 if load_model:  loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load)
 else:
         loaded_epoch = 0
