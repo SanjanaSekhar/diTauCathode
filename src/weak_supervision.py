@@ -31,7 +31,7 @@ class NN(torch.nn.Module):
                 super().__init__()
 
                 self.classifier = torch.nn.Sequential(
-                        torch.nn.Linear(24,200),
+                        torch.nn.Linear(27,200),
                         torch.nn.ReLU(),
                         torch.nn.Linear(200,200),
                         torch.nn.ReLU(),
@@ -135,8 +135,8 @@ def training(train_loader,val_loader,losses,val_losses,loaded_epoch,name):
                 # EARLY STOPPING
                 flag = 0
                 if early_stop > 0 and epoch > loaded_epoch + early_stop:
-                        for e in range(early_stop):
-                                if val_losses[-e] > val_losses[-e-1]: flag += 1
+                        for e in range(1,early_stop+1):
+                                if val_losses[-e] > val_losses[-early_stop]: flag += 1
                         if flag == early_stop:
                                 print("STOPPING TRAINING EARLY, VAL LOSS HAS BEEN INCREASING FOR THE LAST %i EPOCHS"%early_stop)
                                 break
@@ -185,7 +185,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         # jet2_pt, jet2_eta, jet2_phi, jet2_cef, jet2_nef, bjet2_pt, bjet2_eta, bjet2_phi, bjet2_cef, bjet2_nef, isSig
         print(sig.shape, bkg1.shape)
         sig.columns = ["tau1_pt", "tau1_eta", "tau1_phi", "tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m",
-                        "m_tau1tau2", "met_met", "met_eta", "met_phi", "n_jets", "n_bjets",
+                        "m_tau1tau2","pt_tau1tau2", "eta_tau1tau2", "phi_tau1tau2", "met_met", "met_eta", "met_phi", "n_jets", "n_bjets",
                         "jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", "bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef",
                         "jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef", "label"]
         bkg1.columns = sig.columns
@@ -323,6 +323,18 @@ gpu_boole = torch.cuda.is_available()
 print("Is GPU available? ",gpu_boole)
 if load_model: print("Loading model... ")
 
+if "ttbar" in name :
+	options.bkg = "SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag"
+if "DY" in name:
+	options.bkg = "SM_dyToTauTau_0J1J2J_MinMass120_NoMisTag"
+if "Phi250" in name:
+	options.sig = "2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag"
+	m_tt_min = 120.
+	m_tt_max = 500.
+if "Phi750" in name:
+	options.sig = "2HDM-vbfPhiToTauTau-M750_2J_MinMass120_NoMisTag"
+	m_tt_min = 350.
+	m_tt_max = 1000.
 
 sig = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.sig, lineterminator='\n')
 bkg1 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.bkg,lineterminator='\n')
