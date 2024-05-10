@@ -287,75 +287,18 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         print(train, train_ws)
         return train, val, test, train_ws, val_ws, test_ws, feature_list.to_list()
 
-parser = ArgumentParser(description='Train sig vs bkg for identifying CATHODE vars')
-parser.add_argument("--name",  default="Phi250vsDY", help="file name extension for residuals and pulls")
-parser.add_argument("--sig", default="2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag", help = "name of the .csv file for the signal")
-parser.add_argument("--bkg",  default="SM_dyToTauTau_0J1J2J_MinMass120_NoMisTag", help="name of the .csv file for the bkg")
-parser.add_argument("--early_stop",  default=5, type = int, help="early stopping patience (no. of epochs)")
-parser.add_argument("--batch_size",  default=64, type = int, help="batch size for training")
-parser.add_argument("--n_epochs",  default=20, type = int, help="no. of epochs to train for")
-parser.add_argument("--ending",  default="042624", help="date")
-parser.add_argument("--load_model",  default=False, help="load saved model")
-parser.add_argument("--epoch_to_load",  default=3, type = int, help="load checkpoint corresponding to this epoch")
-parser.add_argument("--train_model",  default=False, help="train and save model")
-parser.add_argument("--test_model",  default=False, help="test model")
-parser.add_argument("--full_supervision",  default=False, help="Run fully supervised")
-parser.add_argument("--sig_injection",  default=0.2, type=float , help="percent of signal to inject into data")
-parser.add_argument("--bkg_frac",  default=5, type=float, help="n_bkg/n_sig")
-parser.add_argument("--m_tt_min",  default=120., type=float, help="lower boundary for sig region in ditau inv mass")
-parser.add_argument("--m_tt_max",  default=500., type=float, help="upper boundary for sig region in ditau inv mass")
-parser.add_argument("--feature_imp",  default=False, help="Plot feature_importance_")
-parser.add_argument("--choose_n_features",  default=6, type = int, help="extract n best features")
-options = parser.parse_args()
+from sklearn.preprocessing import StandardScaler
 
+def preprocess(train, val, test):
 
-ending = options.ending
-name = options.name
-load_model = options.load_model
-train_model = options.train_model
-test_model = options.test_model
-early_stop = options.early_stop
-batch_size = options.batch_size
-epochs = options.n_epochs
-sig_injection = options.sig_injection
-bkg_sig_frac = options.bkg_frac
-m_tt_min = options.m_tt_min
-m_tt_max = options.m_tt_max
-epoch_to_load = options.epoch_to_load
+        n_features = train.shape[1] - 1
+        scaler = StandardScaler()
+        scaler.fit(np.vstack((train,val,test))[:,0:n_features])
+        train[:,0:n_features] = scaler.transform(train[:,0:n_features])
+        test[:,0:n_features] = scaler.transform(test[:,0:n_features])
+        val[:,0:n_features] = scaler.transform(val[:,0:n_features])
 
-if options.full_supervision: name += "_fs" 
-
-gpu_boole = torch.cuda.is_available()
-print("Is GPU available? ",gpu_boole)
-if load_model: print("Loading model... ")
-
-if "ttbar" in name :
-	options.bkg = "SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag"
-if "DY" in name:
-	options.bkg = "SM_dyToTauTau_0J1J2J_MinMass120_NoMisTag"
-if "Phi250" in name:
-	options.sig = "2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag"
-	m_tt_min = 0.
-	m_tt_max = 2500.
-if "Phi750" in name:
-	options.sig = "2HDM-vbfPhiToTauTau-M750_2J_MinMass120_NoMisTag"
-	m_tt_min = 0.
-	m_tt_max = 2500.
-
-sig = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.sig, lineterminator='\n')
-bkg1 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.bkg,lineterminator='\n')
-#bkg2 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv",lineterminator='\n')
-
-model = NN()
-if gpu_boole: model = model.cuda()
-
-optimizer = torch.optim.Adam(model.parameters(),
-        lr = 1e-3,
-        weight_decay = 1e-8)
-
-loss_function = torch.nn.BCELoss()
-#loss_function = chamfer_distance()
-
+        return train, test, val
 
 # LOAD AN EXISTING MODEL 
 def load_trained_model(name, epoch):
@@ -412,8 +355,78 @@ def feature_select(vector, name, feature_list, k = 7):
         #concat two dataframes for better visualization 
         featureScores = pd.concat([dfcolumns,dfscores],axis=1)
         featureScores.columns = ['Specs','Score']  #naming the dataframe columns
-        print(featureScores.nlargest(k,'Score')) 
-        '''
+        print(featureScores.nlargest(k,'Score'))
+        ''' 
+
+parser = ArgumentParser(description='Train sig vs bkg for identifying CATHODE vars')
+parser.add_argument("--name",  default="Phi250vsDY", help="file name extension for residuals and pulls")
+parser.add_argument("--sig", default="2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag", help = "name of the .csv file for the signal")
+parser.add_argument("--bkg",  default="SM_dyToTauTau_0J1J2J_MinMass120_NoMisTag", help="name of the .csv file for the bkg")
+parser.add_argument("--early_stop",  default=5, type = int, help="early stopping patience (no. of epochs)")
+parser.add_argument("--batch_size",  default=64, type = int, help="batch size for training")
+parser.add_argument("--n_epochs",  default=20, type = int, help="no. of epochs to train for")
+parser.add_argument("--ending",  default="042624", help="date")
+parser.add_argument("--load_model",  default=False, help="load saved model")
+parser.add_argument("--epoch_to_load",  default=3, type = int, help="load checkpoint corresponding to this epoch")
+parser.add_argument("--train_model",  default=False, help="train and save model")
+parser.add_argument("--test_model",  default=False, help="test model")
+parser.add_argument("--full_supervision",  default=False, help="Run fully supervised")
+parser.add_argument("--sig_injection",  default=0.2, type=float , help="percent of signal to inject into data")
+parser.add_argument("--bkg_frac",  default=5, type=float, help="n_bkg/n_sig")
+parser.add_argument("--m_tt_min",  default=120., type=float, help="lower boundary for sig region in ditau inv mass")
+parser.add_argument("--m_tt_max",  default=500., type=float, help="upper boundary for sig region in ditau inv mass")
+parser.add_argument("--feature_imp",  default=False, help="Plot feature_importance_")
+parser.add_argument("--choose_n_features",  default=10, type = int, help="extract n best features")
+options = parser.parse_args()
+
+
+ending = options.ending
+name = options.name
+load_model = options.load_model
+train_model = options.train_model
+test_model = options.test_model
+early_stop = options.early_stop
+batch_size = options.batch_size
+epochs = options.n_epochs
+sig_injection = options.sig_injection
+bkg_sig_frac = options.bkg_frac
+m_tt_min = options.m_tt_min
+m_tt_max = options.m_tt_max
+epoch_to_load = options.epoch_to_load
+
+if options.full_supervision: name += "_fs" 
+
+gpu_boole = torch.cuda.is_available()
+print("Is GPU available? ",gpu_boole)
+if load_model: print("Loading model... ")
+
+if "ttbar" in name :
+	options.bkg = "SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag"
+if "DY" in name:
+	options.bkg = "SM_dyToTauTau_0J1J2J_MinMass120_1M"
+if "Phi250" in name:
+	options.sig = "2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag"
+	m_tt_min = 0.
+	m_tt_max = 2500.
+if "Phi750" in name:
+	options.sig = "2HDM-vbfPhiToTauTau-M750_2J_MinMass120_NoMisTag"
+	m_tt_min = 0.
+	m_tt_max = 2500.
+
+sig = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.sig, lineterminator='\n')
+bkg1 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.bkg,lineterminator='\n')
+#bkg2 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv",lineterminator='\n')
+
+model = NN()
+if gpu_boole: model = model.cuda()
+
+optimizer = torch.optim.Adam(model.parameters(),
+        lr = 1e-3,
+        weight_decay = 1e-8)
+
+loss_function = torch.nn.BCELoss()
+#loss_function = chamfer_distance()
+
 
 if test_model: load_model = True
 if load_model:  loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load)
@@ -426,7 +439,8 @@ train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,v
 train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
 
 if options.feature_imp:
-        feature_select(train, name, feature_list, k = options.choose_n_features)
+        if options.full_supervision: feature_select(train, name, feature_list, k = options.choose_n_features)
+        feature_select(train_ws, name, feature_list, k = options.choose_n_features)
 
 if not options.full_supervision:
         if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
