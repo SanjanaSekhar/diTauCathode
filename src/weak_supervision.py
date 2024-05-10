@@ -191,7 +191,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         bkg1.columns = sig.columns
         # deltaR of taus
         sig["deltaR_taus"] = ((sig["tau1_eta"]-sig["tau2_eta"]).pow(2) + (sig["tau1_phi"]-sig["tau2_phi"]).pow(2)).pow(0.5)
-        bkg["deltaR_taus"] = ((bkg["tau1_eta"]-bkg["tau2_eta"]).pow(2) + (bkg["tau1_phi"]-bkg["tau2_phi"]).pow(2)).pow(0.5)
+        bkg1["deltaR_taus"] = ((bkg1["tau1_eta"]-bkg1["tau2_eta"]).pow(2) + (bkg1["tau1_phi"]-bkg1["tau2_phi"]).pow(2)).pow(0.5)
         
         #sig.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
         #bkg1.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
@@ -442,7 +442,7 @@ loss_function = torch.nn.BCELoss()
 #loss_function = chamfer_distance()
 
 
-if test_model: load_model = True
+#if test_model: load_model = True
 if load_model:  loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load)
 else:
         loaded_epoch = 0
@@ -461,10 +461,14 @@ if options.feature_imp:
 
 if not options.full_supervision:
         if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
-        if test_model: testing(test_loader_ws, test, name)
+        if test_model:
+            loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load) 
+            testing(test_loader_ws, test, name)
 else:
         if train_model: training(train_loader,val_loader,losses,val_losses,loaded_epoch,name)
-        if test_model: testing(test_loader, test, name)
+        if test_model:
+            loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load) 
+            testing(test_loader, test, name)
 
 '''
 name = "Phi250vsDY_fs"
