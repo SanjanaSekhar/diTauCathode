@@ -380,6 +380,7 @@ parser.add_argument("--early_stop",  default=5, type = int, help="early stopping
 parser.add_argument("--batch_size",  default=64, type = int, help="batch size for training")
 parser.add_argument("--n_epochs",  default=20, type = int, help="no. of epochs to train for")
 parser.add_argument("--ending",  default="042624", help="date")
+parser.add_argument("--BDT",  default=False, help="Use HistGradientBoostingClassifier instead of NN")
 parser.add_argument("--load_model",  default=False, help="load saved model")
 parser.add_argument("--epoch_to_load",  default=3, type = int, help="load checkpoint corresponding to this epoch")
 parser.add_argument("--train_model",  default=False, help="train and save model")
@@ -431,15 +432,17 @@ sig = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.cs
 bkg1 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.bkg,lineterminator='\n')
 #bkg2 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv",lineterminator='\n')
 
-model = NN()
-if gpu_boole: model = model.cuda()
+if not options.BDT:
+        model = NN()
+        if gpu_boole: model = model.cuda()
 
-optimizer = torch.optim.Adam(model.parameters(),
-        lr = 1e-3,
-        weight_decay = 1e-8)
+        optimizer = torch.optim.Adam(model.parameters(),
+                lr = 1e-3,
+                weight_decay = 1e-8)
 
-loss_function = torch.nn.BCELoss()
-#loss_function = chamfer_distance()
+        loss_function = torch.nn.BCELoss()
+
+
 
 
 #if test_model: load_model = True
@@ -452,23 +455,43 @@ train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_
 train, val, test = preprocess(train, val, test)
 train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
 
-train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
-train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
+n_features = len(feature_list[:-1])
 
 if options.feature_imp:
         if options.full_supervision: feature_select(train, name, feature_list, k = options.choose_n_features)
         else: feature_select(train_ws, name, feature_list, k = options.choose_n_features)
 
-if not options.full_supervision:
-        if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
-        if test_model:
-            loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load) 
-            testing(test_loader_ws, test, name)
+if options.BDT:
+        from sklearn.ensemble import HistGradientBoostingClassifier
+        if options.full_supervision:
+                bdt = HistGradientBoostingClassifier().fit(train[:,:n_features],train[:,n_features])
+                pred_list = bdt.predict(test[:,:n_features])
+                true_list = test[:,-1]
+                # print(np.vstack((true_list,pred_list)))
+                np.savetxt("losses/fpr_tpr_bdt_%s.txt"%name,np.vstack((true_list,pred_list)))
+        else:
+                bdt = HistGradientBoostingClassifier().fit(train_ws[:,:n_features],train_ws[:,n_features])
+                pred_list = bdt.predict(test_ws[:,:n_features])
+                true_list = test_ws[:,-1]
+                # print(np.vstack((true_list,pred_list)))
+                np.savetxt("losses/fpr_tpr_bdt_%s.txt"%name,np.vstack((true_list,pred_list))) 
+
 else:
-        if train_model: training(train_loader,val_loader,losses,val_losses,loaded_epoch,name)
-        if test_model:
-            loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load) 
-            testing(test_loader, test, name)
+        train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
+        train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
+
+
+
+        if not options.full_supervision:
+                if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
+                if test_model:
+                    loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load) 
+                    testing(test_loader_ws, test, name)
+        else:
+                if train_model: training(train_loader,val_loader,losses,val_losses,loaded_epoch,name)
+                if test_model:
+                    loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load) 
+                    testing(test_loader, test, name)
 
 '''
 name = "Phi250vsDY_fs"
