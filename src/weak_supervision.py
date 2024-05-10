@@ -189,11 +189,12 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
                         "jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", "bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef",
                         "jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef", "label"]
         bkg1.columns = sig.columns
-        #sig.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
-        #bkg1.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
+        sig.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
+        bkg1.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
         
-        sig = sig[["pt_tau1tau2","met_met","jet1_pt","jet1_cef", "jet1_nef","bjet1_pt","jet2_pt","jet2_cef", "jet2_nef","m_tau1tau2","label"]]
-        bkg1 = bkg1[["pt_tau1tau2","met_met","jet1_pt","jet1_cef", "jet1_nef","bjet1_pt","jet2_pt","jet2_cef", "jet2_nef","m_tau1tau2","label"]]
+        #sig = sig[["pt_tau1tau2","met_met","jet1_pt","jet1_cef", "jet1_nef","bjet1_pt","jet2_pt","jet2_cef", "jet2_nef","m_tau1tau2","label"]]
+        #bkg1 = bkg1[["pt_tau1tau2","met_met","jet1_pt","jet1_cef", "jet1_nef","bjet1_pt","jet2_pt","jet2_cef", "jet2_nef","m_tau1tau2","label"]]
+        
         print(sig.shape, bkg1.shape)
         print("Min, max m_tt in sig: ", sig['m_tau1tau2'].min(), sig['m_tau1tau2'].max() )
         print("Min, max m_tt in bkg1: ", bkg1['m_tau1tau2'].min(), bkg1['m_tau1tau2'].max() )
@@ -290,15 +291,15 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
 from sklearn.preprocessing import StandardScaler
 
 def preprocess(train, val, test):
-
+        print(train.shape)
         n_features = train.shape[1] - 1
         scaler = StandardScaler()
         scaler.fit(np.vstack((train,val,test))[:,0:n_features])
         train[:,0:n_features] = scaler.transform(train[:,0:n_features])
         test[:,0:n_features] = scaler.transform(test[:,0:n_features])
         val[:,0:n_features] = scaler.transform(val[:,0:n_features])
-
-        return train, test, val
+        print(train.shape)
+        return train, val, test
 
 # LOAD AN EXISTING MODEL 
 def load_trained_model(name, epoch):
@@ -331,6 +332,7 @@ def feature_select(vector, name, feature_list, k = 7):
         n_features = vector.shape[1]-1
         x = vector[:,0:n_features]
         y = vector[:,n_features]
+        print(x.shape, y.shape)
         bestfeatures = SelectKBest(score_func=f_classif, k = k)
         bestfeatures.fit(x,y)
         print(bestfeatures.pvalues_)
@@ -339,10 +341,10 @@ def feature_select(vector, name, feature_list, k = 7):
         print(scores)
         scores /= max(scores)
     
-        del feature_list[-1]
-        print(feature_list)
+        feature_l = feature_list[:-1]
+        print(feature_l, len(feature_l))
         plt.figure(figsize=(10,10))
-        plt.bar(feature_list, scores, width=0.2)
+        plt.bar(feature_l, scores, width=0.2)
         plt.title("Feature univariate score")
         plt.xlabel("Features")
         plt.xticks(rotation=90)
@@ -435,12 +437,15 @@ else:
         losses,val_losses = [],[]
 
 train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(sig, bkg1, m_tt_min, m_tt_max, sig_injection, bkg_sig_frac, name)
+train, val, test = preprocess(train, val, test)
+train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
+
 train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
 train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
 
 if options.feature_imp:
         if options.full_supervision: feature_select(train, name, feature_list, k = options.choose_n_features)
-        feature_select(train_ws, name, feature_list, k = options.choose_n_features)
+        else: feature_select(train_ws, name, feature_list, k = options.choose_n_features)
 
 if not options.full_supervision:
         if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
