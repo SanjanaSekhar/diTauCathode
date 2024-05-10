@@ -5,3 +5,4 @@ build/
 *.root
 *.pth
 .cathode/
+*.log
