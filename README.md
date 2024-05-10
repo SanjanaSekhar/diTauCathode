@@ -28,7 +28,7 @@ singularity run --nv --bind `readlink $HOME` --bind `readlink ~/nobackup` --bind
 Singularity> python src/weak_supervision.py --help
 usage: weak_supervision.py [-h] [--name NAME] [--sig SIG] [--bkg BKG] [--early_stop EARLY_STOP] [--batch_size BATCH_SIZE] [--n_epochs N_EPOCHS] [--ending ENDING] [--load_model LOAD_MODEL]
                            [--epoch_to_load EPOCH_TO_LOAD] [--train_model TRAIN_MODEL] [--test_model TEST_MODEL] [--full_supervision FULL_SUPERVISION] [--sig_injection SIG_INJECTION] [--bkg_frac BKG_FRAC]
-                           [--m_tt_min M_TT_MIN] [--m_tt_max M_TT_MAX]
+                           [--m_tt_min M_TT_MIN] [--m_tt_max M_TT_MAX] [--feature_imp FEATURE_IMP] [--choose_n_features CHOOSE_N_FEATURES]
 
 Train sig vs bkg for identifying CATHODE vars
 
@@ -58,5 +58,9 @@ optional arguments:
   --bkg_frac BKG_FRAC   n_bkg/n_sig
   --m_tt_min M_TT_MIN   lower boundary for sig region in ditau inv mass
   --m_tt_max M_TT_MAX   upper boundary for sig region in ditau inv mass
+  --feature_imp FEATURE_IMP
+                        Plot feature_importance_
+  --choose_n_features CHOOSE_N_FEATURES
+                        extract n best features
 ```
 (More info to be added.)
