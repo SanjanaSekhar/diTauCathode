@@ -31,7 +31,7 @@ class NN(torch.nn.Module):
                 super().__init__()
 
                 self.classifier = torch.nn.Sequential(
-                        torch.nn.Linear(9,200),
+                        torch.nn.Linear(14,200),
                         torch.nn.ReLU(),
                         torch.nn.Linear(200,200),
                         torch.nn.ReLU(),
@@ -189,11 +189,23 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
                         "jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", "bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef",
                         "jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef", "label"]
         bkg1.columns = sig.columns
-        sig.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
-        bkg1.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
+        # deltaR of taus
+        sig["deltaR_taus"] = ((sig["tau1_eta"]-sig["tau2_eta"]).pow(2) + (sig["tau1_phi"]-sig["tau2_phi"]).pow(2)).pow(0.5)
+        bkg["deltaR_taus"] = ((bkg["tau1_eta"]-bkg["tau2_eta"]).pow(2) + (bkg["tau1_phi"]-bkg["tau2_phi"]).pow(2)).pow(0.5)
         
-        #sig = sig[["pt_tau1tau2","met_met","jet1_pt","jet1_cef", "jet1_nef","bjet1_pt","jet2_pt","jet2_cef", "jet2_nef","m_tau1tau2","label"]]
-        #bkg1 = bkg1[["pt_tau1tau2","met_met","jet1_pt","jet1_cef", "jet1_nef","bjet1_pt","jet2_pt","jet2_cef", "jet2_nef","m_tau1tau2","label"]]
+        #sig.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
+        #bkg1.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
+        
+        sig = sig[["deltaR_taus","met_met", "n_bjets",
+                "jet1_eta","jet1_phi","jet1_cef", "jet1_nef",
+                "jet2_cef", "jet2_nef",
+                "bjet1_pt","bjet1_eta","bjet1_phi","bjet1_cef", "bjet1_nef",
+                "m_tau1tau2","label"]]
+        bkg1 = bkg1[["deltaR_taus","met_met", "n_bjets",
+                "jet1_eta","jet1_phi","jet1_cef", "jet1_nef",
+                "jet2_cef", "jet2_nef",
+                "bjet1_pt","bjet1_eta","bjet1_phi","bjet1_cef", "bjet1_nef",
+                "m_tau1tau2","label"]]
         
         print(sig.shape, bkg1.shape)
         print("Min, max m_tt in sig: ", sig['m_tau1tau2'].min(), sig['m_tau1tau2'].max() )
@@ -383,7 +395,7 @@ options = parser.parse_args()
 
 
 ending = options.ending
-name = options.name
+name = options.name+"_sig%.3f"%options.sig_injection
 load_model = options.load_model
 train_model = options.train_model
 test_model = options.test_model
