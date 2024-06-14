@@ -9,7 +9,8 @@ Links:
 ```
 git clone git@github.com:delphes/delphes.git
 cd Delphes
-source /cvmfs/sft.cern.ch/lcg/views/LCG_103swan/x86_64-centos7-gcc11-opt/setup.sh 
+source /cvmfs/sft.cern.ch/lcg/views/LCG_103swan/x86_64-centos7-gcc11-opt/setup.sh # for sl7
+source /cvmfs/sft.cern.ch/lcg/views/LCG_103cuda/x86_64-centos9-gcc11-opt/setup.sh # for el9
 make
 ```
 
