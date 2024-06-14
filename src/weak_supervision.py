@@ -31,13 +31,13 @@ class NN(torch.nn.Module):
                 super().__init__()
 
                 self.classifier = torch.nn.Sequential(
-                        torch.nn.Linear(14,200),
+                        torch.nn.Linear(8,100),
                         torch.nn.ReLU(),
-                        torch.nn.Linear(200,200),
+                        torch.nn.Linear(100,100),
                         torch.nn.ReLU(),
-                        torch.nn.Linear(200,32),
+                        torch.nn.Linear(100,16),
                         torch.nn.ReLU(),
-                        torch.nn.Linear(32,1),
+                        torch.nn.Linear(16,1),
                         torch.nn.Sigmoid()
                         )
 
@@ -184,27 +184,24 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         # jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef,
         # jet2_pt, jet2_eta, jet2_phi, jet2_cef, jet2_nef, bjet2_pt, bjet2_eta, bjet2_phi, bjet2_cef, bjet2_nef, isSig
         print(sig.shape, bkg1.shape)
-        sig.columns = ["tau1_pt", "tau1_eta", "tau1_phi", "tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m",
+        sig.columns = [ "m_jet1jet2", "deltaR_jet1jet2", "m_bjet1bjet2", "deltaR_bjet1bjet2", "deltaR_tau1tau2",
+                        "tau1_pt", "tau1_eta", "tau1_phi", "tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m",
                         "m_tau1tau2","pt_tau1tau2", "eta_tau1tau2", "phi_tau1tau2", "met_met", "met_eta", "met_phi", "n_jets", "n_bjets",
                         "jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", "bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef",
                         "jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef", "label"]
         bkg1.columns = sig.columns
         # deltaR of taus
-        sig["deltaR_taus"] = ((sig["tau1_eta"]-sig["tau2_eta"]).pow(2) + (sig["tau1_phi"]-sig["tau2_phi"]).pow(2)).pow(0.5)
-        bkg1["deltaR_taus"] = ((bkg1["tau1_eta"]-bkg1["tau2_eta"]).pow(2) + (bkg1["tau1_phi"]-bkg1["tau2_phi"]).pow(2)).pow(0.5)
+        #sig["deltaR_taus"] = ((sig["tau1_eta"]-sig["tau2_eta"]).pow(2) + (sig["tau1_phi"]-sig["tau2_phi"]).pow(2)).pow(0.5)
+        #bkg1["deltaR_taus"] = ((bkg1["tau1_eta"]-bkg1["tau2_eta"]).pow(2) + (bkg1["tau1_phi"]-bkg1["tau2_phi"]).pow(2)).pow(0.5)
         
         #sig.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
         #bkg1.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
         
-        sig = sig[["deltaR_taus","met_met", "n_bjets",
-                "jet1_eta","jet1_phi","jet1_cef", "jet1_nef",
-                "jet2_cef", "jet2_nef",
-                "bjet1_pt","bjet1_eta","bjet1_phi","bjet1_cef", "bjet1_nef",
+        sig = sig[["m_jet1jet2", "deltaR_jet1jet2", "m_bjet1bjet2", "deltaR_bjet1bjet2", "deltaR_tau1tau2",
+                "met_met", "met_eta", "met_phi",
                 "m_tau1tau2","label"]]
-        bkg1 = bkg1[["deltaR_taus","met_met", "n_bjets",
-                "jet1_eta","jet1_phi","jet1_cef", "jet1_nef",
-                "jet2_cef", "jet2_nef",
-                "bjet1_pt","bjet1_eta","bjet1_phi","bjet1_cef", "bjet1_nef",
+        bkg1 = bkg1[["m_jet1jet2", "deltaR_jet1jet2", "m_bjet1bjet2", "deltaR_bjet1bjet2", "deltaR_tau1tau2",
+                "met_met", "met_eta", "met_phi",
                 "m_tau1tau2","label"]]
         
         print(sig.shape, bkg1.shape)
@@ -421,12 +418,14 @@ if "DY" in name:
 	options.bkg = "SM_dyToTauTau_0J1J2J_MinMass120_1M"
 if "Phi250" in name:
 	options.sig = "2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag"
-	m_tt_min = 100.
-	m_tt_max = 500.
+	options.m_tt_min = 100.
+	options.m_tt_max = 500.
 if "Phi750" in name:
 	options.sig = "2HDM-vbfPhiToTauTau-M750_2J_MinMass120_NoMisTag"
-	m_tt_min = 500.
-	m_tt_max = 1000.
+	options.m_tt_min = 350.
+	options.m_tt_max = 1200.
+
+print(options)
 
 sig = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.sig, lineterminator='\n')
 bkg1 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.bkg,lineterminator='\n')
@@ -451,7 +450,7 @@ else:
         loaded_epoch = 0
         losses,val_losses = [],[]
 
-train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(sig, bkg1, m_tt_min, m_tt_max, sig_injection, bkg_sig_frac, name)
+train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, bkg_sig_frac, name)
 train, val, test = preprocess(train, val, test)
 train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
 
@@ -464,18 +463,24 @@ if options.feature_imp:
 if options.BDT:
         from sklearn.ensemble import HistGradientBoostingClassifier
         if options.full_supervision:
-                bdt = HistGradientBoostingClassifier(early_stopping=False,max_iter=200)
+                bdt = HistGradientBoostingClassifier(early_stopping=False,max_iter=2000)
                 bdt.fit(train[:,:n_features],train[:,n_features])
-                pred_list = bdt.decision_function(test[:,:n_features])
+                #pred_list = bdt.predict(test[:,:n_features])
+                #pred_list=[]
+                pred_list = bdt.predict_proba(test[:,:n_features])[:,1]
                 true_list = test[:,-1]
-                print(true_list,pred_list)
+                #for i,label in enumerate(true_list): pred_list.append(pred[i,1]) 
+                print(true_list[:20],pred_list[:20])
                 np.savetxt("losses/fpr_tpr_bdt_%s.txt"%name,np.vstack((true_list,pred_list)))
         else:
-                bdt = HistGradientBoostingClassifier(early_stopping=False,max_iter=200)
+                bdt = HistGradientBoostingClassifier(early_stopping=False,max_iter=2000)
                 bdt.fit(train_ws[:,:n_features],train_ws[:,n_features])
-                pred_list = bdt.decision_function(test_ws[:,:n_features])
+                #pred_list = bdt.predict(test_ws[:,:n_features])
+                #pred_list=[]
+                pred_list = bdt.predict_proba(test_ws[:,:n_features])[:,1]
                 true_list = test_ws[:,-1]
-                print(true_list,pred_list)
+                #for i,label in enumerate(true_list): pred_list.append(pred[i,1])
+                print(true_list[:20],pred_list[:20])
                 np.savetxt("losses/fpr_tpr_bdt_%s.txt"%name,np.vstack((true_list,pred_list))) 
 
 else:
