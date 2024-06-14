@@ -416,17 +416,17 @@ print("Is GPU available? ",gpu_boole)
 if load_model: print("Loading model... ")
 
 if "ttbar" in name :
-	options.bkg = "SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag"
+	options.bkg = "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_NoMisTag_MadSpin_1M"
 if "DY" in name:
 	options.bkg = "SM_dyToTauTau_0J1J2J_MinMass120_1M"
 if "Phi250" in name:
 	options.sig = "2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag"
-	m_tt_min = 0.
-	m_tt_max = 2500.
+	m_tt_min = 100.
+	m_tt_max = 500.
 if "Phi750" in name:
 	options.sig = "2HDM-vbfPhiToTauTau-M750_2J_MinMass120_NoMisTag"
-	m_tt_min = 0.
-	m_tt_max = 2500.
+	m_tt_min = 500.
+	m_tt_max = 1000.
 
 sig = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.sig, lineterminator='\n')
 bkg1 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.bkg,lineterminator='\n')
@@ -466,15 +466,16 @@ if options.BDT:
         if options.full_supervision:
                 bdt = HistGradientBoostingClassifier(early_stopping=False,max_iter=200)
                 bdt.fit(train[:,:n_features],train[:,n_features])
-                pred_list = bdt.predict_proba(test[:,:n_features])
+                pred_list = bdt.decision_function(test[:,:n_features])
                 true_list = test[:,-1]
                 print(true_list,pred_list)
                 np.savetxt("losses/fpr_tpr_bdt_%s.txt"%name,np.vstack((true_list,pred_list)))
         else:
-                bdt = HistGradientBoostingClassifier().fit(train_ws[:,:n_features],train_ws[:,n_features])
-                pred_list = bdt.predict(test_ws[:,:n_features])
+                bdt = HistGradientBoostingClassifier(early_stopping=False,max_iter=200)
+                bdt.fit(train_ws[:,:n_features],train_ws[:,n_features])
+                pred_list = bdt.decision_function(test_ws[:,:n_features])
                 true_list = test_ws[:,-1]
-                # print(np.vstack((true_list,pred_list)))
+                print(true_list,pred_list)
                 np.savetxt("losses/fpr_tpr_bdt_%s.txt"%name,np.vstack((true_list,pred_list))) 
 
 else:
@@ -493,32 +494,3 @@ else:
                 if test_model:
                     loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load) 
                     testing(test_loader, test, name)
-
-'''
-name = "Phi250vsDY_fs"
-if load_model:  loaded_epoch, losses, val_losses = load_trained_model(name, epoch = 3)
-else:
-        loaded_epoch = 0
-        losses,val_losses = [],[]
-if train_model: training(train_loader,val_loader,losses,val_losses,loaded_epoch,name)
-if test_model: testing(test_loader, test, name)
-
-name = "Phi250vsttbar"
-if load_model:  loaded_epoch, losses, val_losses = load_trained_model(name, epoch = 3)
-else:
-        loaded_epoch = 0
-        losses,val_losses = [],[]
-train, val, test, train_ws, val_ws, test_ws = make_train_test_val_ws(sig,bkg2,m_tt_min = 350.,m_tt_max = 1000.,sig_injection = 0.2,bkg_sig_frac = 5,name = name)
-train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
-train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
-if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
-if test_model: testing(test_loader_ws, test, name)
-
-name = "Phivsttbar_fs"
-if load_model:  loaded_epoch, losses, val_losses = load_trained_model(name, epoch = 3)
-else:
-        loaded_epoch = 0
-        losses,val_losses = [],[]
-if train_model: training(train_loader,val_loader,losses,val_losses,loaded_epoch,name)
-if test_model: testing(test_loader, test, name)
-'''
