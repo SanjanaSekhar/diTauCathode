@@ -456,7 +456,7 @@ train, val, test = preprocess(train, val, test)
 train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
 
 n_features = len(feature_list[:-1])
-
+print("n_features = ",n_features)
 if options.feature_imp:
         if options.full_supervision: feature_select(train, name, feature_list, k = options.choose_n_features)
         else: feature_select(train_ws, name, feature_list, k = options.choose_n_features)
@@ -464,10 +464,11 @@ if options.feature_imp:
 if options.BDT:
         from sklearn.ensemble import HistGradientBoostingClassifier
         if options.full_supervision:
-                bdt = HistGradientBoostingClassifier().fit(train[:,:n_features],train[:,n_features])
-                pred_list = bdt.predict(test[:,:n_features])
+                bdt = HistGradientBoostingClassifier(early_stopping=False,max_iter=200)
+                bdt.fit(train[:,:n_features],train[:,n_features])
+                pred_list = bdt.predict_proba(test[:,:n_features])
                 true_list = test[:,-1]
-                # print(np.vstack((true_list,pred_list)))
+                print(true_list,pred_list)
                 np.savetxt("losses/fpr_tpr_bdt_%s.txt"%name,np.vstack((true_list,pred_list)))
         else:
                 bdt = HistGradientBoostingClassifier().fit(train_ws[:,:n_features],train_ws[:,n_features])
