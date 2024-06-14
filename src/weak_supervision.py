@@ -166,6 +166,7 @@ def testing(test_loader_ws, test_true, name):
         print("Test Loss: %f"%(test_loss_per_epoch/int(test.shape[0])))
 
         true_list = test_true[:,-1]
+        print(true_list==1)
         # print(np.vstack((true_list,pred_list)))
         np.savetxt("losses/fpr_tpr_%s.txt"%name,np.vstack((true_list,pred_list)))
         
@@ -258,7 +259,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         train_bkg1, val_bkg1, test_bkg1 = np.split(bkg1_sigregion, [int(.8*len(bkg1_sigregion)), int(.9*len(bkg1_sigregion))])
         train_sig_ws, val_sig_ws, test_sig_ws = np.split(sig_to_inject_bkg1_ws, [int(.8*len(sig_to_inject_bkg1_ws)), int(.9*len(sig_to_inject_bkg1_ws))])
         train_bkg1_ws, val_bkg1_ws, test_bkg1_ws = np.split(bkg1_sigregion_ws, [int(.8*len(bkg1_sigregion_ws)), int(.9*len(bkg1_sigregion_ws))])
-        
+        #print(train_bkg1_ws) 
         print("train_sig.shape, train_bkg1.shape, train_bkg1_ws.shape = ",train_sig.shape, train_bkg1.shape, train_bkg1_ws.shape)
         
         
@@ -294,7 +295,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         
         print("Final samples before training starts")
         print("%s: train, val, test shapes: "%name,train_ws.shape, val_ws.shape, test_ws.shape)
-        print(train, train_ws)
+        print(train[:,-1], train_ws[:,-1])
         return train, val, test, train_ws, val_ws, test_ws, feature_list.to_list()
 
 from sklearn.preprocessing import StandardScaler
@@ -493,7 +494,7 @@ else:
                 if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
                 if test_model:
                     loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load) 
-                    testing(test_loader_ws, test, name)
+                    testing(test_loader_ws, test_ws, name)
         else:
                 if train_model: training(train_loader,val_loader,losses,val_losses,loaded_epoch,name)
                 if test_model:
