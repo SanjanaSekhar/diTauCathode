@@ -230,8 +230,8 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         # We want to ensure that the sig/bkg ratio in the "data" is realistic and small
         # choose at random signal samples to inject into the data 
 
-        n_sig_bkg1 = int((sig_injection/(1-sig_injection)) * (bkg1_sigregion.shape[0]))
-
+        #n_sig_bkg1 = int((sig_injection/(1-sig_injection)) * (bkg1_sigregion.shape[0]))
+        n_sig_bkg1 = int(sig_injection * bkg1_sigregion.shape[0])
         print("No of signal samples to inject into bkg1 = ",n_sig_bkg1)
 
         sig_bkg1_idxs = np.random.choice(range(0,sig_sigregion.shape[0]),size=n_sig_bkg1)
