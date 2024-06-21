@@ -31,9 +31,9 @@ class NN(torch.nn.Module):
                 super().__init__()
 
                 self.classifier = torch.nn.Sequential(
-                        torch.nn.Linear(4,32),
+                        torch.nn.Linear(41,64),
                         torch.nn.ReLU(),
-                        torch.nn.Linear(32,32),
+                        torch.nn.Linear(64,32),
                         torch.nn.ReLU(),
                         torch.nn.Linear(32,16),
                         torch.nn.ReLU(),
@@ -197,12 +197,20 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         
         #sig.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
         #bkg1.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
-        
-        sig = sig[["m_jet1jet2", "deltaR_jet1jet2", "deltaR_tau1tau2","met_met",
+        '''
+        sig = sig[[#"m_jet1jet2", "deltaR_jet1jet2", 
+                #"deltaR_tau1tau2","met_met",
+                #"jet1_nef", "jet1_cef",
+                #"pt_tau1tau2","deltaR_jet1jet2",
+                "tau1_m","tau2_m","deltaR_tau1tau2",
                 "m_tau1tau2","label"]]
-        bkg1 = bkg1[["m_jet1jet2", "deltaR_jet1jet2", "deltaR_tau1tau2","met_met",
+        bkg1 = bkg1[[#"m_jet1jet2", "deltaR_jet1jet2", 
+                #"deltaR_tau1tau2","met_met",
+                #"jet1_nef", "jet1_cef",
+                #"pt_tau1tau2","deltaR_jet1jet2",
+                "tau1_m","tau2_m","deltaR_tau1tau2",
                 "m_tau1tau2","label"]]
-        
+        '''
         print(sig.shape, bkg1.shape)
         print("Min, max m_tt in sig: ", sig['m_tau1tau2'].min(), sig['m_tau1tau2'].max() )
         print("Min, max m_tt in bkg1: ", bkg1['m_tau1tau2'].min(), bkg1['m_tau1tau2'].max() )
