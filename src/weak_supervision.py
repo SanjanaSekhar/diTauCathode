@@ -237,7 +237,16 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         sig_bkg1_idxs = np.random.choice(range(0,sig_sigregion.shape[0]),size=n_sig_bkg1)
         #print(sig_bkg1_idxs, sig_bkg2_idxs)
         sig_to_inject_bkg1 = sig_sigregion.loc[sig_sigregion.index[sig_bkg1_idxs]]
-        print(sig_to_inject_bkg1.shape)
+        #print(sig_to_inject_bkg1.shape)
+    
+        n_bkg1 = int((1-sig_injection) * bkg1_sigregion.shape[0])
+        bkg1_idxs = np.random.choice(range(0,bkg1_sigregion.shape[0]),size=n_bkg1)
+        bkg_to_inject_bkg1 = bkg1_sigregion.loc[bkg1_sigregion.index[bkg1_idxs]]
+        bkg1_sigregion = bkg_to_inject_bkg1.copy()
+        
+        print("No of bkg samples in data = ",n_bkg1)
+        print("Shape of signal and bkg in data: ",sig_to_inject_bkg1.shape, bkg1_sigregion.shape)
+
 
         # define data and bkg vectors
         # label data as 1 and pure bkg as 0
