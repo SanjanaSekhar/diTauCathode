@@ -31,9 +31,9 @@ class NN(torch.nn.Module):
                 super().__init__()
 
                 self.classifier = torch.nn.Sequential(
-                        torch.nn.Linear(41,64),
+                        torch.nn.Linear(2,16),
                         torch.nn.ReLU(),
-                        torch.nn.Linear(64,32),
+                        torch.nn.Linear(16,32),
                         torch.nn.ReLU(),
                         torch.nn.Linear(32,16),
                         torch.nn.ReLU(),
@@ -197,20 +197,20 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         
         #sig.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
         #bkg1.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
-        '''
-        sig = sig[[#"m_jet1jet2", "deltaR_jet1jet2", 
+        
+        sig = sig[["m_jet1jet2", "deltaR_jet1jet2", 
                 #"deltaR_tau1tau2","met_met",
                 #"jet1_nef", "jet1_cef",
                 #"pt_tau1tau2","deltaR_jet1jet2",
-                "tau1_m","tau2_m","deltaR_tau1tau2",
+                #"tau1_m","tau2_m","deltaR_tau1tau2",
                 "m_tau1tau2","label"]]
-        bkg1 = bkg1[[#"m_jet1jet2", "deltaR_jet1jet2", 
+        bkg1 = bkg1[["m_jet1jet2", "deltaR_jet1jet2", 
                 #"deltaR_tau1tau2","met_met",
                 #"jet1_nef", "jet1_cef",
                 #"pt_tau1tau2","deltaR_jet1jet2",
-                "tau1_m","tau2_m","deltaR_tau1tau2",
+                #"tau1_m","tau2_m","deltaR_tau1tau2",
                 "m_tau1tau2","label"]]
-        '''
+        
         print(sig.shape, bkg1.shape)
         print("Min, max m_tt in sig: ", sig['m_tau1tau2'].min(), sig['m_tau1tau2'].max() )
         print("Min, max m_tt in bkg1: ", bkg1['m_tau1tau2'].min(), bkg1['m_tau1tau2'].max() )
@@ -390,7 +390,7 @@ parser.add_argument("--name",  default="Phi250vsDY", help="file name extension f
 parser.add_argument("--sig", default="2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag", help = "name of the .csv file for the signal")
 parser.add_argument("--bkg",  default="SM_dyToTauTau_0J1J2J_MinMass120_NoMisTag", help="name of the .csv file for the bkg")
 parser.add_argument("--early_stop",  default=5, type = int, help="early stopping patience (no. of epochs)")
-parser.add_argument("--batch_size",  default=64, type = int, help="batch size for training")
+parser.add_argument("--batch_size",  default=128, type = int, help="batch size for training")
 parser.add_argument("--n_epochs",  default=20, type = int, help="no. of epochs to train for")
 parser.add_argument("--ending",  default="042624", help="date")
 parser.add_argument("--BDT",  default=False, help="Use HistGradientBoostingClassifier instead of NN")
@@ -428,18 +428,23 @@ gpu_boole = torch.cuda.is_available()
 print("Is GPU available? ",gpu_boole)
 if load_model: print("Loading model... ")
 
-if "ttbar" in name :
-	options.bkg = "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_NoMisTag_MadSpin_1M"
-if "DY" in name:
-	options.bkg = "SM_dyToTauTau_0J1J2J_MinMass120_1M"
+
 if "Phi250" in name:
-	options.sig = "2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag"
-	options.m_tt_min = 100.
-	options.m_tt_max = 500.
+        options.sig = "2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag"
+        options.m_tt_min = 100.
+        options.m_tt_max = 500.
+        if "ttbar" in name:
+                options.bkg = "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_NoMisTag_MadSpin_1M"
+        if "DY" in name:
+                options.bkg = "SM_dyToTauTau_0J1J2J_MinMass120_1M"
 if "Phi750" in name:
-	options.sig = "2HDM-vbfPhiToTauTau-M750_2J_MinMass120_NoMisTag"
-	options.m_tt_min = 350.
-	options.m_tt_max = 1200.
+        options.sig = "2HDM-vbfPhiToTauTau-M750_2J_MinMass350_NoMisTag"
+        options.m_tt_min = 400.
+        options.m_tt_max = 1000.
+        if "ttbar" in name:
+                options.bkg = "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass350_NoMisTag_MadSpin_1M"
+        if "DY" in name:
+                options.bkg = "SM_dyToTauTau_0J1J2J_MinMass350_NoMisTag_1M"
 
 print(options)
 
