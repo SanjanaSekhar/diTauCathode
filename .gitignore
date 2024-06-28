@@ -6,3 +6,4 @@ build/
 *.pth
 .cathode/
 *.log
+csv_files/
