@@ -641,7 +641,7 @@ else:
 
         if not options.full_supervision:
                 if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
-                if test_model: testing(test_loader_ws, test_ws, name, kfold = True)
+                if test_model: testing(test_loader_ws, test_ws, name, kfold = False)
         else:
                 if train_model: training(train_loader,val_loader,losses,val_losses,loaded_epoch,name)
-                if test_model: testing(test_loader, test, name, kfold = True)
+                if test_model: testing(test_loader, test, name, kfold = False)
