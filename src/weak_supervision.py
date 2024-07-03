@@ -406,7 +406,7 @@ parser.add_argument("--train_model",  default=False, help="train and save model"
 parser.add_argument("--test_model",  default=False, help="test model")
 parser.add_argument("--full_supervision",  default=False, help="Run fully supervised")
 parser.add_argument("--sig_injection",  default=0.2, type=float , help="percent of signal to inject into data")
-parser.add_argument("--train_frac",  default=0.8, type=float , help="fraction of samples to train on")
+parser.add_argument("--train_frac",  default=0.7, type=float , help="fraction of samples to train on")
 parser.add_argument("--val_frac",  default=0.1, type=float , help="fraction of samples to validate on")
 parser.add_argument("--bkg_frac",  default=5, type=float, help="n_bkg/n_sig")
 parser.add_argument("--m_tt_min",  default=120., type=float, help="lower boundary for sig region in ditau inv mass")
@@ -480,8 +480,31 @@ else:
         losses,val_losses = [],[]
 
 train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, bkg_sig_frac, options.train_frac, options.val_frac, name)
+train_val_prepre = np.vstack((train,val))
+test_prepre = np.copy(test)
+
 train, val, test = preprocess(train, val, test)
 train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
+
+plt.hist(train_val_prepre[:,0],label="train set (Full sup) before")
+plt.hist(test_prepre[:,0],label="test set (Full sup) before")
+plt.hist(np.vstack((train,val))[:,0],label="train set (Full sup) after")
+plt.hist(test[:,0],label="test set (Full sup) after")
+plt.xlabel("m_jj")
+plt.title("Distributions before and after preprocessing, train_frac = 0.7, sig_injection = 0.2")
+plt.legend()
+plt.savefig("m_jj_pre_post.png")
+plt.close()
+
+plt.hist(train_val_prepre[:,1],label="train set (Full sup) before")
+plt.hist(test_prepre[:,1],label="test set (Full sup) before")
+plt.hist(np.vstack((train,val))[:,1],label="train set (Full sup) after")
+plt.hist(test[:,1],label="test set (Full sup) after")
+plt.xlabel("deltaR_jj")
+plt.title("Distributions before and after preprocessing, train_frac = 0.7, sig_injection = 0.2")
+plt.legend()
+plt.savefig("deltaR_jj_pre_post.png")
+plt.close()
 
 n_features = len(feature_list[:-1])
 print("n_features = ",n_features)
