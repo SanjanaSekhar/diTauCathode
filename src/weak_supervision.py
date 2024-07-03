@@ -229,9 +229,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         print(sig_sigregion.shape[0], bkg1_sigregion.shape[0])
 
         # shuffle the background indices
-        perm = np.arange(len(bkg1_sigregion)) 
-        np.random.shuffle(perm)
-        bkg1_sigregion = bkg1_sigregion[perm]
+        bkg1_sigregion = bkg1_sigregion.sample(frac=1).reset_index(drop=True)
 
         # split background in 2, one for data one for pure bkg
         bkg1_bkgregion = bkg1_sigregion[0:int(bkg1_sigregion.shape[0]/2)]
@@ -433,6 +431,8 @@ m_tt_max = options.m_tt_max
 epoch_to_load = options.epoch_to_load
 
 if options.full_supervision: name += "_fs" 
+
+name += "_trainfrac%.2f"%options.train_frac
 
 gpu_boole = torch.cuda.is_available()
 print("Is GPU available? ",gpu_boole)
