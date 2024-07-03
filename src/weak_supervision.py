@@ -155,6 +155,7 @@ def testing(test_loader_ws, test_true, name, kfold=False):
                 pred_list_all = []
                 for tf, vf in zip(train_frac, val_frac):
                         pth = "Phi250vsttbar_sig%0.3f_train%.2f_val%.2f.pth"%(sig_injection, tf, vf)
+                        if options.full_supervision: pth = "Phi250vsttbar_sig%0.3f_fs_train%.2f_val%.2f.pth"%(sig_injection, tf, vf)
                         loaded_epoch, losses, val_losses = load_trained_model(pth, epoch_to_load)
                         pred_list = []
                         print("================= Testing %s ================="%name)
