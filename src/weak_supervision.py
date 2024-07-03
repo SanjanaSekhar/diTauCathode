@@ -401,11 +401,11 @@ parser.add_argument("--n_epochs",  default=20, type = int, help="no. of epochs t
 parser.add_argument("--ending",  default="042624", help="date")
 parser.add_argument("--BDT",  default=False, help="Use HistGradientBoostingClassifier instead of NN")
 parser.add_argument("--load_model",  default=False, help="load saved model")
-parser.add_argument("--epoch_to_load",  default=3, type = int, help="load checkpoint corresponding to this epoch")
+parser.add_argument("--epoch_to_load",  default=1, type = int, help="load checkpoint corresponding to this epoch")
 parser.add_argument("--train_model",  default=False, help="train and save model")
 parser.add_argument("--test_model",  default=False, help="test model")
 parser.add_argument("--full_supervision",  default=False, help="Run fully supervised")
-parser.add_argument("--sig_injection",  default=0.2, type=float , help="percent of signal to inject into data")
+parser.add_argument("--sig_injection",  default=0.1, type=float , help="percent of signal to inject into data")
 parser.add_argument("--train_frac",  default=0.7, type=float , help="fraction of samples to train on")
 parser.add_argument("--val_frac",  default=0.1, type=float , help="fraction of samples to validate on")
 parser.add_argument("--bkg_frac",  default=5, type=float, help="n_bkg/n_sig")
@@ -433,7 +433,7 @@ epoch_to_load = options.epoch_to_load
 
 if options.full_supervision: name += "_fs" 
 
-name += "_trainfrac%.2f"%options.train_frac
+name += "_train%.2f_val%.2f"%(options.train_frac, options.val_frac)
 
 gpu_boole = torch.cuda.is_available()
 print("Is GPU available? ",gpu_boole)
