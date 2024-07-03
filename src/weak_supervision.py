@@ -497,7 +497,8 @@ if options.plot_pre_post:
         bkg =  train_ws[train_ws[:,2]==0]
         sig = train[train[:,2]==1]
         bkg_fs = train[train[:,2]==0]
-
+        
+        print("Plotting %s pre and post processing: m_jj"%name)
         plt.hist(data_pre[:,0],label="Data before preprocessing",histtype='step')
         plt.hist(bkg_pre[:,0],label="Bkg before preprocessing",histtype='step')
         plt.hist(data[:,0],label="Data after preprocessing",histtype='step')
@@ -508,6 +509,7 @@ if options.plot_pre_post:
         plt.savefig("%s_m_jj_pre_post.png"%name)
         plt.close()
 
+        print("Plotting %s pre and post processing: deltaR_jj"%name)
         plt.hist(data_pre[:,1],label="Data before preprocessing",histtype='step')
         plt.hist(bkg_pre[:,1],label="Bkg before preprocessing",histtype='step')
         plt.hist(data[:,1],label="Data after preprocessing",histtype='step')
@@ -517,7 +519,8 @@ if options.plot_pre_post:
         plt.legend()
         plt.savefig("%s_deltaR_jj_pre_post.png"%name)
         plt.close()
-
+        
+        print("Plotting %s pre and post processing (FS): m_jj"%name)
         plt.hist(sig_pre[:,0],label="Signal before preprocessing",histtype='step')
         plt.hist(bkg_fs_pre[:,0],label="Bkg before preprocessing",histtype='step')
         plt.hist(sig[:,0],label="Signal after preprocessing",histtype='step')
@@ -527,7 +530,8 @@ if options.plot_pre_post:
         plt.legend()
         plt.savefig("%s_fs_m_jj_pre_post.png"%name)
         plt.close()
-
+        
+        print("Plotting %s pre and post processing (FS): deltaR_jj"%name)
         plt.hist(sig_pre[:,1],label="Signal before preprocessing",histtype='step')
         plt.hist(bkg_fs_pre[:,1],label="Bkg before preprocessing",histtype='step')
         plt.hist(sig[:,1],label="Signal after preprocessing",histtype='step')
