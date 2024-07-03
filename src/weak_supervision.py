@@ -151,14 +151,15 @@ def testing(test_loader_ws, test_true, name, kfold=False):
 
         if kfold:
                 train_frac = ["0.10","0.20","0.30","0.40","0.50","0.60","0.70"]  
-                val_frac = train_frac.reverse()
+                val_frac = train_frac[::-1]
+                print(train_frac, val_frac)
                 pred_list_all = []
                 for tf, vf in zip(train_frac, val_frac):
-                        pth = "Phi250vsttbar_sig%0.3f_train%.2f_val%.2f.pth"%(sig_injection, tf, vf)
-                        if options.full_supervision: pth = "Phi250vsttbar_sig%0.3f_fs_train%.2f_val%.2f.pth"%(sig_injection, tf, vf)
+                        pth = "%s_sig%0.3f_train%s_val%s"%(name.split("_")[0],sig_injection, tf, vf)
+                        if options.full_supervision: pth = "%s_sig%0.3f_fs_train%s_val%s"%(name.split("_")[0],sig_injection, tf, vf)
                         loaded_epoch, losses, val_losses = load_trained_model(pth, epoch_to_load)
                         pred_list = []
-                        print("================= Testing %s ================="%name)
+                        print("================= Testing %s ================="%pth)
                         test_loss_per_epoch = 0.
                         test_losses = []
                         for vector in test_loader_ws:
@@ -182,7 +183,8 @@ def testing(test_loader_ws, test_true, name, kfold=False):
                 true_list = test_true[:,-1]
                 print(true_list==1)
                 # print(np.vstack((true_list,pred_list)))
-                np.savetxt("losses/fpr_tpr_%s_kfold.txt"%name,np.vstack((true_list,pred_list)))
+                if options.full_supervision: np.savetxt("losses/fpr_tpr_%s_fs_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
+                else: np.savetxt("losses/fpr_tpr_%s_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
 
         else:
                 loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load) 
@@ -439,7 +441,7 @@ parser.add_argument("--n_epochs",  default=20, type = int, help="no. of epochs t
 parser.add_argument("--ending",  default="042624", help="date")
 parser.add_argument("--BDT",  default=False, help="Use HistGradientBoostingClassifier instead of NN")
 parser.add_argument("--load_model",  default=False, help="load saved model")
-parser.add_argument("--epoch_to_load",  default=1, type = int, help="load checkpoint corresponding to this epoch")
+parser.add_argument("--epoch_to_load",  default=0, type = int, help="load checkpoint corresponding to this epoch")
 parser.add_argument("--train_model",  default=False, help="train and save model")
 parser.add_argument("--test_model",  default=False, help="test model")
 parser.add_argument("--full_supervision",  default=False, help="Run fully supervised")
