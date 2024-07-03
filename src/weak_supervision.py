@@ -412,6 +412,7 @@ parser.add_argument("--bkg_frac",  default=5, type=float, help="n_bkg/n_sig")
 parser.add_argument("--m_tt_min",  default=120., type=float, help="lower boundary for sig region in ditau inv mass")
 parser.add_argument("--m_tt_max",  default=500., type=float, help="upper boundary for sig region in ditau inv mass")
 parser.add_argument("--feature_imp",  default=False, help="Plot feature_importance_")
+parser.add_argument("--plot_pre_post",  default=False, help="Plot sig and bkg pre and postproc")
 parser.add_argument("--choose_n_features",  default=10, type = int, help="extract n best features")
 options = parser.parse_args()
 
@@ -480,31 +481,62 @@ else:
         losses,val_losses = [],[]
 
 train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, bkg_sig_frac, options.train_frac, options.val_frac, name)
-train_val_prepre = np.vstack((train,val))
-test_prepre = np.copy(test)
+
+if options.plot_pre_post:
+        # plot data vs bkg for pre and post proc
+        data_pre = train_ws[train_ws[:,2]==1]
+        bkg_pre =  train_ws[train_ws[:,2]==0]
+        sig_pre = train[train[:,2]==1]
+        bkg_fs_pre = train[train[:,2]==0]
 
 train, val, test = preprocess(train, val, test)
 train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
 
-plt.hist(train_val_prepre[:,0],label="train set (Full sup) before")
-plt.hist(test_prepre[:,0],label="test set (Full sup) before")
-plt.hist(np.vstack((train,val))[:,0],label="train set (Full sup) after")
-plt.hist(test[:,0],label="test set (Full sup) after")
-plt.xlabel("m_jj")
-plt.title("Distributions before and after preproc for %s, train_frac = 0.7, sig_injection = 0.2"%name)
-plt.legend()
-plt.savefig("%s_m_jj_pre_post.png"%name)
-plt.close()
+if options.plot_pre_post:
+        data = train_ws[train_ws[:,2]==1]
+        bkg =  train_ws[train_ws[:,2]==0]
+        sig = train[train[:,2]==1]
+        bkg_fs = train[train[:,2]==0]
 
-plt.hist(train_val_prepre[:,1],label="train set (Full sup) before")
-plt.hist(test_prepre[:,1],label="test set (Full sup) before")
-plt.hist(np.vstack((train,val))[:,1],label="train set (Full sup) after")
-plt.hist(test[:,1],label="test set (Full sup) after")
-plt.xlabel("deltaR_jj")
-plt.title("Distributions before and after preprocessing for %s, train_frac = 0.7, sig_injection = 0.2"%name)
-plt.legend()
-plt.savefig("%s_deltaR_jj_pre_post.png"%name)
-plt.close()
+        plt.hist(data_pre[:,0],label="Data before preprocessing",histtype='step')
+        plt.hist(bkg_pre[:,0],label="Bkg before preprocessing",histtype='step')
+        plt.hist(data[:,0],label="Data after preprocessing",histtype='step')
+        plt.hist(bkg[:,0],label="Bkg after preprocessing",histtype='step')
+        plt.xlabel("m_jj")
+        plt.title("Distributions before and after preproc for IAD for %s"%name)
+        plt.legend()
+        plt.savefig("%s_m_jj_pre_post.png"%name)
+        plt.close()
+
+        plt.hist(data_pre[:,1],label="Data before preprocessing",histtype='step')
+        plt.hist(bkg_pre[:,1],label="Bkg before preprocessing",histtype='step')
+        plt.hist(data[:,1],label="Data after preprocessing",histtype='step')
+        plt.hist(bkg[:,1],label="Bkg after preprocessing",histtype='step')
+        plt.xlabel("deltaR_jj")
+        plt.title("Distributions before and after preproc for IAD for %s"%name)
+        plt.legend()
+        plt.savefig("%s_deltaR_jj_pre_post.png"%name)
+        plt.close()
+
+        plt.hist(sig_pre[:,0],label="Signal before preprocessing",histtype='step')
+        plt.hist(bkg_fs_pre[:,0],label="Bkg before preprocessing",histtype='step')
+        plt.hist(sig[:,0],label="Signal after preprocessing",histtype='step')
+        plt.hist(bkg_fs[:,0],label="Bkg after preprocessing",histtype='step')
+        plt.xlabel("m_jj")
+        plt.title("Distributions before and after preproc for FS for %s"%name)
+        plt.legend()
+        plt.savefig("%s_fs_m_jj_pre_post.png"%name)
+        plt.close()
+
+        plt.hist(sig_pre[:,1],label="Signal before preprocessing",histtype='step')
+        plt.hist(bkg_fs_pre[:,1],label="Bkg before preprocessing",histtype='step')
+        plt.hist(sig[:,1],label="Signal after preprocessing",histtype='step')
+        plt.hist(bkg_fs[:,1],label="Bkg after preprocessing",histtype='step')
+        plt.xlabel("deltaR_jj")
+        plt.title("Distributions before and after preproc for FS for %s"%name)
+        plt.legend()
+        plt.savefig("%s_fs_deltaR_jj_pre_post.png"%name)
+        plt.close()
 
 n_features = len(feature_list[:-1])
 print("n_features = ",n_features)
