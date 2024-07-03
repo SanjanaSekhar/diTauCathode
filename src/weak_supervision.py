@@ -147,28 +147,65 @@ def training(train_loader,val_loader,losses,val_losses,loaded_epoch,name):
 
         print("========== TRAINING COMPLETE ===========")
 
-def testing(test_loader_ws, test_true, name):
-        pred_list = []
-        print("================= Training %s ================="%name)
-        test_loss_per_epoch = 0.
-        test_losses = []
-        for vector in test_loader_ws:
-                n_features = vector.size()[1]-1
-                features, label = vector[:,:n_features],vector[:,n_features]
-                if gpu_boole:
-                        features,label = features.cuda(),label.cuda()
-                prediction = model.forward(features)
-                test_loss = loss_function(prediction, label.view(-1,1))
-                test_loss_per_epoch += test_loss.cpu().data.numpy().item()
-                pred_list.append(prediction.cpu().data.numpy().item())
-        
-        test_losses.append(test_loss_per_epoch/int(test.shape[0]))
-        print("Test Loss: %f"%(test_loss_per_epoch/int(test.shape[0])))
+def testing(test_loader_ws, test_true, name, kfold=False):
 
-        true_list = test_true[:,-1]
-        print(true_list==1)
-        # print(np.vstack((true_list,pred_list)))
-        np.savetxt("losses/fpr_tpr_%s.txt"%name,np.vstack((true_list,pred_list)))
+        if kfold:
+                train_frac = ["0.10","0.20","0.30","0.40","0.50","0.60","0.70"]  
+                val_frac = train_frac.reverse()
+                pred_list_all = []
+                for tf, vf in zip(train_frac, val_frac):
+                        pth = "Phi250vsttbar_sig%0.3f_train%.2f_val%.2f.pth"%(sig_injection, tf, vf)
+                        loaded_epoch, losses, val_losses = load_trained_model(pth, epoch_to_load)
+                        pred_list = []
+                        print("================= Testing %s ================="%name)
+                        test_loss_per_epoch = 0.
+                        test_losses = []
+                        for vector in test_loader_ws:
+                                n_features = vector.size()[1]-1
+                                features, label = vector[:,:n_features],vector[:,n_features]
+                                if gpu_boole:
+                                        features,label = features.cuda(),label.cuda()
+                                prediction = model.forward(features)
+                                test_loss = loss_function(prediction, label.view(-1,1))
+                                test_loss_per_epoch += test_loss.cpu().data.numpy().item()
+                                pred_list.append(prediction.cpu().data.numpy().item())
+                        
+                        test_losses.append(test_loss_per_epoch/int(test.shape[0]))
+                        print("Test Loss: %f"%(test_loss_per_epoch/int(test.shape[0])))
+                        pred_list_all.append(pred_list) 
+                
+                pred_list_all = np.array(pred_list_all)
+                pred_list = np.mean(pred_list_all, axis=0)
+                print("After averaging results of kfold, predicted list shape = ", pred_list.shape)
+
+                true_list = test_true[:,-1]
+                print(true_list==1)
+                # print(np.vstack((true_list,pred_list)))
+                np.savetxt("losses/fpr_tpr_%s_kfold.txt"%name,np.vstack((true_list,pred_list)))
+
+        else:
+                loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load) 
+                pred_list = []
+                print("================= Testing %s ================="%name)
+                test_loss_per_epoch = 0.
+                test_losses = []
+                for vector in test_loader_ws:
+                        n_features = vector.size()[1]-1
+                        features, label = vector[:,:n_features],vector[:,n_features]
+                        if gpu_boole:
+                                features,label = features.cuda(),label.cuda()
+                        prediction = model.forward(features)
+                        test_loss = loss_function(prediction, label.view(-1,1))
+                        test_loss_per_epoch += test_loss.cpu().data.numpy().item()
+                        pred_list.append(prediction.cpu().data.numpy().item())
+                
+                test_losses.append(test_loss_per_epoch/int(test.shape[0]))
+                print("Test Loss: %f"%(test_loss_per_epoch/int(test.shape[0])))
+
+                true_list = test_true[:,-1]
+                print(true_list==1)
+                # print(np.vstack((true_list,pred_list)))
+                np.savetxt("losses/fpr_tpr_%s.txt"%name,np.vstack((true_list,pred_list)))
         
 
 
@@ -601,11 +638,7 @@ else:
 
         if not options.full_supervision:
                 if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
-                if test_model:
-                    loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load) 
-                    testing(test_loader_ws, test_ws, name)
+                if test_model: testing(test_loader_ws, test_ws, name, kfold = True)
         else:
                 if train_model: training(train_loader,val_loader,losses,val_losses,loaded_epoch,name)
-                if test_model:
-                    loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load) 
-                    testing(test_loader, test, name)
+                if test_model: testing(test_loader, test, name, kfold = True)
