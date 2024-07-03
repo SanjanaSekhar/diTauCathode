@@ -174,7 +174,7 @@ def testing(test_loader_ws, test_true, name):
 
 
 
-def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_injection = 0.2, bkg_sig_frac = 5, name = "PhivsDY"):
+def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_injection = 0.2, bkg_sig_frac = 5, train_frac = 0.8, val_frac = 0.1, name = "PhivsDY"):
 
         # CREATE an IDEAL Anomaly Detector
         # Train pure bkg vs sig+bkg in the SR only
@@ -227,11 +227,19 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         bkg1_sigregion = bkg1_sigregion[bkg1_sigregion['m_tau1tau2'] < m_tt_max]
         print("No. of samples in SR in sig, bkg")
         print(sig_sigregion.shape[0], bkg1_sigregion.shape[0])
+
+        # shuffle the background indices
+        perm = np.arange(len(bkg1_sigregion)) 
+        np.random.shuffle(perm)
+        bkg1_sigregion = bkg1_sigregion[perm]
+
+        # split background in 2, one for data one for pure bkg
         bkg1_bkgregion = bkg1_sigregion[0:int(bkg1_sigregion.shape[0]/2)]
         bkg1_sigregion = bkg1_sigregion[int(bkg1_sigregion.shape[0]/2):]
         #bkg1_bkgregion = pd.concat([bkg1[bkg1['m_tau1tau2']< m_tt_min], bkg1[bkg1['m_tau1tau2'] >= m_tt_max]])
         print("No. of bkg samples in data and pure bkg")
         print(bkg1_sigregion.shape[0], bkg1_bkgregion.shape[0])
+        
         #print("bkg1_sigregion",bkg1_sigregion,"bkg1_bkgregion",bkg1_bkgregion)
         # We want to ensure that the sig/bkg ratio in the "data" is realistic and small
         # choose at random signal samples to inject into the data 
@@ -269,11 +277,11 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         sig_to_inject_bkg1_ws = sig_to_inject_bkg1_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
         bkg1_sigregion_ws = bkg1_sigregion_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
         bkg1_sigregion = bkg1_sigregion.drop(['m_tau1tau2'],axis=1).to_numpy()  
-        # train val test split: 0.7, 0.1, 0.2
-        train_sig, val_sig, test_sig = np.split(sig_to_inject_bkg1, [int(.8*len(sig_to_inject_bkg1)), int(.9*len(sig_to_inject_bkg1))])
-        train_bkg1, val_bkg1, test_bkg1 = np.split(bkg1_sigregion, [int(.8*len(bkg1_sigregion)), int(.9*len(bkg1_sigregion))])
-        train_sig_ws, val_sig_ws, test_sig_ws = np.split(sig_to_inject_bkg1_ws, [int(.8*len(sig_to_inject_bkg1_ws)), int(.9*len(sig_to_inject_bkg1_ws))])
-        train_bkg1_ws, val_bkg1_ws, test_bkg1_ws = np.split(bkg1_sigregion_ws, [int(.8*len(bkg1_sigregion_ws)), int(.9*len(bkg1_sigregion_ws))])
+        # train val test split: train_frac, train_frac + val_frac, 1-(train_frac + val_frac)
+        train_sig, val_sig, test_sig = np.split(sig_to_inject_bkg1, [int(train_frac*len(sig_to_inject_bkg1)), int((train_frac + val_frac)*len(sig_to_inject_bkg1))])
+        train_bkg1, val_bkg1, test_bkg1 = np.split(bkg1_sigregion, [int(train_frac*len(bkg1_sigregion)), int((train_frac + val_frac)*len(bkg1_sigregion))])
+        train_sig_ws, val_sig_ws, test_sig_ws = np.split(sig_to_inject_bkg1_ws, [int(train_frac*len(sig_to_inject_bkg1_ws)), int((train_frac + val_frac)*len(sig_to_inject_bkg1_ws))])
+        train_bkg1_ws, val_bkg1_ws, test_bkg1_ws = np.split(bkg1_sigregion_ws, [int(train_frac*len(bkg1_sigregion_ws)), int((train_frac + val_frac)*len(bkg1_sigregion_ws))])
         #print(train_bkg1_ws) 
         print("train_sig.shape, train_bkg1.shape, train_bkg1_ws.shape = ",train_sig.shape, train_bkg1.shape, train_bkg1_ws.shape)
         
@@ -288,7 +296,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         test_ws = np.vstack((test_sig_ws,test_bkg1_ws))
 
 
-        print("%s : Weak supervision -  train, val, test shapes: "%name,train.shape, val.shape, test.shape)
+        #print("%s : Weak supervision -  train, val, test shapes: "%name,train.shape, val.shape, test.shape)
 
         #bkg1_idxs = np.random.choice(range(0,bkg1_bkgregion.shape[0]),size=(train.shape[0]+test.shape[0]+val.shape[0])*bkg_sig_frac)
         # both bkg1_bkgregion and bkg1_bkgregion_ws have label = 0
@@ -297,7 +305,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
 
         bkg1_bkgregion_ws = bkg1_bkgregion_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
 
-        train_bkg1, val_bkg1, test_bkg1 = np.split(bkg1_bkgregion_ws, [int(.8*len(bkg1_bkgregion_ws)), int(.9*len(bkg1_bkgregion_ws))])
+        train_bkg1, val_bkg1, test_bkg1 = np.split(bkg1_bkgregion_ws, [int(train_frac*len(bkg1_bkgregion_ws)), int((train_frac + val_frac)*len(bkg1_bkgregion_ws))])
         # sets with all true labels for full supervision and ROC curve
         train = np.vstack((train,train_bkg1))
         val = np.vstack((val,val_bkg1))
@@ -309,7 +317,7 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
 
         
         print("Final samples before training starts")
-        print("%s: train, val, test shapes: "%name,train_ws.shape, val_ws.shape, test_ws.shape)
+        print("%s: train, val, test shapes: "%name, train_ws.shape, val_ws.shape, test_ws.shape)
         print(train[:,-1], train_ws[:,-1])
         return train, val, test, train_ws, val_ws, test_ws, feature_list.to_list()
 
@@ -400,6 +408,8 @@ parser.add_argument("--train_model",  default=False, help="train and save model"
 parser.add_argument("--test_model",  default=False, help="test model")
 parser.add_argument("--full_supervision",  default=False, help="Run fully supervised")
 parser.add_argument("--sig_injection",  default=0.2, type=float , help="percent of signal to inject into data")
+parser.add_argument("--train_frac",  default=0.8, type=float , help="fraction of samples to train on")
+parser.add_argument("--val_frac",  default=0.1, type=float , help="fraction of samples to validate on")
 parser.add_argument("--bkg_frac",  default=5, type=float, help="n_bkg/n_sig")
 parser.add_argument("--m_tt_min",  default=120., type=float, help="lower boundary for sig region in ditau inv mass")
 parser.add_argument("--m_tt_max",  default=500., type=float, help="upper boundary for sig region in ditau inv mass")
@@ -463,15 +473,13 @@ if not options.BDT:
         loss_function = torch.nn.BCELoss()
 
 
-
-
 #if test_model: load_model = True
 if load_model:  loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load)
 else:
         loaded_epoch = 0
         losses,val_losses = [],[]
 
-train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, bkg_sig_frac, name)
+train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, bkg_sig_frac, options.train_frac, options.val_frac, name)
 train, val, test = preprocess(train, val, test)
 train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
 

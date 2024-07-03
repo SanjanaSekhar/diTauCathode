@@ -44,16 +44,18 @@ def plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title):
 	
 	tpr_list, bkg_rej_list, sic_list = [],[],[]
 
-	for l in ws_lists:
+	for l,n in zip(ws_lists,ws_names):
 		fpr, tpr, _ = roc_curve(l[0], l[1])
+		#print(n, fpr, tpr)
 		bkg_rej = 1 / (fpr+0.001)
 		sic = tpr / np.sqrt(fpr+0.001)
 		tpr_list.append(tpr)
 		bkg_rej_list.append(bkg_rej)
 		sic_list.append(sic)
 
-	for l in fs_lists:
+	for l,n in zip(fs_lists,fs_names):
 		fpr, tpr, _ = roc_curve(l[0], l[1])
+		#print(n, fpr, tpr)
 		bkg_rej = 1 / (fpr+0.001)
 		sic = tpr / np.sqrt(fpr+0.001)
 		tpr_list.append(tpr)
@@ -88,7 +90,7 @@ def plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title):
 	plt.plot(random_tpr, random_sic, label="random")
 	plt.xlabel("True Positive Rate")
 	plt.ylabel("Significance Improvement")
-	plt.legend()
+	plt.legend(loc="upper right")
 	plt.title(plt_title)
 	plt.savefig("plots/SIC_%s.png"%plt_title)
 	plt.close()
@@ -100,18 +102,155 @@ bkg2 = pd.read_csv("csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv")
 
 #plot_features(sig, bkg1, bkg2)
 
-injections = ["0.050","0.010","0.005"]
+#injections = ["0.050","0.010","0.005"]
+injections = ["0.100","0.200","0.300","0.400","0.500","0.600","0.700","0.800","0.900"]
 sig_masses = [250,750]
+bkgs = ["DY","ttbar"]
 
 
 for mass in sig_masses:
-	ws_lists, ws_names, fs_lists, fs_names = [],[],[],[]
-	for inj in injections:
-		ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivsDY_sig%s.txt"%(mass,inj)))
-		ws_names.append("IAD: %.2f%% signal"%(float(inj)*100))
-		fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivsDY_sig%s_fs.txt"%(mass,inj)))
-		fs_names.append("Full Sup: %.2f%% signal"%(float(inj)*100))
-		plt_title = "Phi%ivsDY"%mass 
-	
-	#print(ws_names)
-	plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
+	for bkg in bkgs:
+		ws_lists, ws_names, fs_lists, fs_names = [],[],[],[]
+		for inj in injections:
+			ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_mjj_deltaRjj_sig%s.txt"%(mass,bkg,inj)))
+			ws_names.append("NN IAD: %.2f%% signal"%(float(inj)*100))
+			fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_mjj_deltaRjj_sig%s_fs.txt"%(mass,bkg,inj)))
+			fs_names.append("NN Full Sup: %.2f%% signal"%(float(inj)*100))
+			# ws_lists.append(np.loadtxt("losses/fpr_tpr_bdt_Phi%ivs%s_sig%s.txt"%(mass,bkg,inj)))
+			# ws_names.append("BDT IAD: %.2f%% signal"%(float(inj)*100))
+			# fs_lists.append(np.loadtxt("losses/fpr_tpr_bdt_Phi%ivs%s_sig%s_fs.txt"%(mass,bkg,inj)))
+			# fs_names.append("BDT Full Sup: %.2f%% signal"%(float(inj)*100))
+			plt_title = "Phi%ivs%s_mjj_deltaRjj"%(mass,bkg) 
+		# ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_sig0.000.txt"%(mass,bkg)))
+		# ws_names.append("Bkg vs Bkg: 0%% signal")
+		#print(ws_names)
+		plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
+'''
+
+for mass in sig_masses:
+	for bkg in bkgs:
+		ws_lists, ws_names, fs_lists, fs_names = [],[],[],[]
+		for inj in injections:
+			ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_type2_sig%s.txt"%(mass,bkg,inj))) # 8 features
+			ws_names.append("NN IAD: 8 features")
+			fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_type2_sig%s_fs.txt"%(mass,bkg,inj))) # 8 features
+			fs_names.append("NN Full Sup: 8 features")
+			ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_4feats_sig%s.txt"%(mass,bkg,inj))) # 4 features
+			ws_names.append("NN IAD: 4 features")
+			fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_4feats_sig%s_fs.txt"%(mass,bkg,inj))) # 4 features
+			fs_names.append("NN Full Sup: 4 features")
+			ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_all_sig%s.txt"%(mass,bkg,inj))) # all 41 features
+			ws_names.append("NN IAD: ALL(41) features")
+			fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_all_sig%s_fs.txt"%(mass,bkg,inj))) # all 41 features
+			fs_names.append("NN Full Sup: ALL(41) features")
+			ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_mjj_deltaRjj_sig%s.txt"%(mass,bkg,inj))) # all 41 features
+			ws_names.append("NN IAD: m_jj deltaR_jj")
+			fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_mjj_deltaRjj_sig%s_fs.txt"%(mass,bkg,inj))) # all 41 features
+			fs_names.append("NN Full Sup: m_jj deltaR_jj")
+			ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_j1cef_j1nef_sig%s.txt"%(mass,bkg,inj))) # all 41 features
+			ws_names.append("NN IAD: jet1_cef jet1_nef")
+			fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_j1cef_j1nef_sig%s_fs.txt"%(mass,bkg,inj))) # all 41 features
+			fs_names.append("NN Full Sup: jet1_cef jet1_nef")
+			ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_deltaRtt_met_sig%s.txt"%(mass,bkg,inj))) # all 41 features
+			ws_names.append("NN IAD: deltaR_tautau MET")
+			fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_deltaRtt_met_sig%s_fs.txt"%(mass,bkg,inj))) # all 41 features
+			fs_names.append("NN Full Sup: deltaR_tautau MET")
+			ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_pttt_deltaRjj_sig%s.txt"%(mass,bkg,inj))) # all 41 features
+			ws_names.append("NN IAD: pT_tautau deltaR_jj")
+			fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_pttt_deltaRjj_sig%s_fs.txt"%(mass,bkg,inj))) # all 41 features
+			fs_names.append("NN Full Sup: pT_tautau deltaR_jj")
+			ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_m1m2t_deltaRtt_sig%s.txt"%(mass,bkg,inj))) # all 41 features
+			ws_names.append("NN IAD: m_tau1 m_tau2 deltaR_tautau")
+			fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_m1m2t_deltaRtt_sig%s_fs.txt"%(mass,bkg,inj))) # all 41 features
+			fs_names.append("NN Full Sup: m_tau1 m_tau2 deltaR_tautau")
+			plt_title = "Phi%ivs%s_Feature-Comparison"%(mass,bkg) 
+		# ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_sig0.000.txt"%(mass,bkg)))
+		# ws_names.append("Bkg vs Bkg: 0%% signal")
+		#print(ws_names)
+		plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
+
+for mass in sig_masses:
+	for bkg in bkgs:
+		ws_lists, ws_names, fs_lists, fs_names = [],[],[],[]
+		for inj in injections:
+			ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_type2_sig%s.txt"%(mass,bkg,inj))) # 8 features
+			ws_names.append("NN IAD: 8 features")
+			#fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_sig%s_fs.txt"%(mass,bkg,inj))) # 8 features
+			#fs_names.append("NN Full Sup: 8 features")
+			ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_4feats_sig%s.txt"%(mass,bkg,inj))) # 4 features
+			ws_names.append("NN IAD: 4 features")
+			#fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_4feats_sig%s_fs.txt"%(mass,bkg,inj))) # 4 features
+			#fs_names.append("NN Full Sup: 4 features")
+			ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_all_sig%s.txt"%(mass,bkg,inj))) # all 41 features
+			ws_names.append("NN IAD: ALL(41) features")
+			#fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_all_sig%s_fs.txt"%(mass,bkg,inj))) # all 41 features
+			#fs_names.append("NN Full Sup: ALL(41) features")
+			ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_mjj_deltaRjj_sig%s.txt"%(mass,bkg,inj))) # all 41 features
+			ws_names.append("NN IAD: m_jj deltaR_jj")
+			#fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_mjj_deltaRjj_sig%s_fs.txt"%(mass,bkg,inj))) # all 41 features
+			#fs_names.append("NN Full Sup: m_jj deltaR_jj")
+			ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_j1cef_j1nef_sig%s.txt"%(mass,bkg,inj))) # all 41 features
+			ws_names.append("NN IAD: jet1_cef jet1_nef")
+			#fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_j1cef_j1nef_sig%s_fs.txt"%(mass,bkg,inj))) # all 41 features
+			#fs_names.append("NN Full Sup: jet1_cef jet1_nef")
+			ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_deltaRtt_met_sig%s.txt"%(mass,bkg,inj))) # all 41 features
+			ws_names.append("NN IAD: deltaR_tautau MET")
+			#fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_deltaRtt_met_sig%s_fs.txt"%(mass,bkg,inj))) # all 41 features
+			#fs_names.append("NN Full Sup: deltaR_tautau MET")
+			ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_pttt_deltaRjj_sig%s.txt"%(mass,bkg,inj))) # all 41 features
+			ws_names.append("NN IAD: pT_tautau deltaR_jj")
+			#fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_pttt_deltaRjj_sig%s_fs.txt"%(mass,bkg,inj))) # all 41 features
+			#fs_names.append("NN Full Sup: pT_tautau deltaR_jj")
+			ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_m1m2t_deltaRtt_sig%s.txt"%(mass,bkg,inj))) # all 41 features
+			ws_names.append("NN IAD: m_tau1 m_tau2 deltaR_tautau")
+			#fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_m1m2t_deltaRtt_sig%s_fs.txt"%(mass,bkg,inj))) # all 41 features
+			#fs_names.append("NN Full Sup: m_tau1 m_tau2 deltaR_tautau")
+			plt_title = "Phi%ivs%s_Feature-Comparison_Weak-Supervision"%(mass,bkg) 
+		# ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_sig0.000.txt"%(mass,bkg)))
+		# ws_names.append("Bkg vs Bkg: 0%% signal")
+		#print(ws_names)
+		plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
+
+for mass in sig_masses:
+	for bkg in bkgs:
+		ws_lists, ws_names, fs_lists, fs_names = [],[],[],[]
+		for inj in injections:
+			#ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_sig%s.txt"%(mass,bkg,inj))) # 8 features
+			#ws_names.append("NN IAD: 8 features")
+			fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_type2_sig%s_fs.txt"%(mass,bkg,inj))) # 8 features
+			fs_names.append("NN Full Sup: 8 features")
+			#ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_4feats_sig%s.txt"%(mass,bkg,inj))) # 4 features
+			#ws_names.append("NN IAD: 4 features")
+			fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_4feats_sig%s_fs.txt"%(mass,bkg,inj))) # 4 features
+			fs_names.append("NN Full Sup: 4 features")
+			#ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_all_sig%s.txt"%(mass,bkg,inj))) # all 41 features
+			#ws_names.append("NN IAD: ALL(41) features")
+			fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_all_sig%s_fs.txt"%(mass,bkg,inj))) # all 41 features
+			fs_names.append("NN Full Sup: ALL(41) features")
+			#ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_mjj_deltaRjj_sig%s.txt"%(mass,bkg,inj))) # all 41 features
+			#ws_names.append("NN IAD: m_jj deltaR_jj")
+			fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_mjj_deltaRjj_sig%s_fs.txt"%(mass,bkg,inj))) # all 41 features
+			fs_names.append("NN Full Sup: m_jj deltaR_jj")
+			#ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_j1cef_j1nef_sig%s.txt"%(mass,bkg,inj))) # all 41 features
+			#ws_names.append("NN IAD: jet1_cef jet1_nef")
+			fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_j1cef_j1nef_sig%s_fs.txt"%(mass,bkg,inj))) # all 41 features
+			fs_names.append("NN Full Sup: jet1_cef jet1_nef")
+			#ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_deltaRtt_met_sig%s.txt"%(mass,bkg,inj))) # all 41 features
+			#ws_names.append("NN IAD: deltaR_tautau MET")
+			fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_deltaRtt_met_sig%s_fs.txt"%(mass,bkg,inj))) # all 41 features
+			fs_names.append("NN Full Sup: deltaR_tautau MET")
+			#ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_pttt_deltaRjj_sig%s.txt"%(mass,bkg,inj))) # all 41 features
+			#ws_names.append("NN IAD: pT_tautau deltaR_jj")
+			fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_pttt_deltaRjj_sig%s_fs.txt"%(mass,bkg,inj))) # all 41 features
+			fs_names.append("NN Full Sup: pT_tautau deltaR_jj")
+			#ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_m1m2t_deltaRtt_sig%s.txt"%(mass,bkg,inj))) # all 41 features
+			#ws_names.append("NN IAD: m_tau1 m_tau2 deltaR_tautau")
+			fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_m1m2t_deltaRtt_sig%s_fs.txt"%(mass,bkg,inj))) # all 41 features
+			fs_names.append("NN Full Sup: m_tau1 m_tau2 deltaR_tautau")
+			plt_title = "Phi%ivs%s_Feature-Comparison_Full-Supervision"%(mass,bkg) 
+		# #ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_sig0.000.txt"%(mass,bkg)))
+		# #ws_names.append("Bkg vs Bkg: 0%% signal")
+		#print(ws_names)
+		plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
+
+'''
