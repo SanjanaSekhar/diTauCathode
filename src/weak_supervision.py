@@ -218,8 +218,8 @@ def make_train_test_val_ws(test_ws, sig, bkg1, m_tt_min = 350., m_tt_max = 1000.
         # Train pure bkg vs sig+bkg in the SR only
 
         if test_ws:
-                sig_sigregion = sig
-                bkg1_sigregion = bkg1
+                sig_sigregion = pd.DataFrame(sig)
+                bkg1_sigregion = pd.DataFrame(bkg1)
         else:
                 # Format of csv file:
                 # tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, 
@@ -307,7 +307,8 @@ def make_train_test_val_ws(test_ws, sig, bkg1, m_tt_min = 350., m_tt_max = 1000.
         # label data as 1 and pure bkg as 0
         # bkg1_sigregion has label = 0 in the data region, bkg1_sigregion_ws has label = 1
         bkg1_sigregion_ws = bkg1_sigregion.copy()
-        bkg1_sigregion_ws.loc[:,'label'] = 1
+        if not test_ws: bkg1_sigregion_ws.loc[:,'label'] = 1
+        else: bkg1_sigregion_ws[bkg1_sigregion_ws.columns[2]] = 1
 
         
         # sig_to_inject_bkg1 and sig_to_inject_bkg1_ws both have label = 1
@@ -316,9 +317,14 @@ def make_train_test_val_ws(test_ws, sig, bkg1, m_tt_min = 350., m_tt_max = 1000.
         feature_list = sig_to_inject_bkg1.columns
         sig_to_inject_bkg1 = sig_to_inject_bkg1.to_numpy()
         if not test_ws:
-                sig_to_inject_bkg1_ws = sig_to_inject_bkg1_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
-                bkg1_sigregion_ws = bkg1_sigregion_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
-                bkg1_sigregion = bkg1_sigregion.drop(['m_tau1tau2'],axis=1).to_numpy()  
+                sig_to_inject_bkg1_ws = sig_to_inject_bkg1_ws.drop(['m_tau1tau2'],axis=1)
+                bkg1_sigregion_ws = bkg1_sigregion_ws.drop(['m_tau1tau2'],axis=1)
+                bkg1_sigregion = bkg1_sigregion.drop(['m_tau1tau2'],axis=1)
+        
+        sig_to_inject_bkg1_ws = sig_to_inject_bkg1_ws.to_numpy()
+        bkg1_sigregion_ws = bkg1_sigregion_ws.to_numpy()
+        bkg1_sigregion = bkg1_sigregion.to_numpy()
+
         # train val test split: train_frac, train_frac + val_frac, 1-(train_frac + val_frac)
         train_sig, val_sig, test_sig = np.split(sig_to_inject_bkg1, [int(train_frac*len(sig_to_inject_bkg1)), int((train_frac + val_frac)*len(sig_to_inject_bkg1))])
         train_bkg1, val_bkg1, test_bkg1 = np.split(bkg1_sigregion, [int(train_frac*len(bkg1_sigregion)), int((train_frac + val_frac)*len(bkg1_sigregion))])
@@ -338,14 +344,14 @@ def make_train_test_val_ws(test_ws, sig, bkg1, m_tt_min = 350., m_tt_max = 1000.
         test_ws = np.vstack((test_sig_ws,test_bkg1_ws))
 
 
-        #print("%s : Weak supervision -  train, val, test shapes: "%name,train.shape, val.shape, test.shape)
+        print("%s : Weak supervision -  train, val, test shapes: "%name,train.shape, val.shape, test.shape)
 
         #bkg1_idxs = np.random.choice(range(0,bkg1_bkgregion.shape[0]),size=(train.shape[0]+test.shape[0]+val.shape[0])*bkg_sig_frac)
         # both bkg1_bkgregion and bkg1_bkgregion_ws have label = 0
         #bkg1_bkgregion_ws = bkg1_bkgregion.loc[bkg1_bkgregion.index[bkg1_idxs]]
         bkg1_bkgregion_ws = bkg1_bkgregion.copy()
 
-        if not test_ws: bkg1_bkgregion_ws = bkg1_bkgregion_ws.drop(['m_tau1tau2'],axis=1)
+        #if not test_ws: bkg1_bkgregion_ws = bkg1_bkgregion_ws.drop(['m_tau1tau2'],axis=1)
 
         bkg1_bkgregion_ws = bkg1_bkgregion_ws.to_numpy()
 
@@ -516,8 +522,8 @@ else:
         y_sig = np.ones((50000))
         x1_bkg, x2_bkg = np.random.multivariate_normal([4,4], np.diag((4,4)), 100000).T
         y_bkg = np.zeros((100000))
-        sig = np.vstack((x1_sig, x2_sig, y_sig))
-        bkg1 = np.vstack((x1_bkg, x2_bkg, y_bkg))
+        sig = np.vstack((x1_sig, x2_sig, y_sig)).T
+        bkg1 = np.vstack((x1_bkg, x2_bkg, y_bkg)).T
 
 if not options.BDT:
         model = NN()
