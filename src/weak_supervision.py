@@ -17,10 +17,8 @@ import gc
 import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
-import h5py
 import pandas as pd
 from sklearn.model_selection import train_test_split
-import numpy as np 
 from sklearn.metrics import roc_curve
 from argparse import ArgumentParser
 
@@ -214,62 +212,67 @@ def testing(test_loader_ws, test_true, name, kfold=False):
 
 
 
-def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_injection = 0.2, bkg_sig_frac = 5, train_frac = 0.8, val_frac = 0.1, name = "PhivsDY"):
+def make_train_test_val_ws(test_ws, sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_injection = 0.2, bkg_sig_frac = 5, train_frac = 0.8, val_frac = 0.1, name = "PhivsDY"):
 
         # CREATE an IDEAL Anomaly Detector
         # Train pure bkg vs sig+bkg in the SR only
 
-        # Format of csv file:
-        # tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, 
-        # tau2_m, m_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
-        # jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef,
-        # jet2_pt, jet2_eta, jet2_phi, jet2_cef, jet2_nef, bjet2_pt, bjet2_eta, bjet2_phi, bjet2_cef, bjet2_nef, isSig
-        print(sig.shape, bkg1.shape)
-        sig.columns = [ "m_jet1jet2", "deltaR_jet1jet2", "m_bjet1bjet2", "deltaR_bjet1bjet2", "deltaR_tau1tau2",
-                        "tau1_pt", "tau1_eta", "tau1_phi", "tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m",
-                        "m_tau1tau2","pt_tau1tau2", "eta_tau1tau2", "phi_tau1tau2", "met_met", "met_eta", "met_phi", "n_jets", "n_bjets",
-                        "jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", "bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef",
-                        "jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef", "label"]
-        bkg1.columns = sig.columns
-        # deltaR of taus
-        #sig["deltaR_taus"] = ((sig["tau1_eta"]-sig["tau2_eta"]).pow(2) + (sig["tau1_phi"]-sig["tau2_phi"]).pow(2)).pow(0.5)
-        #bkg1["deltaR_taus"] = ((bkg1["tau1_eta"]-bkg1["tau2_eta"]).pow(2) + (bkg1["tau1_phi"]-bkg1["tau2_phi"]).pow(2)).pow(0.5)
-        
-        #sig.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
-        #bkg1.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
-        
-        sig = sig[["m_jet1jet2", "deltaR_jet1jet2", 
-                #"deltaR_tau1tau2","met_met",
-                #"jet1_nef", "jet1_cef",
-                #"pt_tau1tau2","deltaR_jet1jet2",
-                #"tau1_m","tau2_m","deltaR_tau1tau2",
-                "m_tau1tau2","label"]]
-        bkg1 = bkg1[["m_jet1jet2", "deltaR_jet1jet2", 
-                #"deltaR_tau1tau2","met_met",
-                #"jet1_nef", "jet1_cef",
-                #"pt_tau1tau2","deltaR_jet1jet2",
-                #"tau1_m","tau2_m","deltaR_tau1tau2",
-                "m_tau1tau2","label"]]
-        
-        print(sig.shape, bkg1.shape)
-        print("Min, max m_tt in sig: ", sig['m_tau1tau2'].min(), sig['m_tau1tau2'].max() )
-        print("Min, max m_tt in bkg1: ", bkg1['m_tau1tau2'].min(), bkg1['m_tau1tau2'].max() )
+        if test_ws:
+                sig_sigregion = sig
+                bkg1_sigregion = bkg1
+        else:
+                # Format of csv file:
+                # tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, 
+                # tau2_m, m_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
+                # jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef,
+                # jet2_pt, jet2_eta, jet2_phi, jet2_cef, jet2_nef, bjet2_pt, bjet2_eta, bjet2_phi, bjet2_cef, bjet2_nef, isSig
 
-        # Choose the m_tautau window in which to define 'data' and bkg regions
-        # The max ditau inv mass is not the same in all samples
+                print(sig.shape, bkg1.shape)
+                sig.columns = [ "m_jet1jet2", "deltaR_jet1jet2", "m_bjet1bjet2", "deltaR_bjet1bjet2", "deltaR_tau1tau2",
+                                "tau1_pt", "tau1_eta", "tau1_phi", "tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m",
+                                "m_tau1tau2","pt_tau1tau2", "eta_tau1tau2", "phi_tau1tau2", "met_met", "met_eta", "met_phi", "n_jets", "n_bjets",
+                                "jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", "bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef",
+                                "jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef", "label"]
+                bkg1.columns = sig.columns
+                # deltaR of taus
+                #sig["deltaR_taus"] = ((sig["tau1_eta"]-sig["tau2_eta"]).pow(2) + (sig["tau1_phi"]-sig["tau2_phi"]).pow(2)).pow(0.5)
+                #bkg1["deltaR_taus"] = ((bkg1["tau1_eta"]-bkg1["tau2_eta"]).pow(2) + (bkg1["tau1_phi"]-bkg1["tau2_phi"]).pow(2)).pow(0.5)
+                
+                #sig.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
+                #bkg1.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
+                
+                sig = sig[["m_jet1jet2", "deltaR_jet1jet2", 
+                        #"deltaR_tau1tau2","met_met",
+                        #"jet1_nef", "jet1_cef",
+                        #"pt_tau1tau2","deltaR_jet1jet2",
+                        #"tau1_m","tau2_m","deltaR_tau1tau2",
+                        "m_tau1tau2","label"]]
+                bkg1 = bkg1[["m_jet1jet2", "deltaR_jet1jet2", 
+                        #"deltaR_tau1tau2","met_met",
+                        #"jet1_nef", "jet1_cef",
+                        #"pt_tau1tau2","deltaR_jet1jet2",
+                        #"tau1_m","tau2_m","deltaR_tau1tau2",
+                        "m_tau1tau2","label"]]
+                
+                print(sig.shape, bkg1.shape)
+                print("Min, max m_tt in sig: ", sig['m_tau1tau2'].min(), sig['m_tau1tau2'].max() )
+                print("Min, max m_tt in bkg1: ", bkg1['m_tau1tau2'].min(), bkg1['m_tau1tau2'].max() )
+
+                # Choose the m_tautau window in which to define 'data' and bkg regions
+                # The max ditau inv mass is not the same in all samples
 
 
-        # define "data" and "bkg" regions
-        sig_sigregion = sig[sig['m_tau1tau2'] >= m_tt_min] #and sig[sig['m_tau1tau2'] <= m_tt_max]
-        sig_sigregion = sig_sigregion[sig_sigregion['m_tau1tau2'] < m_tt_max]
+                # define "data" and "bkg" regions
+                sig_sigregion = sig[sig['m_tau1tau2'] >= m_tt_min] #and sig[sig['m_tau1tau2'] <= m_tt_max]
+                sig_sigregion = sig_sigregion[sig_sigregion['m_tau1tau2'] < m_tt_max]
 
-        bkg1_sigregion = bkg1[bkg1['m_tau1tau2'] >=  m_tt_min] #and bkg1[bkg1['m_tau1tau2'] <= m_tt_max]
-        bkg1_sigregion = bkg1_sigregion[bkg1_sigregion['m_tau1tau2'] < m_tt_max]
-        print("No. of samples in SR in sig, bkg")
-        print(sig_sigregion.shape[0], bkg1_sigregion.shape[0])
+                bkg1_sigregion = bkg1[bkg1['m_tau1tau2'] >=  m_tt_min] #and bkg1[bkg1['m_tau1tau2'] <= m_tt_max]
+                bkg1_sigregion = bkg1_sigregion[bkg1_sigregion['m_tau1tau2'] < m_tt_max]
+                print("No. of samples in SR in sig, bkg")
+                print(sig_sigregion.shape[0], bkg1_sigregion.shape[0])
 
-        # shuffle the background indices
-        bkg1_sigregion = bkg1_sigregion.sample(frac=1).reset_index(drop=True)
+                # shuffle the background indices
+                bkg1_sigregion = bkg1_sigregion.sample(frac=1).reset_index(drop=True)
 
         # split background in 2, one for data one for pure bkg
         bkg1_bkgregion = bkg1_sigregion[0:int(bkg1_sigregion.shape[0]/2)]
@@ -309,12 +312,13 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         
         # sig_to_inject_bkg1 and sig_to_inject_bkg1_ws both have label = 1
         sig_to_inject_bkg1_ws = sig_to_inject_bkg1.copy()
-        sig_to_inject_bkg1 = sig_to_inject_bkg1.drop(['m_tau1tau2'],axis=1)
+        if not test_ws: sig_to_inject_bkg1 = sig_to_inject_bkg1.drop(['m_tau1tau2'],axis=1)
         feature_list = sig_to_inject_bkg1.columns
         sig_to_inject_bkg1 = sig_to_inject_bkg1.to_numpy()
-        sig_to_inject_bkg1_ws = sig_to_inject_bkg1_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
-        bkg1_sigregion_ws = bkg1_sigregion_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
-        bkg1_sigregion = bkg1_sigregion.drop(['m_tau1tau2'],axis=1).to_numpy()  
+        if not test_ws:
+                sig_to_inject_bkg1_ws = sig_to_inject_bkg1_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
+                bkg1_sigregion_ws = bkg1_sigregion_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
+                bkg1_sigregion = bkg1_sigregion.drop(['m_tau1tau2'],axis=1).to_numpy()  
         # train val test split: train_frac, train_frac + val_frac, 1-(train_frac + val_frac)
         train_sig, val_sig, test_sig = np.split(sig_to_inject_bkg1, [int(train_frac*len(sig_to_inject_bkg1)), int((train_frac + val_frac)*len(sig_to_inject_bkg1))])
         train_bkg1, val_bkg1, test_bkg1 = np.split(bkg1_sigregion, [int(train_frac*len(bkg1_sigregion)), int((train_frac + val_frac)*len(bkg1_sigregion))])
@@ -341,7 +345,9 @@ def make_train_test_val_ws(sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_inj
         #bkg1_bkgregion_ws = bkg1_bkgregion.loc[bkg1_bkgregion.index[bkg1_idxs]]
         bkg1_bkgregion_ws = bkg1_bkgregion.copy()
 
-        bkg1_bkgregion_ws = bkg1_bkgregion_ws.drop(['m_tau1tau2'],axis=1).to_numpy()
+        if not test_ws: bkg1_bkgregion_ws = bkg1_bkgregion_ws.drop(['m_tau1tau2'],axis=1)
+
+        bkg1_bkgregion_ws = bkg1_bkgregion_ws.to_numpy()
 
         train_bkg1, val_bkg1, test_bkg1 = np.split(bkg1_bkgregion_ws, [int(train_frac*len(bkg1_bkgregion_ws)), int((train_frac + val_frac)*len(bkg1_bkgregion_ws))])
         # sets with all true labels for full supervision and ROC curve
@@ -453,6 +459,7 @@ parser.add_argument("--m_tt_min",  default=120., type=float, help="lower boundar
 parser.add_argument("--m_tt_max",  default=500., type=float, help="upper boundary for sig region in ditau inv mass")
 parser.add_argument("--feature_imp",  default=False, help="Plot feature_importance_")
 parser.add_argument("--plot_pre_post",  default=False, help="Plot sig and bkg pre and postproc")
+parser.add_argument("--test_ws",  default=False, help="test WS with gaussians")
 parser.add_argument("--choose_n_features",  default=10, type = int, help="extract n best features")
 options = parser.parse_args()
 
@@ -499,9 +506,18 @@ if "Phi750" in name:
 
 print(options)
 
-sig = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.sig, lineterminator='\n')
-bkg1 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.bkg,lineterminator='\n')
-#bkg2 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv",lineterminator='\n')
+if not options.test_ws:
+        sig = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.sig, lineterminator='\n')
+        bkg1 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.bkg,lineterminator='\n')
+        #bkg2 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv",lineterminator='\n')
+
+else:
+        x1_sig, x2_sig = np.random.multivariate_normal([7,7], np.diag((0.5,0.5)), 50000).T
+        y_sig = np.ones((50000))
+        x1_bkg, x2_bkg = np.random.multivariate_normal([4,4], np.diag((4,4)), 100000).T
+        y_bkg = np.zeros((100000))
+        sig = np.vstack((x1_sig, x2_sig, y_sig))
+        bkg1 = np.vstack((x1_bkg, x2_bkg, y_bkg))
 
 if not options.BDT:
         model = NN()
@@ -520,7 +536,7 @@ else:
         loaded_epoch = 0
         losses,val_losses = [],[]
 
-train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, bkg_sig_frac, options.train_frac, options.val_frac, name)
+train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(options.test_ws, sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, bkg_sig_frac, options.train_frac, options.val_frac, name)
 
 if options.plot_pre_post:
         # plot data vs bkg for pre and post proc

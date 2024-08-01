@@ -111,6 +111,22 @@ train_frac = ["0.50","0.55","0.60","0.65","0.70","0.75"]
 for mass in sig_masses:
 	for bkg in bkgs:
 		ws_lists, ws_names, fs_lists, fs_names = [],[],[],[]
+		ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_kfold.txt"%(mass,bkg)))
+		ws_names.append("NN IAD with 7-fold cross val")
+		fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_fs_kfold.txt"%(mass,bkg)))
+		fs_names.append("NN Full Sup with 7-fold cross val")
+		# losses/fpr_tpr_Phi250vsttbar_sig0.100_train0.70_val0.10.txt
+		ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_sig0.100_train0.70_val0.10.txt"%(mass,bkg)))
+		ws_names.append("NN IAD: train_frac = 70%%, val_frac = 10%%")
+		fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%svs%s_sig0.100_fs_train0.70_val0.10.txt"%(mass,bkg)))
+		fs_names.append("NN Full Sup: train_frac = 70%%, val_frac = 10%%")
+		plt_title = "Phi%ivs%s_mjj_deltaRjj_kfold"%(mass,bkg) 
+		plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
+
+'''
+for mass in sig_masses:
+	for bkg in bkgs:
+		ws_lists, ws_names, fs_lists, fs_names = [],[],[],[]
 		for inj in injections:
 			for tr in train_frac:
 				ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_sig%s_trainfrac%s.txt"%(mass,bkg,inj,tr)))
@@ -130,7 +146,7 @@ for mass in sig_masses:
 			# ws_names.append("Bkg vs Bkg: 0%% signal")
 			#print(ws_names)
 			plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
-'''
+
 
 for mass in sig_masses:
 	for bkg in bkgs:
