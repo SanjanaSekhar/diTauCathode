@@ -358,7 +358,7 @@ def make_train_test_val_ws(test_ws, sig, bkg1, m_tt_min = 350., m_tt_max = 1000.
         #bkg1_bkgregion_ws = bkg1_bkgregion.loc[bkg1_bkgregion.index[bkg1_idxs]]
         bkg1_bkgregion_ws = bkg1_bkgregion.copy()
 
-        #if not test_ws: bkg1_bkgregion_ws = bkg1_bkgregion_ws.drop(['m_tau1tau2'],axis=1)
+        bkg1_bkgregion_ws = bkg1_bkgregion_ws.drop(['m_tau1tau2'],axis=1)
 
         bkg1_bkgregion_ws = bkg1_bkgregion_ws.to_numpy()
         np.savetxt("bkg1_bkgregion_ws.txt",bkg1_bkgregion_ws)
