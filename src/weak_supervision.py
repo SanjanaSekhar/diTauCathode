@@ -193,6 +193,7 @@ def testing(test_loader_ws, test_true, name, kfold=False):
                 for vector in test_loader_ws:
                         n_features = vector.size()[1]-1
                         features, label = vector[:,:n_features],vector[:,n_features]
+                        #print(features[:10], label[:10])
                         if gpu_boole:
                                 features,label = features.cuda(),label.cuda()
                         prediction = model.forward(features)
@@ -324,6 +325,12 @@ def make_train_test_val_ws(test_ws, sig, bkg1, m_tt_min = 350., m_tt_max = 1000.
         sig_to_inject_bkg1_ws = sig_to_inject_bkg1_ws.to_numpy()
         bkg1_sigregion_ws = bkg1_sigregion_ws.to_numpy()
         bkg1_sigregion = bkg1_sigregion.to_numpy()
+        
+
+        np.savetxt("sig_to_inject_bkg1.txt",sig_to_inject_bkg1)
+        np.savetxt("sig_to_inject_bkg1_ws.txt",sig_to_inject_bkg1_ws)
+        np.savetxt("bkg1_sigregion_ws.txt", bkg1_sigregion_ws)
+        np.savetxt("bkg1_sigregion.txt",bkg1_sigregion)
 
         # train val test split: train_frac, train_frac + val_frac, 1-(train_frac + val_frac)
         train_sig, val_sig, test_sig = np.split(sig_to_inject_bkg1, [int(train_frac*len(sig_to_inject_bkg1)), int((train_frac + val_frac)*len(sig_to_inject_bkg1))])
@@ -354,6 +361,7 @@ def make_train_test_val_ws(test_ws, sig, bkg1, m_tt_min = 350., m_tt_max = 1000.
         #if not test_ws: bkg1_bkgregion_ws = bkg1_bkgregion_ws.drop(['m_tau1tau2'],axis=1)
 
         bkg1_bkgregion_ws = bkg1_bkgregion_ws.to_numpy()
+        np.savetxt("bkg1_bkgregion_ws.txt",bkg1_bkgregion_ws)
 
         train_bkg1, val_bkg1, test_bkg1 = np.split(bkg1_bkgregion_ws, [int(train_frac*len(bkg1_bkgregion_ws)), int((train_frac + val_frac)*len(bkg1_bkgregion_ws))])
         # sets with all true labels for full supervision and ROC curve
@@ -364,7 +372,8 @@ def make_train_test_val_ws(test_ws, sig, bkg1, m_tt_min = 350., m_tt_max = 1000.
         train_ws = np.vstack((train_ws,train_bkg1))
         val_ws = np.vstack((val_ws,val_bkg1))
         test_ws = np.vstack((test_ws,test_bkg1))
-
+        
+        np.savetxt("train_ws.txt", train_ws)
         
         print("Final samples before training starts")
         print("%s: train, val, test shapes: "%name, train_ws.shape, val_ws.shape, test_ws.shape)
@@ -663,7 +672,7 @@ else:
 
         if not options.full_supervision:
                 if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
-                if test_model: testing(test_loader_ws, test_ws, name, kfold = False)
+                if test_model: testing(test_loader_ws, test, name, kfold = False)
         else:
                 if train_model: training(train_loader,val_loader,losses,val_losses,loaded_epoch,name)
                 if test_model: testing(test_loader, test, name, kfold = False)
