@@ -153,7 +153,7 @@ def testing(test_loader_ws, test_true, name, kfold=False):
                 print(train_frac, val_frac)
                 pred_list_all = []
                 for tf, vf in zip(train_frac, val_frac):
-                        pth =  "-case%i"%case + "%s_sig%0.3f_train%s_val%s"%(name.split("_")[0],sig_injection, tf, vf)
+                        pth = "%s_sig%0.3f_train%s_val%s"%(name.split("_")[0],sig_injection, tf, vf)
                         if options.full_supervision: pth +=  "_fs"
                         loaded_epoch, losses, val_losses = load_trained_model(pth, epoch_to_load)
                         pred_list = []
@@ -525,21 +525,37 @@ if "TS250" in name:
 
 case = options.case 
 if case == 1: 
-        f_list = ["tau1_m","tau2_m","deltaR_tau1tau2","met_met"
+        f_list = ["tau1_m","tau2_m","deltaR_tau1tau2","met_met",
                         "m_tau1tau2","label"]
 elif case == 2:
-        f_list = ["m_jet1jet2", "deltaR_jet1jet2","deltaR_tau1tau2","met_met"
+        f_list = ["m_jet1jet2", "deltaR_jet1jet2","deltaR_tau1tau2","met_met",
                         "m_tau1tau2","label"]
 elif case == 3:
-        f_list = ["m_jet1jet2", "deltaR_jet1jet2","tau1_m","tau2_m"
+        f_list = ["m_jet1jet2", "deltaR_jet1jet2","tau1_m","tau2_m",
                         "m_tau1tau2","label"]
 elif case == 4:
-        f_list = ["m_jet1jet2", "deltaR_jet1jet2","tau1_m","deltaR_tau1tau2"
+        f_list = ["m_jet1jet2", "deltaR_jet1jet2","tau1_m","deltaR_tau1tau2",
                         "m_tau1tau2","label"]
 
 print(options)
 
 print(" Will use the following features: ", f_list)
+
+
+if not options.test_ws:
+        sig = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.sig, lineterminator='\n')
+        bkg1 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.bkg,lineterminator='\n')
+        #bkg2 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv",lineterminator='\n')
+
+else:
+        x1_sig, x2_sig = np.random.multivariate_normal([7,7], np.diag((0.5,0.5)), 50000).T
+        y_sig = np.ones((50000))
+        x1_bkg, x2_bkg = np.random.multivariate_normal([4,4], np.diag((4,4)), 100000).T
+        y_bkg = np.zeros((100000))
+        sig = np.vstack((x1_sig, x2_sig, y_sig)).T
+        bkg1 = np.vstack((x1_bkg, x2_bkg, y_bkg)).T
+
+
 
 if load_model:  loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load)
 else:
@@ -586,14 +602,6 @@ if options.BDT:
                         print("After averaging results of kfold, predicted list shape = ", pred_list.shape)
                         np.savetxt("losses/fpr_tpr_bdt_%s_fs_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
         else:
-                model = NN()
-                if gpu_boole: model = model.cuda()
-
-                optimizer = torch.optim.Adam(model.parameters(),
-                        lr = 1e-3,
-                        weight_decay = 1e-8)
-
-                loss_function = torch.nn.BCELoss()
                 if train_model:
                         val_frac_list = [0.1,0.2,0.3,0.4,0.5,0.6,0.7]
                         for val_frac in val_frac_list:
@@ -626,6 +634,15 @@ if options.BDT:
                         np.savetxt("losses/fpr_tpr_bdt_%s_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
 
 else:
+        model = NN()
+        if gpu_boole: model = model.cuda()
+
+        optimizer = torch.optim.Adam(model.parameters(),
+                        lr = 1e-3,
+                        weight_decay = 1e-8)
+
+        loss_function = torch.nn.BCELoss()
+        
         if train_model:
                 train_frac_list = [0.1, 0.3, 0.5, 0.7]  
                 val_frac_list = train_frac_list[::-1]
@@ -736,15 +753,3 @@ if options.feature_imp:
         if options.full_supervision: feature_select(train, name, feature_list, k = options.choose_n_features)
         else: feature_select(train_ws, name, feature_list, k = options.choose_n_features)
 
-if not options.test_ws:
-        sig = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.sig, lineterminator='\n')
-        bkg1 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.bkg,lineterminator='\n')
-        #bkg2 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv",lineterminator='\n')
-
-else:
-        x1_sig, x2_sig = np.random.multivariate_normal([7,7], np.diag((0.5,0.5)), 50000).T
-        y_sig = np.ones((50000))
-        x1_bkg, x2_bkg = np.random.multivariate_normal([4,4], np.diag((4,4)), 100000).T
-        y_bkg = np.zeros((100000))
-        sig = np.vstack((x1_sig, x2_sig, y_sig)).T
-        bkg1 = np.vstack((x1_bkg, x2_bkg, y_bkg)).T
