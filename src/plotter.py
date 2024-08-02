@@ -23,14 +23,14 @@ def plot_features(sig,bkg1,bkg2):
 	                "jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef", "label"]
     bkg1.columns = sig.columns
     bkg2.columns = sig.columns
-    pp = PdfPages('plots/Phi750_ttbar_DY_features.pdf')
+    pp = PdfPages('plots/TS250_ttbar_DY_features.pdf')
 
     for col in sig.columns:
 
 	    plt.figure(figsize=(10,7))
 	    plt.hist(bkg1[col], label = "DY + 0/1/2 jets", bins = 30, histtype = "step")
 	    plt.hist(bkg2[col], label = "ttbar + 2 jets", bins = 30, histtype = "step")
-	    plt.hist(sig[col], label = "VBF Phi + 2 jets, mass = 750 GeV", bins = 30, histtype = "step")
+	    plt.hist(sig[col], label = "ttbar Phi + 2 jets, mass = 750 GeV", bins = 30, histtype = "step")
 	    plt.legend()
 	    plt.title("Distribution of %s"%col)
 	    plt.xlabel(col)
@@ -98,9 +98,11 @@ def plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title):
 	plt.close()
 
 
-sig = pd.read_csv("csv_files/2HDM-vbfPhiToTauTau-M750_2J_MinMass350_NoMisTag.csv", lineterminator='\n')
-bkg1 = pd.read_csv("csv_files/SM_dyToTauTau_0J1J2J_MinMass350_NoMisTag_1M.csv")
-bkg2 = pd.read_csv("csv_files/SM_ttbarTo2Tau2Nu_0J1J2J_MinMass350_NoMisTag_MadSpin_1M.csv")
+#sig = pd.read_csv("csv_files/2HDM-vbfPhiToTauTau-M750_2J_MinMass350_NoMisTag.csv", lineterminator='\n')
+#sig = pd.read_csv("csv_files/2HDM-ttPhiToTauTau-M750_2J_MinMass350_NoMisTag.csv")
+sig = pd.read_csv("csv_files/eVLQ_T-M1000_S-M250_NoMisTag.csv")
+bkg1 = pd.read_csv("csv_files/SM_dyToTauTau_0J1J2J_MinMass120_1M.csv")
+bkg2 = pd.read_csv("csv_files/SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_NoMisTag_MadSpin_1M.csv")
 
 plot_features(sig, bkg1, bkg2)
 
