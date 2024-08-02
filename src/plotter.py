@@ -30,7 +30,7 @@ def plot_features(sig,bkg1,bkg2):
 	    plt.figure(figsize=(10,7))
 	    plt.hist(bkg1[col], label = "DY + 0/1/2 jets", bins = 30, histtype = "step")
 	    plt.hist(bkg2[col], label = "ttbar + 2 jets", bins = 30, histtype = "step")
-	    plt.hist(sig[col], label = "ttbar Phi + 2 jets, mass = 750 GeV", bins = 30, histtype = "step")
+	    plt.hist(sig[col], label = "T'(1000) + S (250) + 2 jets", bins = 30, histtype = "step")
 	    plt.legend()
 	    plt.title("Distribution of %s"%col)
 	    plt.xlabel(col)
