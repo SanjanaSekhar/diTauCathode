@@ -647,7 +647,7 @@ if options.BDT:
         if options.full_supervision:
 
                 if train_model:
-                        val_frac_list = [0.1,0.3,0.5,0.7]
+                        val_frac_list = [0.1,0.2,0.3,0.4,0.5,0.6,0.7]
                         for val_frac in val_frac_list:
                                 name = options.name+"_sig%.3f"%options.sig_injection+"_fs"+"_train%.2f_val%.2f"%((0.8-val_frac), val_frac)
                                 print(">> Training %s on %i%% training, %i%% validation"%(name, (0.8-val_frac)*100, val_frac*100))
@@ -659,7 +659,7 @@ if options.BDT:
                 #pred_list = bdt.predict(test[:,:n_features])
                 #pred_list=[]
                 if test_model:
-                        train_frac = ["0.10","0.30","0.50","0.70"]  
+                        train_frac = ["0.10","0.20","0.30","0.40","0.50","0.60","0.70"]  
                         val_frac = train_frac[::-1]
                         pred_list_all = []
                         for tf, vf in zip(train_frac, val_frac):
@@ -678,7 +678,7 @@ if options.BDT:
                         np.savetxt("losses/fpr_tpr_bdt_%s_fs_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
         else:
                 if train_model:
-                        val_frac_list = [0.1,0.3,0.5,0.7]
+                        val_frac_list = [0.1,0.2,0.3,0.4,0.5,0.6,0.7]
                         for val_frac in val_frac_list:
                                 name = options.name+"_sig%.3f"%options.sig_injection+"_train%.2f_val%.2f"%((0.8-val_frac), val_frac)
                                 print(">> Training %s on %i%% training, %i%% validation"%(name, (0.8-val_frac)*100, val_frac*100))
@@ -690,7 +690,7 @@ if options.BDT:
                 #pred_list = bdt.predict(test_ws[:,:n_features])
                 #pred_list=[]
                 if test_model:
-                        train_frac = ["0.10","0.30","0.50","0.70"]  
+                        train_frac = ["0.10","0.20","0.30","0.40","0.50","0.60","0.70"]  
                         val_frac = train_frac[::-1]
                         pred_list_all = []
                         for tf, vf in zip(train_frac, val_frac):
