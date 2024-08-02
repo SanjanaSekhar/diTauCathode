@@ -646,11 +646,14 @@ if options.BDT:
         if options.full_supervision:
 
                 if train_model:
-                        bdt = HistGradientBoostingClassifier(max_iter=300)
-                        train = np.vstack((train,val))
-                        bdt.fit(train[:,:n_features],train[:,n_features])
-                        with open("checkpoints/weak_supervision_BDT_%s.pkl"%(name),"wb") as f:
-                                dump(bdt, f, protocol=5)
+                        val_frac_list = [0.1,0.3,0.5,0.7]
+                        for val_frac in val_frac_list:
+                                name = options.name+"_sig%.3f"%options.sig_injection+"_fs"+"_train%.2f_val%.2f"%((0.8-val_frac), val_frac)
+                                bdt = HistGradientBoostingClassifier(max_iter=300, validation_fraction=val_frac)
+                                train = np.vstack((train,val))
+                                bdt.fit(train[:,:n_features],train[:,n_features])
+                                with open("checkpoints/weak_supervision_BDT_%s.pkl"%(name),"wb") as f:
+                                        dump(bdt, f, protocol=5)
                 #pred_list = bdt.predict(test[:,:n_features])
                 #pred_list=[]
                 if test_model:
@@ -672,11 +675,14 @@ if options.BDT:
                         np.savetxt("losses/fpr_tpr_bdt_%s_fs_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
         else:
                 if train_model:
-                        bdt = HistGradientBoostingClassifier(max_iter=300)
-                        train_ws = np.vstack((train_ws, val_ws))
-                        bdt.fit(train_ws[:,:n_features],train_ws[:,n_features])
-                        with open("checkpoints/weak_supervision_BDT_%s.pkl"%(name),"wb") as f:
-                                dump(bdt, f, protocol=5)
+                        val_frac_list = [0.1,0.3,0.5,0.7]
+                        for val_frac in val_frac_list:
+                                name = options.name+"_sig%.3f"%options.sig_injection+"_train%.2f_val%.2f"%((0.8-val_frac), val_frac)
+                                bdt = HistGradientBoostingClassifier(max_iter=300, validation_fraction=val_frac)
+                                train_ws = np.vstack((train_ws, val_ws))
+                                bdt.fit(train_ws[:,:n_features],train_ws[:,n_features])
+                                with open("checkpoints/weak_supervision_BDT_%s.pkl"%(name),"wb") as f:
+                                        dump(bdt, f, protocol=5)
                 #pred_list = bdt.predict(test_ws[:,:n_features])
                 #pred_list=[]
                 if test_model:
