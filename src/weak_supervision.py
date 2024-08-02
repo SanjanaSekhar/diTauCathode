@@ -148,7 +148,7 @@ def training(train_loader,val_loader,losses,val_losses,loaded_epoch,name):
 def testing(test_loader_ws, test_true, name, kfold=False):
 
         if kfold:
-                train_frac = ["0.10","0.20","0.30","0.40","0.50","0.60","0.70"]  
+                train_frac = ["0.10","0.30","0.50","0.70"]  
                 val_frac = train_frac[::-1]
                 print(train_frac, val_frac)
                 pred_list_all = []
@@ -466,7 +466,7 @@ parser.add_argument("--epoch_to_load",  default=0, type = int, help="load checkp
 parser.add_argument("--train_model",  default=False, help="train and save model")
 parser.add_argument("--test_model",  default=False, help="test model")
 parser.add_argument("--full_supervision",  default=False, help="Run fully supervised")
-parser.add_argument("--sig_injection",  default=0.1, type=float , help="percent of signal to inject into data")
+parser.add_argument("--sig_injection",  default=0.01, type=float , help="percent of signal to inject into data")
 parser.add_argument("--train_frac",  default=0.7, type=float , help="fraction of samples to train on")
 parser.add_argument("--val_frac",  default=0.1, type=float , help="fraction of samples to validate on")
 parser.add_argument("--bkg_frac",  default=5, type=float, help="n_bkg/n_sig")
@@ -672,7 +672,7 @@ else:
 
         if not options.full_supervision:
                 if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
-                if test_model: testing(test_loader_ws, test, name, kfold = False)
+                if test_model: testing(test_loader_ws, test, name, kfold = True)
         else:
                 if train_model: training(train_loader,val_loader,losses,val_losses,loaded_epoch,name)
-                if test_model: testing(test_loader, test, name, kfold = False)
+                if test_model: testing(test_loader, test, name, kfold = True)
