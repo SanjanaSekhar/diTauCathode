@@ -641,28 +641,61 @@ if options.feature_imp:
 
 if options.BDT:
         from sklearn.ensemble import HistGradientBoostingClassifier,GradientBoostingClassifier
+        from pickle import dump, load
+
         if options.full_supervision:
-                bdt = GradientBoostingClassifier()
-                train = np.vstack((train,val))
-                bdt.fit(train[:,:n_features],train[:,n_features])
+
+                if train_model:
+                        bdt = HistGradientBoostingClassifier(max_iter=300)
+                        train = np.vstack((train,val))
+                        bdt.fit(train[:,:n_features],train[:,n_features])
+                        with open("checkpoints/weak_supervision_BDT_%s.pkl"%(name),"wb") as f:
+                                dump(bdt, f, protocol=5)
                 #pred_list = bdt.predict(test[:,:n_features])
                 #pred_list=[]
-                pred_list = bdt.predict_proba(test[:,:n_features])[:,1]
-                true_list = test[:,-1]
-                #for i,label in enumerate(true_list): pred_list.append(pred[i,1]) 
-                print(true_list[:20],pred_list[:20])
-                np.savetxt("losses/fpr_tpr_bdt_%s.txt"%name,np.vstack((true_list,pred_list)))
+                if test_model:
+                        train_frac = ["0.10","0.30","0.50","0.70"]  
+                        val_frac = train_frac[::-1]
+                        pred_list_all = []
+                        for tf, vf in zip(train_frac, val_frac):
+                                pth = "%s_sig%0.3f_fs_train%s_val%s"%(name.split("_")[0],sig_injection, tf, vf)
+                                with open("checkpoints/weak_supervision_BDT_%s.pkl"%(pth),"rb") as f:
+                                        bdt = load(f)
+                                pred_list = bdt.predict_proba(test[:,:n_features])[:,1]
+                                
+                                pred_list_all.append(pred_list)
+                        
+                        pred_list_all = np.array(pred_list_all)
+                        pred_list = np.mean(pred_list_all, axis=0)
+                        true_list = test[:,-1]
+                        print("After averaging results of kfold, predicted list shape = ", pred_list.shape)
+                        np.savetxt("losses/fpr_tpr_bdt_%s_fs_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
         else:
-                bdt = GradientBoostingClassifier()
-                train_ws = np.vstack((train_ws, val_ws))
-                bdt.fit(train_ws[:,:n_features],train_ws[:,n_features])
+                if train_model:
+                        bdt = HistGradientBoostingClassifier(max_iter=300)
+                        train_ws = np.vstack((train_ws, val_ws))
+                        bdt.fit(train_ws[:,:n_features],train_ws[:,n_features])
+                        with open("checkpoints/weak_supervision_BDT_%s.pkl"%(name),"wb") as f:
+                                dump(bdt, f, protocol=5)
                 #pred_list = bdt.predict(test_ws[:,:n_features])
                 #pred_list=[]
-                pred_list = bdt.predict_proba(test_ws[:,:n_features])[:,1]
-                true_list = test_ws[:,-1]
-                #for i,label in enumerate(true_list): pred_list.append(pred[i,1])
-                print(true_list[:20],pred_list[:20])
-                np.savetxt("losses/fpr_tpr_bdt_%s.txt"%name,np.vstack((true_list,pred_list))) 
+                if test_model:
+                        train_frac = ["0.10","0.30","0.50","0.70"]  
+                        val_frac = train_frac[::-1]
+                        pred_list_all = []
+                        for tf, vf in zip(train_frac, val_frac):
+                                pth = "%s_sig%0.3f_train%s_val%s"%(name.split("_")[0],sig_injection, tf, vf)
+                                with open("checkpoints/weak_supervision_BDT_%s.pkl"%(pth),"rb") as f:
+                                        bdt = load(f)
+                                pred_list = bdt.predict_proba(test_ws[:,:n_features])[:,1]
+                                
+                                pred_list_all.append(pred_list)
+                        
+                        pred_list_all = np.array(pred_list_all)
+                        pred_list = np.mean(pred_list_all, axis=0)
+                        true_list = test[:,-1]
+                        print("After averaging results of kfold, predicted list shape = ", pred_list.shape)
+                        np.savetxt("losses/fpr_tpr_bdt_%s_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
 
 else:
         train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)

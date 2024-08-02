@@ -102,25 +102,29 @@ bkg2 = pd.read_csv("csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv")
 
 #plot_features(sig, bkg1, bkg2)
 
-#injections = ["0.050","0.010","0.005"]
-injections = ["0.100"]#,"0.200","0.300","0.400","0.500","0.600","0.700","0.800","0.900"]
+injections = ["0.100","0.050","0.010","0.005"]
+#injections = ["0.100"]#,"0.200","0.300","0.400","0.500","0.600","0.700","0.800","0.900"]
 sig_masses = [250]
 bkgs = ["DY","ttbar"]
-train_frac = ["0.50","0.55","0.60","0.65","0.70","0.75"]
+train_frac = ["0.70"]
+
+
 
 for mass in sig_masses:
 	for bkg in bkgs:
 		ws_lists, ws_names, fs_lists, fs_names = [],[],[],[]
+		
+			
 		ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_kfold.txt"%(mass,bkg)))
-		ws_names.append("NN IAD with 7-fold cross val")
+		ws_names.append("NN IAD with 4-fold cross val (1%% signal)")
 		fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_fs_kfold.txt"%(mass,bkg)))
-		fs_names.append("NN Full Sup with 7-fold cross val")
+		fs_names.append("NN Full Sup with 4-fold cross val (1%% signal)")
 		# losses/fpr_tpr_Phi250vsttbar_sig0.100_train0.70_val0.10.txt
-		ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_sig0.100_train0.70_val0.10.txt"%(mass,bkg)))
-		ws_names.append("NN IAD: train_frac = 70%%, val_frac = 10%%")
-		fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%svs%s_sig0.100_fs_train0.70_val0.10.txt"%(mass,bkg)))
-		fs_names.append("NN Full Sup: train_frac = 70%%, val_frac = 10%%")
-		plt_title = "Phi%ivs%s_mjj_deltaRjj_kfold"%(mass,bkg) 
+		ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_sig0.010_train0.70_val0.10.txt"%(mass,bkg)))
+		ws_names.append("NN IAD: No cross val (1%% Signal)")
+		fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%svs%s_sig0.010_fs_train0.70_val0.10.txt"%(mass,bkg)))
+		fs_names.append("NN Full Sup: No cross val (1%% Signal")
+		plt_title = "Phi%ivs%s_mjj_deltaRjj_sig0.01_4fold"%(mass,bkg) 
 		plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
 
 '''
@@ -273,5 +277,13 @@ for mass in sig_masses:
 		# #ws_names.append("Bkg vs Bkg: 0%% signal")
 		#print(ws_names)
 		plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
+
+ws_lists, ws_names, fs_lists, fs_names = [],[],[],[]
+ws_lists.append(np.loadtxt("losses/fpr_tpr_test_sig0.100_train0.70_val0.10.txt"))
+ws_names.append("NN IAD: test")
+fs_lists.append(np.loadtxt("losses/fpr_tpr_test_sig0.100_fs_train0.70_val0.10.txt"))
+fs_names.append("NN Full Sup: test")
+plt_title = "test_sig0.100_fs_train0.70_val0.10"
+plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
 
 '''
