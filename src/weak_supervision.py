@@ -511,11 +511,15 @@ if "Phi750" in name:
                 options.bkg = "SM_dyToTauTau_0J1J2J_MinMass350_NoMisTag_1M"
 if "ttPhi750" in name:
         options.sig = "2HDM-ttPhiToTauTau-M750_2J_MinMass350_NoMisTag"
-        options.m_tt_min = 400.
-        options.m_tt_max = 1000.
+        
+        
         if "ttbar" in name:
+                options.m_tt_min = 350.
+                options.m_tt_max = 1200.
                 options.bkg = "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass350_NoMisTag_MadSpin_1M"
         if "DY" in name:
+                options.m_tt_min = 400.
+                options.m_tt_max = 1000.
                 options.bkg = "SM_dyToTauTau_0J1J2J_MinMass350_NoMisTag_1M"
 if "TS250" in name:
         options.sig = "eVLQ_T-M1000_S-M250_NoMisTag"
