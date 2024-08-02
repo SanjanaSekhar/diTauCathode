@@ -451,7 +451,7 @@ parser.add_argument("--n_epochs",  default=10, type = int, help="no. of epochs t
 parser.add_argument("--ending",  default="042624", help="date")
 parser.add_argument("--BDT",  default=False, help="Use HistGradientBoostingClassifier instead of NN")
 parser.add_argument("--load_model",  default=False, help="load saved model")
-parser.add_argument("--epoch_to_load",  default=0, type = int, help="load checkpoint corresponding to this epoch")
+parser.add_argument("--epoch_to_load",  default=4, type = int, help="load checkpoint corresponding to this epoch")
 parser.add_argument("--train_model",  default=False, help="train and save model")
 parser.add_argument("--test_model",  default=False, help="test model")
 parser.add_argument("--full_supervision",  default=False, help="Run fully supervised")
@@ -500,11 +500,14 @@ if "Phi250" in name:
                 options.bkg = "SM_dyToTauTau_0J1J2J_MinMass120_1M"
 if "Phi750" in name:
         options.sig = "2HDM-vbfPhiToTauTau-M750_2J_MinMass350_NoMisTag"
-        options.m_tt_min = 400.
-        options.m_tt_max = 1000.
+        
         if "ttbar" in name:
+                options.m_tt_min = 350.
+                options.m_tt_max = 1200.
                 options.bkg = "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass350_NoMisTag_MadSpin_1M"
         if "DY" in name:
+                options.m_tt_min = 400.
+                options.m_tt_max = 1000.
                 options.bkg = "SM_dyToTauTau_0J1J2J_MinMass350_NoMisTag_1M"
 if "ttPhi750" in name:
         options.sig = "2HDM-ttPhiToTauTau-M750_2J_MinMass350_NoMisTag"
@@ -656,9 +659,16 @@ else:
                         if not options.full_supervision: training(train_loader_ws, val_loader_ws, losses, val_losses, loaded_epoch, name)      
                         else: training(train_loader, val_loader, losses, val_losses, loaded_epoch, name+"_fs") 
         
-        if test_model: 
+        if test_model:
+                name = options.name+ "-case%i"%case
+                train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(options.test_ws, sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, 
+                    bkg_sig_frac, options.train_frac, options.val_frac, name, f_list) 
+                train, val, test = preprocess(train, val, test)
+                train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
+                train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
+                train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
                 if not options.full_supervision: testing(test_loader_ws, test, name, kfold = True)
-                else: testing(test_loader, test, name+"_fs", kfold = True)
+                else: testing(test_loader, test, name, kfold = True)
 
 '''
 ===========================
