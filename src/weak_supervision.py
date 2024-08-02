@@ -241,18 +241,8 @@ def make_train_test_val_ws(test_ws, sig, bkg1, m_tt_min = 350., m_tt_max = 1000.
                 
                 #sig.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
                 #bkg1.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
-                sig = sig[["m_jet1jet2", "deltaR_jet1jet2", 
-                        #"deltaR_tau1tau2","met_met",
-                        #"jet1_nef", "jet1_cef",
-                        #"pt_tau1tau2","deltaR_jet1jet2",
-                        #"tau1_m","tau2_m","deltaR_tau1tau2",
-                        "m_tau1tau2","label"]]
-                bkg1 = bkg1[["m_jet1jet2", "deltaR_jet1jet2", 
-                        #"deltaR_tau1tau2","met_met",
-                        #"jet1_nef", "jet1_cef",
-                        #"pt_tau1tau2","deltaR_jet1jet2",
-                        #"tau1_m","tau2_m","deltaR_tau1tau2",
-                        "m_tau1tau2","label"]]
+                sig = sig[f_list]
+                bkg1 = bkg1[f_list]
                 
                 print(sig.shape, bkg1.shape)
                 print("Min, max m_tt in sig: ", sig['m_tau1tau2'].min(), sig['m_tau1tau2'].max() )
@@ -636,27 +626,22 @@ if options.BDT:
                         np.savetxt("losses/fpr_tpr_bdt_%s_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
 
 else:
-
-        train_frac_list = [0.1, 0.3, 0.5, 0.7]  
-        val_frac_list = train_frac_list[::-1]
-        for train_frac, val_frac in zip(train_frac_list, val_frac_list):
-                name = options.name+ "-case%i"%case + "_sig%.3f"%options.sig_injection+"_train%.2f_val%.2f"%(train_frac, val_frac) 
-                train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(options.test_ws, sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, bkg_sig_frac, train_frac, val_frac, name, f_list)
-                train, val, test = preprocess(train, val, test)
-                train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
-                train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
-                train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
-
-
-
-                if not options.full_supervision:
-                        if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
-                        if test_model: testing(test_loader_ws, test, name, kfold = True)
-                else:
-                        name += "_fs"
-                        if train_model: training(train_loader,val_loader,losses,val_losses,loaded_epoch,name)
-                        if test_model: testing(test_loader, test, name, kfold = True)
-
+        if train_model:
+                train_frac_list = [0.1, 0.3, 0.5, 0.7]  
+                val_frac_list = train_frac_list[::-1]
+                for train_frac, val_frac in zip(train_frac_list, val_frac_list):
+                        name = options.name+ "-case%i"%case + "_sig%.3f"%options.sig_injection+"_train%.2f_val%.2f"%(train_frac, val_frac) 
+                        train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(options.test_ws, sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, bkg_sig_frac, train_frac, val_frac, name, f_list)
+                        train, val, test = preprocess(train, val, test)
+                        train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
+                        train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
+                        train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
+                        if not options.full_supervision: training(train_loader_ws, val_loader_ws, losses, val_losses, loaded_epoch, name)      
+                        else: training(train_loader, val_loader, losses, val_losses, loaded_epoch, name+"_fs") 
+        
+        if test_model: 
+                if not options.full_supervision: testing(test_loader_ws, test, name, kfold = True)
+                else: testing(test_loader, test, name+"_fs", kfold = True)
 
 '''
 ===========================
