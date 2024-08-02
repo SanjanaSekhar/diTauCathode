@@ -119,12 +119,16 @@ for mass in sig_masses:
 		ws_names.append("NN IAD with 4-fold cross val (1%% signal)")
 		fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_fs_kfold.txt"%(mass,bkg)))
 		fs_names.append("NN Full Sup with 4-fold cross val (1%% signal)")
-		# losses/fpr_tpr_Phi250vsttbar_sig0.100_train0.70_val0.10.txt
-		ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_sig0.010_train0.70_val0.10.txt"%(mass,bkg)))
-		ws_names.append("NN IAD: No cross val (1%% Signal)")
-		fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%svs%s_sig0.010_fs_train0.70_val0.10.txt"%(mass,bkg)))
-		fs_names.append("NN Full Sup: No cross val (1%% Signal")
-		plt_title = "Phi%ivs%s_mjj_deltaRjj_sig0.01_4fold"%(mass,bkg) 
+		ws_lists.append(np.loadtxt("losses/fpr_tpr_bdt_Phi%ivs%s_kfold.txt"%(mass,bkg)))
+		ws_names.append("BDT IAD with 7-fold cross val (1%% signal)")
+		fs_lists.append(np.loadtxt("losses/fpr_tpr_bdt_Phi%ivs%s_fs_kfold.txt"%(mass,bkg)))
+		fs_names.append("BDT Full Sup with 7-fold cross val (1%% signal)")
+		# # losses/fpr_tpr_Phi250vsttbar_sig0.100_train0.70_val0.10.txt
+		# ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_sig0.010_train0.70_val0.10.txt"%(mass,bkg)))
+		# ws_names.append("NN IAD: No cross val (1%% Signal)")
+		# fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%svs%s_sig0.010_fs_train0.70_val0.10.txt"%(mass,bkg)))
+		# fs_names.append("NN Full Sup: No cross val (1%% Signal")
+		plt_title = "Phi%ivs%s_mjj_deltaRjj_sig0.01_4foldvs7fold_NNvsBDT"%(mass,bkg) 
 		plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
 
 '''

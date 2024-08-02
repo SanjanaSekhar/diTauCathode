@@ -29,7 +29,7 @@ class NN(torch.nn.Module):
                 super().__init__()
 
                 self.classifier = torch.nn.Sequential(
-                        torch.nn.Linear(2,16),
+                        torch.nn.Linear(4,16),
                         torch.nn.ReLU(),
                         torch.nn.Linear(16,32),
                         torch.nn.ReLU(),
@@ -153,8 +153,8 @@ def testing(test_loader_ws, test_true, name, kfold=False):
                 print(train_frac, val_frac)
                 pred_list_all = []
                 for tf, vf in zip(train_frac, val_frac):
-                        pth = "%s_sig%0.3f_train%s_val%s"%(name.split("_")[0],sig_injection, tf, vf)
-                        if options.full_supervision: pth = "%s_sig%0.3f_fs_train%s_val%s"%(name.split("_")[0],sig_injection, tf, vf)
+                        pth =  "-case%i"%case + "%s_sig%0.3f_train%s_val%s"%(name.split("_")[0],sig_injection, tf, vf)
+                        if options.full_supervision: pth +=  "_fs"
                         loaded_epoch, losses, val_losses = load_trained_model(pth, epoch_to_load)
                         pred_list = []
                         print("================= Testing %s ================="%pth)
@@ -181,8 +181,8 @@ def testing(test_loader_ws, test_true, name, kfold=False):
                 true_list = test_true[:,-1]
                 print(true_list==1)
                 # print(np.vstack((true_list,pred_list)))
-                if options.full_supervision: np.savetxt("losses/fpr_tpr_%s_fs_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
-                else: np.savetxt("losses/fpr_tpr_%s_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
+                if options.full_supervision: np.savetxt("losses/fpr_tpr_%s_fs_sig%0.3f.txt"%(name.split("_")[0], sig_injection), np.vstack((true_list,pred_list)))
+                else: np.savetxt("losses/fpr_tpr_%s_sig%0.3f.txt"%(name.split("_")[0], sig_injection), np.vstack((true_list,pred_list)))
 
         else:
                 loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load) 
@@ -213,7 +213,7 @@ def testing(test_loader_ws, test_true, name, kfold=False):
 
 
 
-def make_train_test_val_ws(test_ws, sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_injection = 0.2, bkg_sig_frac = 5, train_frac = 0.8, val_frac = 0.1, name = "PhivsDY"):
+def make_train_test_val_ws(test_ws, sig, bkg1, m_tt_min = 350., m_tt_max = 1000., sig_injection = 0.2, bkg_sig_frac = 5, train_frac = 0.8, val_frac = 0.1, name = "PhivsDY", f_list = ["m_jet1jet2", "deltaR_jet1jet2"]):
 
         # CREATE an IDEAL Anomaly Detector
         # Train pure bkg vs sig+bkg in the SR only
@@ -241,7 +241,6 @@ def make_train_test_val_ws(test_ws, sig, bkg1, m_tt_min = 350., m_tt_max = 1000.
                 
                 #sig.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
                 #bkg1.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
-                
                 sig = sig[["m_jet1jet2", "deltaR_jet1jet2", 
                         #"deltaR_tau1tau2","met_met",
                         #"jet1_nef", "jet1_cef",
@@ -458,7 +457,7 @@ parser.add_argument("--sig", default="2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoM
 parser.add_argument("--bkg",  default="SM_dyToTauTau_0J1J2J_MinMass120_NoMisTag", help="name of the .csv file for the bkg")
 parser.add_argument("--early_stop",  default=5, type = int, help="early stopping patience (no. of epochs)")
 parser.add_argument("--batch_size",  default=128, type = int, help="batch size for training")
-parser.add_argument("--n_epochs",  default=20, type = int, help="no. of epochs to train for")
+parser.add_argument("--n_epochs",  default=10, type = int, help="no. of epochs to train for")
 parser.add_argument("--ending",  default="042624", help="date")
 parser.add_argument("--BDT",  default=False, help="Use HistGradientBoostingClassifier instead of NN")
 parser.add_argument("--load_model",  default=False, help="load saved model")
@@ -476,6 +475,7 @@ parser.add_argument("--feature_imp",  default=False, help="Plot feature_importan
 parser.add_argument("--plot_pre_post",  default=False, help="Plot sig and bkg pre and postproc")
 parser.add_argument("--test_ws",  default=False, help="test WS with gaussians")
 parser.add_argument("--choose_n_features",  default=10, type = int, help="extract n best features")
+parser.add_argument("--case",  default=1, type = int, help="which subset of features do you want to try? choose between 1 to 4")
 options = parser.parse_args()
 
 
@@ -494,8 +494,6 @@ m_tt_max = options.m_tt_max
 epoch_to_load = options.epoch_to_load
 
 if options.full_supervision: name += "_fs" 
-
-name += "_train%.2f_val%.2f"%(options.train_frac, options.val_frac)
 
 gpu_boole = torch.cuda.is_available()
 print("Is GPU available? ",gpu_boole)
@@ -518,52 +516,166 @@ if "Phi750" in name:
                 options.bkg = "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass350_NoMisTag_MadSpin_1M"
         if "DY" in name:
                 options.bkg = "SM_dyToTauTau_0J1J2J_MinMass350_NoMisTag_1M"
+if "ttPhi750" in name:
+        options.sig = "2HDM-ttPhiToTauTau-M750_2J_MinMass350_NoMisTag"
+        options.m_tt_min = 400.
+        options.m_tt_max = 1000.
+        if "ttbar" in name:
+                options.bkg = "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass350_NoMisTag_MadSpin_1M"
+        if "DY" in name:
+                options.bkg = "SM_dyToTauTau_0J1J2J_MinMass350_NoMisTag_1M"
+if "TS250" in name:
+        options.sig = "eVLQ_T-M1000_S-M250_NoMisTag"
+        options.m_tt_min = 100.
+        options.m_tt_max = 500.
+        if "ttbar" in name:
+                options.bkg = "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_NoMisTag_MadSpin_1M"
+        if "DY" in name:
+                options.bkg = "SM_dyToTauTau_0J1J2J_MinMass120_1M"
+
+case = options.case 
+if case == 1: 
+        f_list = ["tau1_m","tau2_m","deltaR_tau1tau2","met_met"
+                        "m_tau1tau2","label"]
+elif case == 2:
+        f_list = ["m_jet1jet2", "deltaR_jet1jet2","deltaR_tau1tau2","met_met"
+                        "m_tau1tau2","label"]
+elif case == 3:
+        f_list = ["m_jet1jet2", "deltaR_jet1jet2","tau1_m","tau2_m"
+                        "m_tau1tau2","label"]
+elif case == 4:
+        f_list = ["m_jet1jet2", "deltaR_jet1jet2","tau1_m","deltaR_tau1tau2"
+                        "m_tau1tau2","label"]
 
 print(options)
 
-if not options.test_ws:
-        sig = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.sig, lineterminator='\n')
-        bkg1 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.bkg,lineterminator='\n')
-        #bkg2 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv",lineterminator='\n')
+print(" Will use the following features: ", f_list)
 
-else:
-        x1_sig, x2_sig = np.random.multivariate_normal([7,7], np.diag((0.5,0.5)), 50000).T
-        y_sig = np.ones((50000))
-        x1_bkg, x2_bkg = np.random.multivariate_normal([4,4], np.diag((4,4)), 100000).T
-        y_bkg = np.zeros((100000))
-        sig = np.vstack((x1_sig, x2_sig, y_sig)).T
-        bkg1 = np.vstack((x1_bkg, x2_bkg, y_bkg)).T
-
-if not options.BDT:
-        model = NN()
-        if gpu_boole: model = model.cuda()
-
-        optimizer = torch.optim.Adam(model.parameters(),
-                lr = 1e-3,
-                weight_decay = 1e-8)
-
-        loss_function = torch.nn.BCELoss()
-
-
-#if test_model: load_model = True
 if load_model:  loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load)
 else:
         loaded_epoch = 0
         losses,val_losses = [],[]
 
-train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(options.test_ws, sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, bkg_sig_frac, options.train_frac, options.val_frac, name)
+if options.BDT:
+        from sklearn.ensemble import HistGradientBoostingClassifier,GradientBoostingClassifier
+        from pickle import dump, load
+        train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(options.test_ws, sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, bkg_sig_frac, options.train_frac, options.val_frac, name, f_list)
+        train, val, test = preprocess(train, val, test)
+        train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
+        print("Using a HistGradientBoostingClassifier instead of NN...")
+        if options.full_supervision:
+
+                if train_model:
+                        val_frac_list = [0.1,0.2,0.3,0.4,0.5,0.6,0.7]
+                        for val_frac in val_frac_list:
+                                name = options.name+"_sig%.3f"%options.sig_injection+"_fs"+"_train%.2f_val%.2f"%((0.8-val_frac), val_frac)
+                                print(">> Training %s on %i%% training, %i%% validation"%(name, (0.8-val_frac)*100, val_frac*100))
+                                bdt = HistGradientBoostingClassifier(max_iter=1000, validation_fraction=val_frac, max_leaf_nodes=50)
+                                train = np.vstack((train,val))
+                                bdt.fit(train[:,:n_features],train[:,n_features])
+                                with open("checkpoints/weak_supervision_BDT_%s.pkl"%(name),"wb") as f:
+                                        dump(bdt, f, protocol=5)
+                #pred_list = bdt.predict(test[:,:n_features])
+                #pred_list=[]
+                if test_model:
+                        train_frac = ["0.10","0.20","0.30","0.40","0.50","0.60","0.70"]  
+                        val_frac = train_frac[::-1]
+                        pred_list_all = []
+                        for tf, vf in zip(train_frac, val_frac):
+                                pth = "%s_sig%0.3f_fs_train%s_val%s"%(name.split("_")[0],sig_injection, tf, vf)
+                                print(">> Testing %s on %i%% training, %i%% validation"%(pth, float(tf)*100, float(vf)*100))
+                                with open("checkpoints/weak_supervision_BDT_%s.pkl"%(pth),"rb") as f:
+                                        bdt = load(f)
+                                pred_list = bdt.predict_proba(test[:,:n_features])[:,1]
+                                
+                                pred_list_all.append(pred_list)
+                        
+                        pred_list_all = np.array(pred_list_all)
+                        pred_list = np.mean(pred_list_all, axis=0)
+                        true_list = test[:,-1]
+                        print("After averaging results of kfold, predicted list shape = ", pred_list.shape)
+                        np.savetxt("losses/fpr_tpr_bdt_%s_fs_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
+        else:
+                model = NN()
+                if gpu_boole: model = model.cuda()
+
+                optimizer = torch.optim.Adam(model.parameters(),
+                        lr = 1e-3,
+                        weight_decay = 1e-8)
+
+                loss_function = torch.nn.BCELoss()
+                if train_model:
+                        val_frac_list = [0.1,0.2,0.3,0.4,0.5,0.6,0.7]
+                        for val_frac in val_frac_list:
+                                name = options.name+"_sig%.3f"%options.sig_injection+"_train%.2f_val%.2f"%((0.8-val_frac), val_frac)
+                                print(">> Training %s on %i%% training, %i%% validation"%(name, (0.8-val_frac)*100, val_frac*100))
+                                bdt = HistGradientBoostingClassifier(max_iter=1000, validation_fraction=val_frac, max_leaf_nodes=50)
+                                train_ws = np.vstack((train_ws, val_ws))
+                                bdt.fit(train_ws[:,:n_features],train_ws[:,n_features])
+                                with open("checkpoints/weak_supervision_BDT_%s.pkl"%(name),"wb") as f:
+                                        dump(bdt, f, protocol=5)
+                #pred_list = bdt.predict(test_ws[:,:n_features])
+                #pred_list=[]
+                if test_model:
+                        train_frac = ["0.10","0.20","0.30","0.40","0.50","0.60","0.70"]  
+                        val_frac = train_frac[::-1]
+                        pred_list_all = []
+                        for tf, vf in zip(train_frac, val_frac):
+                                pth = "%s_sig%0.3f_train%s_val%s"%(name.split("_")[0],sig_injection, tf, vf)
+                                print(">> Testing %s on %i%% training, %i%% validation"%(pth, float(tf)*100, float(vf)*100))
+                                with open("checkpoints/weak_supervision_BDT_%s.pkl"%(pth),"rb") as f:
+                                        bdt = load(f)
+                                pred_list = bdt.predict_proba(test_ws[:,:n_features])[:,1]
+                                
+                                pred_list_all.append(pred_list)
+                        
+                        pred_list_all = np.array(pred_list_all)
+                        pred_list = np.mean(pred_list_all, axis=0)
+                        true_list = test[:,-1]
+                        print("After averaging results of kfold, predicted list shape = ", pred_list.shape)
+                        np.savetxt("losses/fpr_tpr_bdt_%s_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
+
+else:
+
+        train_frac_list = [0.1, 0.3, 0.5, 0.7]  
+        val_frac_list = train_frac_list[::-1]
+        for train_frac, val_frac in zip(train_frac_list, val_frac_list):
+                name = options.name+ "-case%i"%case + "_sig%.3f"%options.sig_injection+"_train%.2f_val%.2f"%(train_frac, val_frac) 
+                train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(options.test_ws, sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, bkg_sig_frac, train_frac, val_frac, name, f_list)
+                train, val, test = preprocess(train, val, test)
+                train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
+                train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
+                train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
+
+
+
+                if not options.full_supervision:
+                        if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
+                        if test_model: testing(test_loader_ws, test, name, kfold = True)
+                else:
+                        name += "_fs"
+                        if train_model: training(train_loader,val_loader,losses,val_losses,loaded_epoch,name)
+                        if test_model: testing(test_loader, test, name, kfold = True)
+
+
+'''
+===========================
+        EXTRAS
+===========================
+'''
 
 if options.plot_pre_post:
+        train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(options.test_ws, sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, bkg_sig_frac, options.train_frac, options.val_frac, name, f_list)
+
         # plot data vs bkg for pre and post proc
         data_pre = train_ws[train_ws[:,2]==1]
         bkg_pre =  train_ws[train_ws[:,2]==0]
         sig_pre = train[train[:,2]==1]
         bkg_fs_pre = train[train[:,2]==0]
 
-train, val, test = preprocess(train, val, test)
-train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
+        train, val, test = preprocess(train, val, test)
+        train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
 
-if options.plot_pre_post:
         data = train_ws[train_ws[:,2]==1]
         bkg =  train_ws[train_ws[:,2]==0]
         sig = train[train[:,2]==1]
@@ -639,84 +751,15 @@ if options.feature_imp:
         if options.full_supervision: feature_select(train, name, feature_list, k = options.choose_n_features)
         else: feature_select(train_ws, name, feature_list, k = options.choose_n_features)
 
-if options.BDT:
-        from sklearn.ensemble import HistGradientBoostingClassifier,GradientBoostingClassifier
-        from pickle import dump, load
-        
-        print("Using a HistGradientBoostingClassifier instead of NN...")
-        if options.full_supervision:
-
-                if train_model:
-                        val_frac_list = [0.1,0.2,0.3,0.4,0.5,0.6,0.7]
-                        for val_frac in val_frac_list:
-                                name = options.name+"_sig%.3f"%options.sig_injection+"_fs"+"_train%.2f_val%.2f"%((0.8-val_frac), val_frac)
-                                print(">> Training %s on %i%% training, %i%% validation"%(name, (0.8-val_frac)*100, val_frac*100))
-                                bdt = HistGradientBoostingClassifier(max_iter=1000, validation_fraction=val_frac, max_leaf_nodes=50)
-                                train = np.vstack((train,val))
-                                bdt.fit(train[:,:n_features],train[:,n_features])
-                                with open("checkpoints/weak_supervision_BDT_%s.pkl"%(name),"wb") as f:
-                                        dump(bdt, f, protocol=5)
-                #pred_list = bdt.predict(test[:,:n_features])
-                #pred_list=[]
-                if test_model:
-                        train_frac = ["0.10","0.20","0.30","0.40","0.50","0.60","0.70"]  
-                        val_frac = train_frac[::-1]
-                        pred_list_all = []
-                        for tf, vf in zip(train_frac, val_frac):
-                                pth = "%s_sig%0.3f_fs_train%s_val%s"%(name.split("_")[0],sig_injection, tf, vf)
-                                print(">> Testing %s on %i%% training, %i%% validation"%(pth, float(tf)*100, float(vf)*100))
-                                with open("checkpoints/weak_supervision_BDT_%s.pkl"%(pth),"rb") as f:
-                                        bdt = load(f)
-                                pred_list = bdt.predict_proba(test[:,:n_features])[:,1]
-                                
-                                pred_list_all.append(pred_list)
-                        
-                        pred_list_all = np.array(pred_list_all)
-                        pred_list = np.mean(pred_list_all, axis=0)
-                        true_list = test[:,-1]
-                        print("After averaging results of kfold, predicted list shape = ", pred_list.shape)
-                        np.savetxt("losses/fpr_tpr_bdt_%s_fs_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
-        else:
-                if train_model:
-                        val_frac_list = [0.1,0.2,0.3,0.4,0.5,0.6,0.7]
-                        for val_frac in val_frac_list:
-                                name = options.name+"_sig%.3f"%options.sig_injection+"_train%.2f_val%.2f"%((0.8-val_frac), val_frac)
-                                print(">> Training %s on %i%% training, %i%% validation"%(name, (0.8-val_frac)*100, val_frac*100))
-                                bdt = HistGradientBoostingClassifier(max_iter=1000, validation_fraction=val_frac, max_leaf_nodes=50)
-                                train_ws = np.vstack((train_ws, val_ws))
-                                bdt.fit(train_ws[:,:n_features],train_ws[:,n_features])
-                                with open("checkpoints/weak_supervision_BDT_%s.pkl"%(name),"wb") as f:
-                                        dump(bdt, f, protocol=5)
-                #pred_list = bdt.predict(test_ws[:,:n_features])
-                #pred_list=[]
-                if test_model:
-                        train_frac = ["0.10","0.20","0.30","0.40","0.50","0.60","0.70"]  
-                        val_frac = train_frac[::-1]
-                        pred_list_all = []
-                        for tf, vf in zip(train_frac, val_frac):
-                                pth = "%s_sig%0.3f_train%s_val%s"%(name.split("_")[0],sig_injection, tf, vf)
-                                print(">> Testing %s on %i%% training, %i%% validation"%(pth, float(tf)*100, float(vf)*100))
-                                with open("checkpoints/weak_supervision_BDT_%s.pkl"%(pth),"rb") as f:
-                                        bdt = load(f)
-                                pred_list = bdt.predict_proba(test_ws[:,:n_features])[:,1]
-                                
-                                pred_list_all.append(pred_list)
-                        
-                        pred_list_all = np.array(pred_list_all)
-                        pred_list = np.mean(pred_list_all, axis=0)
-                        true_list = test[:,-1]
-                        print("After averaging results of kfold, predicted list shape = ", pred_list.shape)
-                        np.savetxt("losses/fpr_tpr_bdt_%s_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
+if not options.test_ws:
+        sig = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.sig, lineterminator='\n')
+        bkg1 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/%s.csv"%options.bkg,lineterminator='\n')
+        #bkg2 = pd.read_csv("~/nobackup/CATHODE_ditau/Delphes/diTauCathode/csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv",lineterminator='\n')
 
 else:
-        train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
-        train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
-
-
-
-        if not options.full_supervision:
-                if train_model: training(train_loader_ws,val_loader_ws,losses,val_losses,loaded_epoch,name)
-                if test_model: testing(test_loader_ws, test, name, kfold = True)
-        else:
-                if train_model: training(train_loader,val_loader,losses,val_losses,loaded_epoch,name)
-                if test_model: testing(test_loader, test, name, kfold = True)
+        x1_sig, x2_sig = np.random.multivariate_normal([7,7], np.diag((0.5,0.5)), 50000).T
+        y_sig = np.ones((50000))
+        x1_bkg, x2_bkg = np.random.multivariate_normal([4,4], np.diag((4,4)), 100000).T
+        y_bkg = np.zeros((100000))
+        sig = np.vstack((x1_sig, x2_sig, y_sig)).T
+        bkg1 = np.vstack((x1_bkg, x2_bkg, y_bkg)).T
