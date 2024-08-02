@@ -96,11 +96,11 @@ def plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title):
 	plt.close()
 
 
-sig = pd.read_csv("csv_files/2HDM-vbfPhiToTauTau-M750_2J_MinMass120_NoMisTag.csv", lineterminator='\n')
-bkg1 = pd.read_csv("csv_files/SM_dyToTauTau_0J1J2J_MinMass120_NoMisTag.csv")
-bkg2 = pd.read_csv("csv_files/SM_ttbarTo2Tau2Nu_2J_MinMass120_NoMisTag.csv")
+sig = pd.read_csv("csv_files/2HDM-vbfPhiToTauTau-M750_2J_MinMass350_NoMisTag.csv", lineterminator='\n')
+bkg1 = pd.read_csv("csv_files/SM_dyToTauTau_0J1J2J_MinMass350_NoMisTag_1M.csv")
+bkg2 = pd.read_csv("csv_files/SM_ttbarTo2Tau2Nu_0J1J2J_MinMass350_NoMisTag_MadSpin_1M.csv")
 
-#plot_features(sig, bkg1, bkg2)
+plot_features(sig, bkg1, bkg2)
 
 injections = ["0.100","0.050","0.010","0.005"]
 #injections = ["0.100"]#,"0.200","0.300","0.400","0.500","0.600","0.700","0.800","0.900"]
@@ -129,7 +129,7 @@ for mass in sig_masses:
 		# fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%svs%s_sig0.010_fs_train0.70_val0.10.txt"%(mass,bkg)))
 		# fs_names.append("NN Full Sup: No cross val (1%% Signal")
 		plt_title = "Phi%ivs%s_mjj_deltaRjj_sig0.01_4foldvs7fold_NNvsBDT"%(mass,bkg) 
-		plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
+		#plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
 
 '''
 for mass in sig_masses:
