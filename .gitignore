@@ -3,7 +3,7 @@ build/
 .ipynb_checkpoints
 *.h5
 *.root
-*.pth
+checkpoints/
 .cathode/
 *.log
 csv_files/
