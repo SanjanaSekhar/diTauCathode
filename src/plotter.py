@@ -99,21 +99,49 @@ def plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title):
 
 
 #sig = pd.read_csv("csv_files/2HDM-vbfPhiToTauTau-M750_2J_MinMass350_NoMisTag.csv", lineterminator='\n')
-#sig = pd.read_csv("csv_files/2HDM-ttPhiToTauTau-M750_2J_MinMass350_NoMisTag.csv")
-sig = pd.read_csv("csv_files/eVLQ_T-M1000_S-M250_NoMisTag.csv")
-bkg1 = pd.read_csv("csv_files/SM_dyToTauTau_0J1J2J_MinMass120_1M.csv")
-bkg2 = pd.read_csv("csv_files/SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_NoMisTag_MadSpin_1M.csv")
+#sig = pd.read_csv("csv_files/2HDM-TSToTauTau-M750_2J_MinMass350_NoMisTag.csv")
+# sig = pd.read_csv("csv_files/eVLQ_T-M1000_S-M250_NoMisTag.csv")
+# bkg1 = pd.read_csv("csv_files/SM_dyToTauTau_0J1J2J_MinMass120_1M.csv")
+# bkg2 = pd.read_csv("csv_files/SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_NoMisTag_MadSpin_1M.csv")
 
-plot_features(sig, bkg1, bkg2)
+#plot_features(sig, bkg1, bkg2)
 
-injections = ["0.100","0.050","0.010","0.005"]
+#injections = ["0.100","0.050","0.010","0.005"]
 #injections = ["0.100"]#,"0.200","0.300","0.400","0.500","0.600","0.700","0.800","0.900"]
-sig_masses = [250]
-bkgs = ["DY","ttbar"]
-train_frac = ["0.70"]
+masses = [250]
+bkgs = ["DY"]
 
 
+# name: losses/fpr_tpr_TS750vsttbar-case3_fs_sig0.010.txt
 
+for mass in masses:
+	for bkg in bkgs:
+		ws_lists, ws_names, fs_lists, fs_names = [],[],[],[]
+		
+		ws_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case1_sig0.010.txt"%(mass,bkg)))
+		ws_names.append(r"IAD: $m_{\tau 1}, m_{\tau 2}, \Delta R_{\tau\tau}$, MET")
+		fs_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case1_fs_sig0.010.txt"%(mass,bkg)))
+		fs_names.append(r"FS: $m_{\tau 1}, m_{\tau 2}, \Delta R_{\tau\tau}$, MET")
+
+		ws_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case2_sig0.010.txt"%(mass,bkg)))
+		ws_names.append(r"IAD: $m_{jj}, \Delta R_{jj}, \Delta R_{\tau\tau}$, MET")
+		fs_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case2_fs_sig0.010.txt"%(mass,bkg)))
+		fs_names.append(r"FS: $m_{jj}, \Delta R_{jj}, \Delta R_{\tau\tau}$, MET")
+
+		ws_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case3_sig0.010.txt"%(mass,bkg)))
+		ws_names.append(r"IAD: $m_{jj}, \Delta R_{jj}, m_{\tau 1}, m_{\tau 2}$")
+		fs_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case3_fs_sig0.010.txt"%(mass,bkg)))
+		fs_names.append(r"FS: $m_{jj}, \Delta R_{jj}, m_{\tau 1}, m_{\tau 2}$")
+
+		ws_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case4_sig0.010.txt"%(mass,bkg)))
+		ws_names.append(r"IAD: $m_{jj}, \Delta R_{jj}, m_{\tau 1}, \Delta R_{\tau\tau}$")
+		fs_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case4_fs_sig0.010.txt"%(mass,bkg)))
+		fs_names.append(r"FS: $m_{jj}, \Delta R_{jj}, m_{\tau 1}, \Delta R_{\tau\tau}$")
+
+		plt_title = "TS%ivs%s_cases_sig0.01"%(mass,bkg) 
+		plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
+
+'''
 for mass in sig_masses:
 	for bkg in bkgs:
 		ws_lists, ws_names, fs_lists, fs_names = [],[],[],[]
@@ -135,7 +163,7 @@ for mass in sig_masses:
 		plt_title = "Phi%ivs%s_mjj_deltaRjj_sig0.01_4foldvs7fold_NNvsBDT"%(mass,bkg) 
 		#plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
 
-'''
+
 for mass in sig_masses:
 	for bkg in bkgs:
 		ws_lists, ws_names, fs_lists, fs_names = [],[],[],[]

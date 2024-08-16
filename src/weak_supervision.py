@@ -18,7 +18,7 @@ import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
 import pandas as pd
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import roc_curve
 from argparse import ArgumentParser
 
@@ -148,12 +148,12 @@ def training(train_loader,val_loader,losses,val_losses,loaded_epoch,name):
 def testing(test_loader_ws, test_true, name, kfold=False):
 
         if kfold:
-                train_frac = ["0.10","0.30","0.50","0.70"]  
-                val_frac = train_frac[::-1]
-                print(train_frac, val_frac)
+                # train_frac = ["0.10","0.30","0.50","0.70"]  
+                # val_frac = train_frac[::-1]
+                # print(train_frac, val_frac)
                 pred_list_all = []
-                for tf, vf in zip(train_frac, val_frac):
-                        pth = "%s_sig%0.3f_train%s_val%s"%(name.split("_")[0],sig_injection, tf, vf)
+                for i in range(10):
+                        pth = "%s_fold%i_sig%0.3f"%(name.split("_")[0],i,sig_injection)
                         if options.full_supervision: pth +=  "_fs"
                         loaded_epoch, losses, val_losses = load_trained_model(pth, epoch_to_load)
                         pred_list = []
@@ -578,67 +578,40 @@ if options.BDT:
         print("Using a HistGradientBoostingClassifier instead of NN...")
         if options.full_supervision:
 
-                if train_model:
-                        val_frac_list = [0.1,0.2,0.3,0.4,0.5,0.6,0.7]
-                        for val_frac in val_frac_list:
-                                name = options.name+"_sig%.3f"%options.sig_injection+"_fs"+"_train%.2f_val%.2f"%((0.8-val_frac), val_frac)
-                                print(">> Training %s on %i%% training, %i%% validation"%(name, (0.8-val_frac)*100, val_frac*100))
-                                bdt = HistGradientBoostingClassifier(max_iter=1000, validation_fraction=val_frac, max_leaf_nodes=50)
-                                train = np.vstack((train,val))
-                                bdt.fit(train[:,:n_features],train[:,n_features])
-                                with open("checkpoints/weak_supervision_BDT_%s.pkl"%(name),"wb") as f:
-                                        dump(bdt, f, protocol=5)
-                #pred_list = bdt.predict(test[:,:n_features])
-                #pred_list=[]
-                if test_model:
-                        train_frac = ["0.10","0.20","0.30","0.40","0.50","0.60","0.70"]  
-                        val_frac = train_frac[::-1]
-                        pred_list_all = []
-                        for tf, vf in zip(train_frac, val_frac):
-                                pth = "%s_sig%0.3f_fs_train%s_val%s"%(name.split("_")[0],sig_injection, tf, vf)
-                                print(">> Testing %s on %i%% training, %i%% validation"%(pth, float(tf)*100, float(vf)*100))
-                                with open("checkpoints/weak_supervision_BDT_%s.pkl"%(pth),"rb") as f:
-                                        bdt = load(f)
-                                pred_list = bdt.predict_proba(test[:,:n_features])[:,1]
-                                
-                                pred_list_all.append(pred_list)
-                        
-                        pred_list_all = np.array(pred_list_all)
-                        pred_list = np.mean(pred_list_all, axis=0)
-                        true_list = test[:,-1]
-                        print("After averaging results of kfold, predicted list shape = ", pred_list.shape)
-                        np.savetxt("losses/fpr_tpr_bdt_%s_fs_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
+                kf = KFold(n_splits = 20)
+                train = np.vstack((train,val))
+                name = options.name+"_sig%.3f"%options.sig_injection+"_fs"
+                for i,(train_i,val_i) in enumerate(kf.split(train)):
+                        train_kf = train[train_i]
+                        print(">> Training with %ith fold as validation"%i)
+                        bdt = HistGradientBoostingClassifier(max_iter=100, validation_fraction=None, max_leaf_nodes=30, warm_start=True, early_stopping=True)
+                        bdt.fit(train_kf[:,:n_features],train_kf[:,n_features])
+                        pred_list = bdt.predict_proba(test[:,:n_features])[:,1]
+                        pred_list_all.append(pred_list)
+                pred_list_all = np.array(pred_list_all)
+                pred_list = np.mean(pred_list_all, axis=0)
+                true_list = test[:,-1]
+                print("After averaging results of kfold, predicted list shape = ", pred_list.shape)
+                np.savetxt("losses/fpr_tpr_bdt_%s_fs_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
+                
         else:
-                if train_model:
-                        val_frac_list = [0.1,0.2,0.3,0.4,0.5,0.6,0.7]
-                        for val_frac in val_frac_list:
-                                name = options.name+"_sig%.3f"%options.sig_injection+"_train%.2f_val%.2f"%((0.8-val_frac), val_frac)
-                                print(">> Training %s on %i%% training, %i%% validation"%(name, (0.8-val_frac)*100, val_frac*100))
-                                bdt = HistGradientBoostingClassifier(max_iter=1000, validation_fraction=val_frac, max_leaf_nodes=50)
-                                train_ws = np.vstack((train_ws, val_ws))
-                                bdt.fit(train_ws[:,:n_features],train_ws[:,n_features])
-                                with open("checkpoints/weak_supervision_BDT_%s.pkl"%(name),"wb") as f:
-                                        dump(bdt, f, protocol=5)
-                #pred_list = bdt.predict(test_ws[:,:n_features])
-                #pred_list=[]
-                if test_model:
-                        train_frac = ["0.10","0.20","0.30","0.40","0.50","0.60","0.70"]  
-                        val_frac = train_frac[::-1]
-                        pred_list_all = []
-                        for tf, vf in zip(train_frac, val_frac):
-                                pth = "%s_sig%0.3f_train%s_val%s"%(name.split("_")[0],sig_injection, tf, vf)
-                                print(">> Testing %s on %i%% training, %i%% validation"%(pth, float(tf)*100, float(vf)*100))
-                                with open("checkpoints/weak_supervision_BDT_%s.pkl"%(pth),"rb") as f:
-                                        bdt = load(f)
-                                pred_list = bdt.predict_proba(test_ws[:,:n_features])[:,1]
-                                
-                                pred_list_all.append(pred_list)
+                kf = KFold(n_splits = 20)
+                train_ws = np.vstack((train_ws,val_ws))
+                #name = options.name+"_sig%.3f"%options.sig_injection+"_fs"+"_train%.2f_val%.2f"%((0.8-val_frac), val_frac)
+                name = options.name+"_sig%.3f"%options.sig_injection
+                for i,(train_i,val_i) in enumerate(kf.split(train_ws)):
+                        train_kf = train_ws[train_i]
+                        print(">> Training with %ith fold as validation"%i)
+                        bdt = HistGradientBoostingClassifier(max_iter=100, validation_fraction=None, max_leaf_nodes=30, warm_start=True, early_stopping=True)
+                        bdt.fit(train_kf[:,:n_features],train_kf[:,n_features])
+                        pred_list = bdt.predict_proba(test_ws[:,:n_features])[:,1]
+                        pred_list_all.append(pred_list)
                         
-                        pred_list_all = np.array(pred_list_all)
-                        pred_list = np.mean(pred_list_all, axis=0)
-                        true_list = test[:,-1]
-                        print("After averaging results of kfold, predicted list shape = ", pred_list.shape)
-                        np.savetxt("losses/fpr_tpr_bdt_%s_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
+                pred_list_all = np.array(pred_list_all)
+                pred_list = np.mean(pred_list_all, axis=0)
+                true_list = test[:,-1]
+                print("After averaging results of kfold, predicted list shape = ", pred_list.shape)
+                np.savetxt("losses/fpr_tpr_bdt_%s_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
 
 else:
         model = NN()
@@ -651,26 +624,35 @@ else:
         loss_function = torch.nn.BCELoss()
         
         if train_model:
-                train_frac_list = [0.1, 0.3, 0.5, 0.7]  
-                val_frac_list = train_frac_list[::-1]
-                for train_frac, val_frac in zip(train_frac_list, val_frac_list):
-                        name = options.name+ "-case%i"%case + "_sig%.3f"%options.sig_injection+"_train%.2f_val%.2f"%(train_frac, val_frac) 
-                        train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(options.test_ws, sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, bkg_sig_frac, train_frac, val_frac, name, f_list)
-                        train, val, test = preprocess(train, val, test)
-                        train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
-                        train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
-                        train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
+                # train_frac_list = [0.1, 0.3, 0.5, 0.7]  
+                # val_frac_list = train_frac_list[::-1]
+                name = options.name+ "_sig%.3f"%options.sig_injection+"_train%.2f_val%.2f"%(train_frac, val_frac) 
+                train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(options.test_ws, sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, bkg_sig_frac, train_frac, val_frac, name, f_list)
+                train, val, test = preprocess(train, val, test)
+                train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
+                train = np.vstack((train,val))
+                train_ws = np.vstack((train_ws,val_ws))
+                kf = KFold(n_splits=10)
+                for i, (train_idx, val_idx) in enumerate(kf.split(train)):
+                        train_kf, val_kf = train[train_idx], val[val_idx]
+                        train_ws_kf, val_ws_kf = train_ws[train_idx], val_ws[val_idx]
+                        
+                        train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws_kf,test_ws,val_ws_kf,batch_size)
+                        train_loader, val_loader, test_loader = make_loaders(train_kf,test,val_kf,batch_size)
+                        name = options.name+ "_fold%i"%i + "_sig%.3f"%options.sig_injection
                         if not options.full_supervision: training(train_loader_ws, val_loader_ws, losses, val_losses, loaded_epoch, name)      
                         else: training(train_loader, val_loader, losses, val_losses, loaded_epoch, name+"_fs") 
         
         if test_model:
-                name = options.name+ "-case%i"%case
-                train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(options.test_ws, sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, 
-                    bkg_sig_frac, options.train_frac, options.val_frac, name, f_list) 
-                train, val, test = preprocess(train, val, test)
-                train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
-                train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
-                train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
+                name = options.name
+                if not train_model:
+                        train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(options.test_ws, sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, 
+                        bkg_sig_frac, options.train_frac, options.val_frac, name, f_list) 
+                        train, val, test = preprocess(train, val, test)
+                        train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
+                        train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws,test_ws,val_ws,batch_size)
+                        train_loader, val_loader, test_loader = make_loaders(train,test,val,batch_size)
+                
                 if not options.full_supervision: testing(test_loader_ws, test, name, kfold = True)
                 else: testing(test_loader, test, name, kfold = True)
 
