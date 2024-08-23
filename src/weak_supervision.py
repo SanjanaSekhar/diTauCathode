@@ -465,7 +465,7 @@ parser.add_argument("--feature_imp",  default=False, help="Plot feature_importan
 parser.add_argument("--plot_pre_post",  default=False, help="Plot sig and bkg pre and postproc")
 parser.add_argument("--test_ws",  default=False, help="test WS with gaussians")
 parser.add_argument("--choose_n_features",  default=10, type = int, help="extract n best features")
-parser.add_argument("--case",  default=1, type = int, help="which subset of features do you want to try? choose between 1 to 4")
+parser.add_argument("--case",  default=2, type = int, help="which subset of features do you want to try? choose between 1 to 4")
 options = parser.parse_args()
 
 
@@ -575,15 +575,16 @@ if options.BDT:
         train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(options.test_ws, sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, bkg_sig_frac, options.train_frac, options.val_frac, name, f_list)
         train, val, test = preprocess(train, val, test)
         train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
+        n_features = len(f_list)-2
         print("Using a HistGradientBoostingClassifier instead of NN...")
         if options.full_supervision:
-
+                pred_list_all = []
                 kf = KFold(n_splits = 20)
                 train = np.vstack((train,val))
                 name = options.name+"_sig%.3f"%options.sig_injection+"_fs"
                 for i,(train_i,val_i) in enumerate(kf.split(train)):
                         train_kf = train[train_i]
-                        print(">> Training with %ith fold as validation"%i)
+                        print(">> Training BDT with %ith fold as validation"%i)
                         bdt = HistGradientBoostingClassifier(max_iter=100, validation_fraction=None, max_leaf_nodes=30, warm_start=True, early_stopping=True)
                         bdt.fit(train_kf[:,:n_features],train_kf[:,n_features])
                         pred_list = bdt.predict_proba(test[:,:n_features])[:,1]
@@ -595,6 +596,7 @@ if options.BDT:
                 np.savetxt("losses/fpr_tpr_bdt_%s_fs_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
                 
         else:
+                pred_list_all = []
                 kf = KFold(n_splits = 20)
                 train_ws = np.vstack((train_ws,val_ws))
                 #name = options.name+"_sig%.3f"%options.sig_injection+"_fs"+"_train%.2f_val%.2f"%((0.8-val_frac), val_frac)
@@ -626,6 +628,7 @@ else:
         if train_model:
                 # train_frac_list = [0.1, 0.3, 0.5, 0.7]  
                 # val_frac_list = train_frac_list[::-1]
+                train_frac, val_frac = options.train_frac, options.val_frac
                 name = options.name+ "_sig%.3f"%options.sig_injection+"_train%.2f_val%.2f"%(train_frac, val_frac) 
                 train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(options.test_ws, sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, bkg_sig_frac, train_frac, val_frac, name, f_list)
                 train, val, test = preprocess(train, val, test)
@@ -634,8 +637,9 @@ else:
                 train_ws = np.vstack((train_ws,val_ws))
                 kf = KFold(n_splits=10)
                 for i, (train_idx, val_idx) in enumerate(kf.split(train)):
-                        train_kf, val_kf = train[train_idx], val[val_idx]
-                        train_ws_kf, val_ws_kf = train_ws[train_idx], val_ws[val_idx]
+                        print(">> Training NN with %ith fold as validation"%i)
+                        train_kf, val_kf = train[train_idx], train[val_idx]
+                        train_ws_kf, val_ws_kf = train_ws[train_idx], train_ws[val_idx]
                         
                         train_loader_ws, val_loader_ws, test_loader_ws = make_loaders(train_ws_kf,test_ws,val_ws_kf,batch_size)
                         train_loader, val_loader, test_loader = make_loaders(train_kf,test,val_kf,batch_size)
