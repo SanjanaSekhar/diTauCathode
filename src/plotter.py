@@ -108,62 +108,58 @@ def plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title):
 
 #injections = ["0.100","0.050","0.010","0.005"]
 #injections = ["0.100"]#,"0.200","0.300","0.400","0.500","0.600","0.700","0.800","0.900"]
-masses = [250]
+masses = [750]
 bkgs = ["DY"]
 
 
 # name: losses/fpr_tpr_TS750vsttbar-case3_fs_sig0.010.txt
 
+# for mass in masses:
+# 	for bkg in bkgs:
+# 		ws_lists, ws_names, fs_lists, fs_names = [],[],[],[]
+		
+# 		ws_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case1_sig0.010.txt"%(mass,bkg)))
+# 		ws_names.append(r"IAD: $m_{\tau 1}, m_{\tau 2}, \Delta R_{\tau\tau}$, MET")
+# 		fs_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case1_fs_sig0.010.txt"%(mass,bkg)))
+# 		fs_names.append(r"FS: $m_{\tau 1}, m_{\tau 2}, \Delta R_{\tau\tau}$, MET")
+
+# 		ws_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case2_sig0.010.txt"%(mass,bkg)))
+# 		ws_names.append(r"IAD: $m_{jj}, \Delta R_{jj}, \Delta R_{\tau\tau}$, MET")
+# 		fs_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case2_fs_sig0.010.txt"%(mass,bkg)))
+# 		fs_names.append(r"FS: $m_{jj}, \Delta R_{jj}, \Delta R_{\tau\tau}$, MET")
+
+# 		ws_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case3_sig0.010.txt"%(mass,bkg)))
+# 		ws_names.append(r"IAD: $m_{jj}, \Delta R_{jj}, m_{\tau 1}, m_{\tau 2}$")
+# 		fs_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case3_fs_sig0.010.txt"%(mass,bkg)))
+# 		fs_names.append(r"FS: $m_{jj}, \Delta R_{jj}, m_{\tau 1}, m_{\tau 2}$")
+
+# 		ws_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case4_sig0.010.txt"%(mass,bkg)))
+# 		ws_names.append(r"IAD: $m_{jj}, \Delta R_{jj}, m_{\tau 1}, \Delta R_{\tau\tau}$")
+# 		fs_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case4_fs_sig0.010.txt"%(mass,bkg)))
+# 		fs_names.append(r"FS: $m_{jj}, \Delta R_{jj}, m_{\tau 1}, \Delta R_{\tau\tau}$")
+
+# 		plt_title = "TS%ivs%s_cases_sig0.01"%(mass,bkg) 
+# 		plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
+
+
 for mass in masses:
 	for bkg in bkgs:
 		ws_lists, ws_names, fs_lists, fs_names = [],[],[],[]
 		
-		ws_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case1_sig0.010.txt"%(mass,bkg)))
-		ws_names.append(r"IAD: $m_{\tau 1}, m_{\tau 2}, \Delta R_{\tau\tau}$, MET")
-		fs_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case1_fs_sig0.010.txt"%(mass,bkg)))
-		fs_names.append(r"FS: $m_{\tau 1}, m_{\tau 2}, \Delta R_{\tau\tau}$, MET")
-
-		ws_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case2_sig0.010.txt"%(mass,bkg)))
-		ws_names.append(r"IAD: $m_{jj}, \Delta R_{jj}, \Delta R_{\tau\tau}$, MET")
-		fs_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case2_fs_sig0.010.txt"%(mass,bkg)))
-		fs_names.append(r"FS: $m_{jj}, \Delta R_{jj}, \Delta R_{\tau\tau}$, MET")
-
-		ws_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case3_sig0.010.txt"%(mass,bkg)))
-		ws_names.append(r"IAD: $m_{jj}, \Delta R_{jj}, m_{\tau 1}, m_{\tau 2}$")
-		fs_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case3_fs_sig0.010.txt"%(mass,bkg)))
-		fs_names.append(r"FS: $m_{jj}, \Delta R_{jj}, m_{\tau 1}, m_{\tau 2}$")
-
-		ws_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case4_sig0.010.txt"%(mass,bkg)))
-		ws_names.append(r"IAD: $m_{jj}, \Delta R_{jj}, m_{\tau 1}, \Delta R_{\tau\tau}$")
-		fs_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case4_fs_sig0.010.txt"%(mass,bkg)))
-		fs_names.append(r"FS: $m_{jj}, \Delta R_{jj}, m_{\tau 1}, \Delta R_{\tau\tau}$")
-
-		plt_title = "TS%ivs%s_cases_sig0.01"%(mass,bkg) 
+		# fpr_tpr_ttPhi750vsDY_fs_sig0.010.txt	
+		# fpr_tpr_bdt_ttPhi750vsDY_fs_kfold.txt
+		ws_lists.append(np.loadtxt("losses/fpr_tpr_ttPhi%ivs%s_sig0.010.txt"%(mass,bkg)))
+		ws_names.append("NN IAD with 10-fold cross val (1%% signal)")
+		fs_lists.append(np.loadtxt("losses/fpr_tpr_ttPhi%ivs%s_fs_sig0.010.txt"%(mass,bkg)))
+		fs_names.append("NN Full Sup with 10-fold cross val (1%% signal)")
+		ws_lists.append(np.loadtxt("losses/fpr_tpr_bdt_ttPhi%ivs%s_kfold.txt"%(mass,bkg)))
+		ws_names.append("BDT IAD with 10-fold cross val (1%% signal)")
+		fs_lists.append(np.loadtxt("losses/fpr_tpr_bdt_ttPhi%ivs%s_fs_kfold.txt"%(mass,bkg)))
+		fs_names.append("BDT Full Sup with 10-fold cross val (1%% signal)")
+		plt_title = "Phi%ivs%s_sig0.01_10fold_NNvsBDT"%(mass,bkg) 
 		plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
 
 '''
-for mass in sig_masses:
-	for bkg in bkgs:
-		ws_lists, ws_names, fs_lists, fs_names = [],[],[],[]
-		
-			
-		ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_kfold.txt"%(mass,bkg)))
-		ws_names.append("NN IAD with 4-fold cross val (1%% signal)")
-		fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_fs_kfold.txt"%(mass,bkg)))
-		fs_names.append("NN Full Sup with 4-fold cross val (1%% signal)")
-		ws_lists.append(np.loadtxt("losses/fpr_tpr_bdt_Phi%ivs%s_kfold.txt"%(mass,bkg)))
-		ws_names.append("BDT IAD with 7-fold cross val (1%% signal)")
-		fs_lists.append(np.loadtxt("losses/fpr_tpr_bdt_Phi%ivs%s_fs_kfold.txt"%(mass,bkg)))
-		fs_names.append("BDT Full Sup with 7-fold cross val (1%% signal)")
-		# # losses/fpr_tpr_Phi250vsttbar_sig0.100_train0.70_val0.10.txt
-		# ws_lists.append(np.loadtxt("losses/fpr_tpr_Phi%ivs%s_sig0.010_train0.70_val0.10.txt"%(mass,bkg)))
-		# ws_names.append("NN IAD: No cross val (1%% Signal)")
-		# fs_lists.append(np.loadtxt("losses/fpr_tpr_Phi%svs%s_sig0.010_fs_train0.70_val0.10.txt"%(mass,bkg)))
-		# fs_names.append("NN Full Sup: No cross val (1%% Signal")
-		plt_title = "Phi%ivs%s_mjj_deltaRjj_sig0.01_4foldvs7fold_NNvsBDT"%(mass,bkg) 
-		#plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
-
-
 for mass in sig_masses:
 	for bkg in bkgs:
 		ws_lists, ws_names, fs_lists, fs_names = [],[],[],[]

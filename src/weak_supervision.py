@@ -571,6 +571,7 @@ else:
 
 if options.BDT:
         from sklearn.ensemble import HistGradientBoostingClassifier,GradientBoostingClassifier
+        from CATHODE_ditau.sk_cathode.sk_cathode.classifier_models.boosted_decision_tree import HGBClassifier
         from pickle import dump, load
         train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(options.test_ws, sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, bkg_sig_frac, options.train_frac, options.val_frac, name, f_list)
         train, val, test = preprocess(train, val, test)
@@ -579,14 +580,14 @@ if options.BDT:
         print("Using a HistGradientBoostingClassifier instead of NN...")
         if options.full_supervision:
                 pred_list_all = []
-                kf = KFold(n_splits = 20)
+                kf = KFold(n_splits = 10)
                 train = np.vstack((train,val))
                 name = options.name+"_sig%.3f"%options.sig_injection+"_fs"
                 for i,(train_i,val_i) in enumerate(kf.split(train)):
-                        train_kf = train[train_i]
+                        train_kf, val_kf = train[train_i], train[val_i]
                         print(">> Training BDT with %ith fold as validation"%i)
-                        bdt = HistGradientBoostingClassifier(max_iter=100, validation_fraction=None, max_leaf_nodes=30, warm_start=True, early_stopping=True)
-                        bdt.fit(train_kf[:,:n_features],train_kf[:,n_features])
+                        bdt = HGBClassifier(max_iters=None, warm_start=True, early_stopping=True, l2_regularization=0.02)
+                        bdt.fit(train_kf[:,:n_features],train_kf[:,n_features], val_kf[:,:n_features], val_kf[:,n_features])
                         pred_list = bdt.predict_proba(test[:,:n_features])[:,1]
                         pred_list_all.append(pred_list)
                 pred_list_all = np.array(pred_list_all)
@@ -597,15 +598,15 @@ if options.BDT:
                 
         else:
                 pred_list_all = []
-                kf = KFold(n_splits = 20)
+                kf = KFold(n_splits = 10)
                 train_ws = np.vstack((train_ws,val_ws))
                 #name = options.name+"_sig%.3f"%options.sig_injection+"_fs"+"_train%.2f_val%.2f"%((0.8-val_frac), val_frac)
                 name = options.name+"_sig%.3f"%options.sig_injection
                 for i,(train_i,val_i) in enumerate(kf.split(train_ws)):
-                        train_kf = train_ws[train_i]
+                        train_kf, val_kf = train_ws[train_i], train_ws[val_i]
                         print(">> Training with %ith fold as validation"%i)
-                        bdt = HistGradientBoostingClassifier(max_iter=100, validation_fraction=None, max_leaf_nodes=30, warm_start=True, early_stopping=True)
-                        bdt.fit(train_kf[:,:n_features],train_kf[:,n_features])
+                        bdt = HGBClassifier(max_iter=None, warm_start=True, early_stopping=True, l2_regularization=0.02)
+                        bdt.fit(train_kf[:,:n_features],train_kf[:,n_features], val_kf[:,:n_features], val_kf[:,n_features])
                         pred_list = bdt.predict_proba(test_ws[:,:n_features])[:,1]
                         pred_list_all.append(pred_list)
                         
