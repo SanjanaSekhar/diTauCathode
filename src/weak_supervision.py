@@ -22,6 +22,7 @@ from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import roc_curve
 from argparse import ArgumentParser
 
+sys.setrecursionlimit(1500)
 # NN
 
 class NN(torch.nn.Module):
@@ -596,7 +597,7 @@ if options.BDT:
                         print(val_kf[:10])
                         if not np.any(val_kf==0): print("THERE ARE NO BKG EVENTS IN THE VAL SET")
                         print(">> Training BDT with %ith fold as validation"%i)
-                        bdt = HGBClassifier(max_iters=None, early_stopping=True, verbose=True)
+                        bdt = HGBClassifier(max_iters=300, early_stopping=True)
                         bdt.fit(train_kf[:,:n_features],train_kf[:,n_features], val_kf[:,:n_features], val_kf[:,n_features])
                         pred_list = bdt.predict_proba(test[:,:n_features])[:,1]
                         pred_list_all.append(pred_list)
