@@ -588,16 +588,19 @@ if options.BDT:
         print("Using a HistGradientBoostingClassifier instead of NN...")
         if options.full_supervision:
                 pred_list_all = []
-                kf = KFold(n_splits = 10)
+                #kf = KFold(n_splits = 10)
                 train = np.vstack((train,val))
                 name = options.name+"_sig%.3f"%options.sig_injection+"_fs"
-                for i,(train_i,val_i) in enumerate(kf.split(train)):
+                #for i,(train_i,val_i) in enumerate(kf.split(train)):
+                for i in range(50):
+                        train_i = np.random.choice(len(train),int(0.7*len(train)))
+                        val_i = np.delete(np.arange(len(train)),train_i)
                         train_kf, val_kf = train[train_i], train[val_i]
                         print(train_kf[:10])
                         print(val_kf[:10])
                         if not np.any(val_kf==0): print("THERE ARE NO BKG EVENTS IN THE VAL SET")
                         print(">> Training BDT with %ith fold as validation"%i)
-                        bdt = HGBClassifier(max_iters=100, early_stopping=True)
+                        bdt = HGBClassifier(max_iters=None, early_stopping=True)
                         bdt.fit(train_kf[:,:n_features],train_kf[:,n_features], val_kf[:,:n_features], val_kf[:,n_features])
                         pred_list = bdt.predict_proba(test[:,:n_features])[:,1]
                         pred_list_all.append(pred_list)
@@ -605,15 +608,18 @@ if options.BDT:
                 pred_list = np.mean(pred_list_all, axis=0)
                 true_list = test[:,-1]
                 print("After averaging results of kfold, predicted list shape = ", pred_list.shape)
-                np.savetxt("losses/fpr_tpr_bdt_%s_fs_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
+                np.savetxt("losses/fpr_tpr_bdt_%s_fs_0.3val_N50.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
                 
         else:
                 pred_list_all = []
-                kf = KFold(n_splits = 10)
+                #kf = KFold(n_splits = 10)
                 train_ws = np.vstack((train_ws,val_ws))
                 #name = options.name+"_sig%.3f"%options.sig_injection+"_fs"+"_train%.2f_val%.2f"%((0.8-val_frac), val_frac)
                 name = options.name+"_sig%.3f"%options.sig_injection
-                for i,(train_i,val_i) in enumerate(kf.split(train_ws)):
+                #for i,(train_i,val_i) in enumerate(kf.split(train_ws)):
+                for i in range(50):
+                        train_i = np.random.choice(len(train_ws),int(0.7*len(train_ws)))
+                        val_i = np.delete(np.arange(len(train_ws)),train_i)
                         train_kf, val_kf = train_ws[train_i], train_ws[val_i]
                         print(train_kf[:10])
                         print(val_kf[:10])
@@ -628,7 +634,7 @@ if options.BDT:
                 pred_list = np.mean(pred_list_all, axis=0)
                 true_list = test[:,-1]
                 print("After averaging results of kfold, predicted list shape = ", pred_list.shape)
-                np.savetxt("losses/fpr_tpr_bdt_%s_kfold.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
+                np.savetxt("losses/fpr_tpr_bdt_%s_0.3val_N50.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
 
 else:
         model = NN()
