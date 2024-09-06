@@ -593,7 +593,7 @@ if options.BDT:
                 name = options.name+"_sig%.3f"%options.sig_injection+"_fs"
                 #for i,(train_i,val_i) in enumerate(kf.split(train)):
                 for i in range(50):
-                        train_i = np.random.choice(len(train),int(0.7*len(train)))
+                        train_i = np.random.choice(len(train),int(0.7*len(train)), replace=False)
                         val_i = np.delete(np.arange(len(train)),train_i)
                         train_kf, val_kf = train[train_i], train[val_i]
                         print(train_kf[:10])
@@ -618,7 +618,7 @@ if options.BDT:
                 name = options.name+"_sig%.3f"%options.sig_injection
                 #for i,(train_i,val_i) in enumerate(kf.split(train_ws)):
                 for i in range(50):
-                        train_i = np.random.choice(len(train_ws),int(0.7*len(train_ws)))
+                        train_i = np.random.choice(len(train_ws),int(0.7*len(train_ws)), replace=False)
                         val_i = np.delete(np.arange(len(train_ws)),train_i)
                         train_kf, val_kf = train_ws[train_i], train_ws[val_i]
                         print(train_kf[:10])
