@@ -588,7 +588,7 @@ if options.BDT:
         print("Using a HistGradientBoostingClassifier instead of NN...")
         if options.full_supervision:
                 pred_list_all = []
-                kf = KFold(n_splits = 5)
+                kf = KFold(n_splits = 10)
                 train = np.vstack((train,val))
                 name = options.name+"_sig%.3f"%options.sig_injection+"_fs"
                 for i,(train_i,val_i) in enumerate(kf.split(train)):
@@ -609,7 +609,7 @@ if options.BDT:
                 
         else:
                 pred_list_all = []
-                kf = KFold(n_splits = 5)
+                kf = KFold(n_splits = 10)
                 train_ws = np.vstack((train_ws,val_ws))
                 #name = options.name+"_sig%.3f"%options.sig_injection+"_fs"+"_train%.2f_val%.2f"%((0.8-val_frac), val_frac)
                 name = options.name+"_sig%.3f"%options.sig_injection
@@ -619,7 +619,7 @@ if options.BDT:
                         print(val_kf[:10])
                         if not np.any(val_kf==0): print("THERE ARE NO BKG EVENTS IN THE VAL SET")
                         print(">> Training with %ith fold as validation"%i)
-                        bdt = HGBClassifier(max_iters=None, early_stopping=True)
+                        bdt = HGBClassifier(max_iters=300, early_stopping=True)
                         bdt.fit(train_kf[:,:n_features],train_kf[:,n_features], val_kf[:,:n_features], val_kf[:,n_features])
                         pred_list = bdt.predict_proba(test_ws[:,:n_features])[:,1]
                         pred_list_all.append(pred_list)
