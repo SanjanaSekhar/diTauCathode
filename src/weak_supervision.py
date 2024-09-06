@@ -597,7 +597,7 @@ if options.BDT:
                         print(val_kf[:10])
                         if not np.any(val_kf==0): print("THERE ARE NO BKG EVENTS IN THE VAL SET")
                         print(">> Training BDT with %ith fold as validation"%i)
-                        bdt = HGBClassifier(max_iters=300, early_stopping=True)
+                        bdt = HGBClassifier(max_iters=100, early_stopping=True)
                         bdt.fit(train_kf[:,:n_features],train_kf[:,n_features], val_kf[:,:n_features], val_kf[:,n_features])
                         pred_list = bdt.predict_proba(test[:,:n_features])[:,1]
                         pred_list_all.append(pred_list)
@@ -619,7 +619,7 @@ if options.BDT:
                         print(val_kf[:10])
                         if not np.any(val_kf==0): print("THERE ARE NO BKG EVENTS IN THE VAL SET")
                         print(">> Training with %ith fold as validation"%i)
-                        bdt = HGBClassifier(max_iters=300, early_stopping=True)
+                        bdt = HGBClassifier(max_iters=100, early_stopping=True)
                         bdt.fit(train_kf[:,:n_features],train_kf[:,n_features], val_kf[:,:n_features], val_kf[:,n_features])
                         pred_list = bdt.predict_proba(test_ws[:,:n_features])[:,1]
                         pred_list_all.append(pred_list)

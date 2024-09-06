@@ -60,7 +60,7 @@ class HGBClassifier(BaseEstimator):
     def __init__(self, save_path=None, load=False,
                  max_bins=127,  early_stopping=True,
                  patience=10, max_iters=100, val_split=0.2,
-                 split_seed=None, use_class_weights=False, verbose=False):
+                 split_seed=None, use_class_weights=True, verbose=False):
 
         self.save_path = save_path
         if save_path is not None:
