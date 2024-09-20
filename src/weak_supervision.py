@@ -22,7 +22,7 @@ from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import roc_curve
 from argparse import ArgumentParser
 
-sys.setrecursionlimit(1500)
+#sys.setrecursionlimit(1500)
 # NN
 
 class NN(torch.nn.Module):
@@ -30,9 +30,9 @@ class NN(torch.nn.Module):
                 super().__init__()
 
                 self.classifier = torch.nn.Sequential(
-                        torch.nn.Linear(4,16),
+                        torch.nn.Linear(6,32),
                         torch.nn.ReLU(),
-                        torch.nn.Linear(16,32),
+                        torch.nn.Linear(32,32),
                         torch.nn.ReLU(),
                         torch.nn.Linear(32,16),
                         torch.nn.ReLU(),
@@ -182,8 +182,8 @@ def testing(test_loader_ws, test_true, name, kfold=False):
                 true_list = test_true[:,-1]
                 print(true_list==1)
                 # print(np.vstack((true_list,pred_list)))
-                if options.full_supervision: np.savetxt("losses/fpr_tpr_%s_fs_sig%0.3f.txt"%(name.split("_")[0], sig_injection), np.vstack((true_list,pred_list)))
-                else: np.savetxt("losses/fpr_tpr_%s_sig%0.3f.txt"%(name.split("_")[0], sig_injection), np.vstack((true_list,pred_list)))
+                if options.full_supervision: np.savetxt("losses/fpr_tpr_nn_%s_fs.txt"%(name), np.vstack((true_list,pred_list)))
+                else: np.savetxt("losses/fpr_tpr_nn_%s.txt"%(name), np.vstack((true_list,pred_list)))
 
         else:
                 loaded_epoch, losses, val_losses = load_trained_model(name, epoch_to_load) 
@@ -510,11 +510,11 @@ if "Phi750" in name:
         options.sig = "2HDM-vbfPhiToTauTau-M750_2J_MinMass350_NoMisTag"
         
         if "ttbar" in name:
-                options.m_tt_min = 350.
-                options.m_tt_max = 1200.
+                options.m_tt_min = 500.
+                options.m_tt_max = 1000.
                 options.bkg = "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass350_NoMisTag_MadSpin_1M"
         if "DY" in name:
-                options.m_tt_min = 400.
+                options.m_tt_min = 500.
                 options.m_tt_max = 1000.
                 options.bkg = "SM_dyToTauTau_0J1J2J_MinMass350_NoMisTag_1M"
 if "ttPhi750" in name:
@@ -522,11 +522,11 @@ if "ttPhi750" in name:
         
         
         if "ttbar" in name:
-                options.m_tt_min = 350.
-                options.m_tt_max = 1200.
+                options.m_tt_min = 500.
+                options.m_tt_max = 1000.
                 options.bkg = "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass350_NoMisTag_MadSpin_1M"
         if "DY" in name:
-                options.m_tt_min = 400.
+                options.m_tt_min = 500.
                 options.m_tt_max = 1000.
                 options.bkg = "SM_dyToTauTau_0J1J2J_MinMass350_NoMisTag_1M"
 if "TS250" in name:
@@ -543,7 +543,7 @@ if case == 1:
         f_list = ["tau1_m","tau2_m","deltaR_tau1tau2","met_met",
                         "m_tau1tau2","label"]
 elif case == 2:
-        f_list = ["m_jet1jet2", "deltaR_jet1jet2","deltaR_tau1tau2","met_met",
+        f_list = ["m_jet1jet2", "deltaR_jet1jet2","deltaR_tau1tau2","pt_tau1tau2","n_jets","n_bjets",
                         "m_tau1tau2","label"]
 elif case == 3:
         f_list = ["m_jet1jet2", "deltaR_jet1jet2","tau1_m","tau2_m",
@@ -593,22 +593,25 @@ if options.BDT:
                 name = options.name+"_sig%.3f"%options.sig_injection+"_fs"
                 #for i,(train_i,val_i) in enumerate(kf.split(train)):
                 for i in range(50):
-                        train_i = np.random.choice(len(train),int(0.7*len(train)), replace=False)
+                        train_i = np.random.choice(len(train),int(0.8*len(train)), replace=False)
                         val_i = np.delete(np.arange(len(train)),train_i)
                         train_kf, val_kf = train[train_i], train[val_i]
                         print(train_kf[:10])
                         print(val_kf[:10])
                         if not np.any(val_kf==0): print("THERE ARE NO BKG EVENTS IN THE VAL SET")
                         print(">> Training BDT with %ith fold as validation"%i)
-                        bdt = HGBClassifier(max_iters=None, early_stopping=True)
+                        bdt = HGBClassifier(max_iters=100, early_stopping=True)
                         bdt.fit(train_kf[:,:n_features],train_kf[:,n_features], val_kf[:,:n_features], val_kf[:,n_features])
                         pred_list = bdt.predict_proba(test[:,:n_features])[:,1]
+                        print(pred_list)
                         pred_list_all.append(pred_list)
                 pred_list_all = np.array(pred_list_all)
+                print("All results shape: ",pred_list_all.shape)
                 pred_list = np.mean(pred_list_all, axis=0)
+                print("After averaging all the results: ",pred_list)
                 true_list = test[:,-1]
                 print("After averaging results of kfold, predicted list shape = ", pred_list.shape)
-                np.savetxt("losses/fpr_tpr_bdt_%s_fs_0.3val_N50.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
+                np.savetxt("losses/fpr_tpr_bdt_%s_fs_N50.txt"%(name),np.vstack((true_list,pred_list)))
                 
         else:
                 pred_list_all = []
@@ -618,23 +621,25 @@ if options.BDT:
                 name = options.name+"_sig%.3f"%options.sig_injection
                 #for i,(train_i,val_i) in enumerate(kf.split(train_ws)):
                 for i in range(50):
-                        train_i = np.random.choice(len(train_ws),int(0.7*len(train_ws)), replace=False)
+                        train_i = np.random.choice(len(train_ws),int(0.8*len(train_ws)), replace=False)
                         val_i = np.delete(np.arange(len(train_ws)),train_i)
                         train_kf, val_kf = train_ws[train_i], train_ws[val_i]
                         print(train_kf[:10])
                         print(val_kf[:10])
                         if not np.any(val_kf==0): print("THERE ARE NO BKG EVENTS IN THE VAL SET")
-                        print(">> Training with %ith fold as validation"%i)
-                        bdt = HGBClassifier(max_iters=None, early_stopping=True)
+                        print(">> Training BDT with %ith fold as validation"%i)
+                        bdt = HGBClassifier(max_iters=100, early_stopping=True)
                         bdt.fit(train_kf[:,:n_features],train_kf[:,n_features], val_kf[:,:n_features], val_kf[:,n_features])
                         pred_list = bdt.predict_proba(test_ws[:,:n_features])[:,1]
                         pred_list_all.append(pred_list)
-                        
+                        print("Predicted values: ",pred_list)
                 pred_list_all = np.array(pred_list_all)
+                print("Shape of all predictions: ", pred_list_all.shape)
                 pred_list = np.mean(pred_list_all, axis=0)
+                print("Predictions after averaging: ",pred_list)
                 true_list = test[:,-1]
                 print("After averaging results of kfold, predicted list shape = ", pred_list.shape)
-                np.savetxt("losses/fpr_tpr_bdt_%s_0.3val_N50.txt"%(name.split("_")[0]),np.vstack((true_list,pred_list)))
+                np.savetxt("losses/fpr_tpr_bdt_%s_N50.txt"%(name),np.vstack((true_list,pred_list)))
 
 else:
         model = NN()

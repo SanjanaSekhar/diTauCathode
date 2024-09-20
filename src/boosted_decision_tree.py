@@ -59,7 +59,7 @@ class HGBClassifier(BaseEstimator):
 
     def __init__(self, save_path=None, load=False,
                  max_bins=127,  early_stopping=True,
-                 patience=10, max_iters=100, val_split=0.2,
+                 patience=5, max_iters=100, val_split=0.2,
                  split_seed=None, use_class_weights=True, verbose=False):
 
         self.save_path = save_path
@@ -79,7 +79,7 @@ class HGBClassifier(BaseEstimator):
         self.verbose = verbose
 
         self.model = HistGradientBoostingClassifier(
-            max_bins=max_bins, 
+            max_bins=max_bins, learning_rate = 0.3, 
             class_weight="balanced",
             max_iter=1, early_stopping=False, warm_start=True)
 
