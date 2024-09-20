@@ -603,7 +603,7 @@ if options.BDT:
                         print(">> Training BDT with %ith fold as validation"%i)
                         #bdt = HGBClassifier(max_iters=100, early_stopping=True)
                         #bdt.fit(train_kf[:,:n_features],train_kf[:,n_features], val_kf[:,:n_features], val_kf[:,n_features])
-                        bdt = HistGradientBoostingClassifier(max_iter=100, early_stopping=True, learning_rate=0.3)
+                        bdt = HistGradientBoostingClassifier(max_iter=200, early_stopping=True, validation_fraction=0.2, warm_start=True)
                         bdt.fit(train[:,:n_features],train[:,n_features])
                         pred_list = bdt.predict_proba(test[:,:n_features])[:,1]
                         print(pred_list)
@@ -634,7 +634,7 @@ if options.BDT:
                         print(">> Training BDT with %ith fold as validation"%i)
                         #bdt = HGBClassifier(max_iters=100, early_stopping=True)
                         #bdt.fit(train_kf[:,:n_features],train_kf[:,n_features], val_kf[:,:n_features], val_kf[:,n_features])
-                        bdt = HistGradientBoostingClassifier(max_iter=100, early_stopping=True, learning_rate=0.3)
+                        bdt = HistGradientBoostingClassifier(max_iter=200, early_stopping=True, validation_fraction=0.2, warm_start=True)
                         bdt.fit(train_ws[:,:n_features],train_ws[:,n_features])
                         pred_list = bdt.predict_proba(test_ws[:,:n_features])[:,1]
                         pred_list_all.append(pred_list)
