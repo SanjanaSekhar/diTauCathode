@@ -378,17 +378,18 @@ def make_train_test_val_ws(test_ws, sig, bkg1, m_tt_min = 350., m_tt_max = 1000.
         print(train[:,-1], train_ws[:,-1])
         return train, val, test, train_ws, val_ws, test_ws, feature_list.to_list()
 
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 def preprocess(train, val, test):
         print(train.shape)
         n_features = train.shape[1] - 1
-        scaler = StandardScaler()
+        #scaler = StandardScaler()
+        scaler = MinMaxScaler()
         scaler.fit(np.vstack((train,val))[:,0:n_features])
         train[:,0:n_features] = scaler.transform(train[:,0:n_features])
         test[:,0:n_features] = scaler.transform(test[:,0:n_features])
         val[:,0:n_features] = scaler.transform(val[:,0:n_features])
-        print("After preprocessing, mean, std for the features:", scaler.mean_,scaler.var_)
+        #print("After preprocessing, mean, std for the features:", scaler.mean_,scaler.var_)
         return train, val, test
 
 # LOAD AN EXISTING MODEL 
@@ -596,7 +597,7 @@ if options.BDT:
                 train = np.vstack((train,val))
                 name = options.name+"_sig%.3f"%options.sig_injection+"_fs"
                 #for i,(train_i,val_i) in enumerate(kf.split(train)):
-                for i in range(10):
+                for i in range(50):
                         np.random.shuffle(train)
                         train_i = np.random.choice(len(train),int(0.8*len(train)), replace=False)
                         val_i = np.delete(np.arange(len(train)),train_i)
@@ -607,9 +608,9 @@ if options.BDT:
                         print(">> Training BDT with %ith fold as validation"%i)
                         #bdt = HGBClassifier(max_iters=100, early_stopping=True)
                         #bdt.fit(train_kf[:,:n_features],train_kf[:,n_features], val_kf[:,:n_features], val_kf[:,n_features])
-                        #bdt = GradientBoostingClassifier(max_iter=200, early_stopping=True, validation_fraction=0.2, warm_start=True)
-                        bdt = RandomForestClassifier(n_estimators = 200, warm_start = True)
-                        bdt.fit(train_kf[:,:n_features],train_kf[:,n_features])
+                        bdt = HistGradientBoostingClassifier(max_iter=200, early_stopping=True, validation_fraction=0.2, warm_start=True)
+                        #bdt = RandomForestClassifier(n_estimators = 200, warm_start = True)
+                        bdt.fit(train[:,:n_features],train[:,n_features])
                         pred_list = bdt.predict_proba(test[:,:n_features])[:,1]
                         print(pred_list)
                         pred_list_all.append(pred_list)
@@ -628,7 +629,7 @@ if options.BDT:
                 #name = options.name+"_sig%.3f"%options.sig_injection+"_fs"+"_train%.2f_val%.2f"%((0.8-val_frac), val_frac)
                 name = options.name+"_sig%.3f"%options.sig_injection
                 #for i,(train_i,val_i) in enumerate(kf.split(train_ws)):
-                for i in range(10):
+                for i in range(50):
                         np.random.shuffle(train_ws)
                         train_i = np.random.choice(len(train_ws),int(0.8*len(train_ws)), replace=False)
                         val_i = np.delete(np.arange(len(train_ws)),train_i)
@@ -639,9 +640,9 @@ if options.BDT:
                         print(">> Training BDT with %ith fold as validation"%i)
                         #bdt = HGBClassifier(max_iters=100, early_stopping=True)
                         #bdt.fit(train_kf[:,:n_features],train_kf[:,n_features], val_kf[:,:n_features], val_kf[:,n_features])
-                        #bdt = GradientBoostingClassifier(max_iter=200, early_stopping=True, validation_fraction=0.2, warm_start=True)
-                        bdt = RandomForestClassifier(n_estimators = 200, warm_start = True)
-                        bdt.fit(train_kf[:,:n_features],train_kf[:,n_features])
+                        bdt = HistGradientBoostingClassifier(max_iter=200, early_stopping=True, validation_fraction=0.2, warm_start=True)
+                        #bdt = RandomForestClassifier(n_estimators = 200, warm_start = True)
+                        bdt.fit(train_ws[:,:n_features],train_ws[:,n_features])
                         pred_list = bdt.predict_proba(test_ws[:,:n_features])[:,1]
                         pred_list_all.append(pred_list)
                         print("Predicted values: ",pred_list)
