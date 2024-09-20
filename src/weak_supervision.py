@@ -593,6 +593,7 @@ if options.BDT:
                 name = options.name+"_sig%.3f"%options.sig_injection+"_fs"
                 #for i,(train_i,val_i) in enumerate(kf.split(train)):
                 for i in range(50):
+                        np.random.shuffle(train)
                         train_i = np.random.choice(len(train),int(0.8*len(train)), replace=False)
                         val_i = np.delete(np.arange(len(train)),train_i)
                         train_kf, val_kf = train[train_i], train[val_i]
@@ -602,8 +603,8 @@ if options.BDT:
                         print(">> Training BDT with %ith fold as validation"%i)
                         # bdt = HGBClassifier(max_iters=100, early_stopping=True)
                         # bdt.fit(train_kf[:,:n_features],train_kf[:,n_features], val_kf[:,:n_features], val_kf[:,n_features])
-                        bdt = HistGradientBoostingClassifier(max_iters=100, early_stopping=True)
-                        bdt.fit(train_kf[:,:n_features],train_kf[:,n_features])
+                        bdt = HistGradientBoostingClassifier(max_iter=100, early_stopping=True, learning_rate=0.3,class_weight='balanced')
+                        bdt.fit(train[:,:n_features],train[:,n_features])
                         pred_list = bdt.predict_proba(test[:,:n_features])[:,1]
                         print(pred_list)
                         pred_list_all.append(pred_list)
@@ -623,6 +624,7 @@ if options.BDT:
                 name = options.name+"_sig%.3f"%options.sig_injection
                 #for i,(train_i,val_i) in enumerate(kf.split(train_ws)):
                 for i in range(50):
+                        np.random.shuffle(train_ws)
                         train_i = np.random.choice(len(train_ws),int(0.8*len(train_ws)), replace=False)
                         val_i = np.delete(np.arange(len(train_ws)),train_i)
                         train_kf, val_kf = train_ws[train_i], train_ws[val_i]
@@ -632,8 +634,8 @@ if options.BDT:
                         print(">> Training BDT with %ith fold as validation"%i)
                         # bdt = HGBClassifier(max_iters=100, early_stopping=True)
                         # bdt.fit(train_kf[:,:n_features],train_kf[:,n_features], val_kf[:,:n_features], val_kf[:,n_features])
-                        bdt = HistGradientBoostingClassifier(max_iters=100, early_stopping=True)
-                        bdt.fit(train_kf[:,:n_features],train_kf[:,n_features])
+                        bdt = HistGradientBoostingClassifier(max_iter=100, early_stopping=True, learning_rate=0.3,class_weight='balanced')
+                        bdt.fit(train_ws[:,:n_features],train_ws[:,n_features])
                         pred_list = bdt.predict_proba(test_ws[:,:n_features])[:,1]
                         pred_list_all.append(pred_list)
                         print("Predicted values: ",pred_list)
@@ -678,7 +680,7 @@ else:
                         else: training(train_loader, val_loader, losses, val_losses, loaded_epoch, name+"_fs") 
         
         if test_model:
-                name = options.name
+                name = name = options.name+ "_sig%.3f"%options.sig_injection
                 if not train_model:
                         train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(options.test_ws, sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, 
                         bkg_sig_frac, options.train_frac, options.val_frac, name, f_list) 
