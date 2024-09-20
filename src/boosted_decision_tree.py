@@ -79,7 +79,7 @@ class HGBClassifier(BaseEstimator):
         self.verbose = verbose
 
         self.model = HistGradientBoostingClassifier(
-            max_bins=max_bins, learning_rate = 0.3, 
+            max_bins=max_bins, learning_rate = 0.15, 
             class_weight="balanced",
             max_iter=1, early_stopping=False, warm_start=True)
 
