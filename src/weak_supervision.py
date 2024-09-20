@@ -609,7 +609,7 @@ if options.BDT:
                         print(">> Training BDT with %ith fold as validation"%i)
                         #bdt = HGBClassifier(max_iters=None, early_stopping=True, verbose=True)
                         #bdt.fit(train_kf[:,:n_features],train_kf[:,n_features], val_kf[:,:n_features], val_kf[:,n_features])
-                        bdt = HistGradientBoostingClassifier(max_iter=1000, early_stopping=True, learning_rate = 0.2, validation_fraction=0.2, warm_start=True, verbose=1)
+                        bdt = HistGradientBoostingClassifier(max_iter=1000, early_stopping=True, learning_rate = 0.2, validation_fraction=0.2, warm_start=True)
                         #bdt = RandomForestClassifier(n_estimators = 200, warm_start = True)
                         bdt.fit(train[:,:n_features],train[:,n_features])
                         pred_list = bdt.predict_proba(test[:,:n_features])[:,1]
@@ -641,7 +641,7 @@ if options.BDT:
                         print(">> Training BDT with %ith fold as validation"%i)
                         #bdt = HGBClassifier(max_iters=None, early_stopping=True, verbose=True)
                         #bdt.fit(train_kf[:,:n_features],train_kf[:,n_features], val_kf[:,:n_features], val_kf[:,n_features])
-                        bdt = HistGradientBoostingClassifier(max_iter=1000, early_stopping=True, learning_rate = 0.2, validation_fraction=0.2, warm_start=True, verbose=1)
+                        bdt = HistGradientBoostingClassifier(max_iter=1000, early_stopping=True, learning_rate = 0.2, validation_fraction=0.2, warm_start=True)
                         #bdt = RandomForestClassifier(n_estimators = 200, warm_start = True)
                         bdt.fit(train_ws[:,:n_features],train_ws[:,n_features])
                         pred_list = bdt.predict_proba(test_ws[:,:n_features])[:,1]
