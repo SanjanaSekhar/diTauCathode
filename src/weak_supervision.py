@@ -299,7 +299,9 @@ def make_train_test_val_ws(test_ws, sig, bkg1, m_tt_min = 350., m_tt_max = 1000.
         # label data as 1 and pure bkg as 0
         # bkg1_sigregion has label = 0 in the data region, bkg1_sigregion_ws has label = 1
         bkg1_sigregion_ws = bkg1_sigregion.copy()
-        if not test_ws: bkg1_sigregion_ws.loc[:,'label'] = 1
+        if not test_ws:
+                print("SETTING LABEL OF BKG TO 1") 
+                bkg1_sigregion_ws.loc[:,'label'] = 1
         else: bkg1_sigregion_ws[bkg1_sigregion_ws.columns[2]] = 1
 
         
@@ -476,7 +478,7 @@ parser.add_argument("--feature_imp",  default=False, help="Plot feature_importan
 parser.add_argument("--plot_pre_post",  default=False, help="Plot sig and bkg pre and postproc")
 parser.add_argument("--test_ws",  default=False, help="test WS with gaussians")
 parser.add_argument("--choose_n_features",  default=10, type = int, help="extract n best features")
-parser.add_argument("--case",  default=-1, type = int, help="which subset of features do you want to try? choose between 1 to 4")
+parser.add_argument("--case",  default=2, type = int, help="which subset of features do you want to try? choose between 1 to 4")
 options = parser.parse_args()
 
 
@@ -546,7 +548,7 @@ if case == 1:
         f_list = ["tau1_m","tau2_m","deltaR_tau1tau2","met_met",
                         "m_tau1tau2","label"]
 elif case == 2:
-        f_list = ["m_jet1jet2", "deltaR_jet1jet2","deltaR_tau1tau2","pt_tau1tau2","n_jets","n_bjets",
+        f_list = ["m_jet1jet2", "deltaR_jet1jet2","deltaR_tau1tau2","met_met",
                         "m_tau1tau2","label"]
 elif case == 3:
         f_list = ["m_jet1jet2", "deltaR_jet1jet2","tau1_m","tau2_m",
@@ -644,7 +646,7 @@ if options.BDT:
                         bdt = HistGradientBoostingClassifier(max_iter=1000, early_stopping=True, learning_rate = 0.2, validation_fraction=0.2, warm_start=True)
                         #bdt = RandomForestClassifier(n_estimators = 200, warm_start = True)
                         bdt.fit(train_ws[:,:n_features],train_ws[:,n_features])
-                        pred_list = bdt.predict_proba(test_ws[:,:n_features])[:,1]
+                        pred_list = bdt.predict_proba(test[:,:n_features])[:,1]
                         pred_list_all.append(pred_list)
                         #print("Validation score per iteration: ",bdt.validation_score_)
                 pred_list_all = np.array(pred_list_all)
