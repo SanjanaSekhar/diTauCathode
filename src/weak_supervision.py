@@ -242,8 +242,9 @@ def make_train_test_val_ws(test_ws, sig, bkg1, m_tt_min = 350., m_tt_max = 1000.
                 
                 #sig.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
                 #bkg1.drop(labels=["tau1_pt", "tau2_pt", "tau1_m","tau2_m", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef"], axis=1, inplace=True)
-                sig = sig[f_list]
-                bkg1 = bkg1[f_list]
+                if f_list:
+                    sig = sig[f_list]
+                    bkg1 = bkg1[f_list]
                 
                 print(sig.shape, bkg1.shape)
                 print("Min, max m_tt in sig: ", sig['m_tau1tau2'].min(), sig['m_tau1tau2'].max() )
@@ -473,7 +474,7 @@ parser.add_argument("--feature_imp",  default=False, help="Plot feature_importan
 parser.add_argument("--plot_pre_post",  default=False, help="Plot sig and bkg pre and postproc")
 parser.add_argument("--test_ws",  default=False, help="test WS with gaussians")
 parser.add_argument("--choose_n_features",  default=10, type = int, help="extract n best features")
-parser.add_argument("--case",  default=2, type = int, help="which subset of features do you want to try? choose between 1 to 4")
+parser.add_argument("--case",  default=-1, type = int, help="which subset of features do you want to try? choose between 1 to 4")
 options = parser.parse_args()
 
 
@@ -551,6 +552,9 @@ elif case == 3:
 elif case == 4:
         f_list = ["m_jet1jet2", "deltaR_jet1jet2","tau1_m","deltaR_tau1tau2",
                         "m_tau1tau2","label"]
+elif case == -1: 
+        f_list = ["m_jet1jet2", "deltaR_jet1jet2","deltaR_tau1tau2","pt_tau1tau2","n_jets","n_bjets","met_met","met_eta","met_phi","jet1_pt",
+                         "m_tau1tau2","label"]
 
 print(options)
 
@@ -584,7 +588,7 @@ if options.BDT:
         train, val, test, train_ws, val_ws, test_ws, feature_list = make_train_test_val_ws(options.test_ws, sig, bkg1, options.m_tt_min, options.m_tt_max, sig_injection, bkg_sig_frac, options.train_frac, options.val_frac, name, f_list)
         train, val, test = preprocess(train, val, test)
         train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
-        n_features = len(f_list)-2
+        n_features = len(feature_list[:-1])
         print("Using a HistGradientBoostingClassifier instead of NN...")
         if options.full_supervision:
                 pred_list_all = []
