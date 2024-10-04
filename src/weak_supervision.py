@@ -320,10 +320,10 @@ def make_train_test_val_ws(test_ws, sig, bkg1, m_tt_min = 350., m_tt_max = 1000.
         bkg1_sigregion = bkg1_sigregion.to_numpy()
         
 
-        np.savetxt("sig_to_inject_bkg1.txt",sig_to_inject_bkg1)
-        np.savetxt("sig_to_inject_bkg1_ws.txt",sig_to_inject_bkg1_ws)
-        np.savetxt("bkg1_sigregion_ws.txt", bkg1_sigregion_ws)
-        np.savetxt("bkg1_sigregion.txt",bkg1_sigregion)
+        #np.savetxt("sig_to_inject_bkg1.txt",sig_to_inject_bkg1)
+        #np.savetxt("sig_to_inject_bkg1_ws.txt",sig_to_inject_bkg1_ws)
+        #np.savetxt("bkg1_sigregion_ws.txt", bkg1_sigregion_ws)
+        #np.savetxt("bkg1_sigregion.txt",bkg1_sigregion)
 
         # train val test split: train_frac, train_frac + val_frac, 1-(train_frac + val_frac)
         train_sig, val_sig, test_sig = np.split(sig_to_inject_bkg1, [int(train_frac*len(sig_to_inject_bkg1)), int((train_frac + val_frac)*len(sig_to_inject_bkg1))])
@@ -508,7 +508,7 @@ if "Phi250" in name:
         options.m_tt_min = 100.
         options.m_tt_max = 500.
         if "ttbar" in name:
-                options.bkg = "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_NoMisTag_MadSpin_1M"
+                options.bkg = "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_1M"
         if "DY" in name:
                 options.bkg = "SM_dyToTauTau_0J1J2J_MinMass120_1M"
 if "Phi750" in name:

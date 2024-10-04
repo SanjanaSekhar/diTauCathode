@@ -69,14 +69,14 @@ int create_dataset(string file_n, int label) {
 	Int_t sorted_jet_idx[5], sorted_bjet_idx[5];	
 	std::cout << "Running on " << n_frac << " out of " << numberOfEntries << " events" << std::endl;
 	int numTauJet1s = 0, numTauJet2s = 0, numGenTau1s = 0, numGenTau2s = 0, numGenTauJet1s = 0, numGenTauJet2s = 0;
-	
+	int nevents = 0;
 //  numberOfEntries = 1000;
 	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
 	//for (Long64_t entry = 0; entry < n_frac; ++entry) {	
 		if (entry % 20000 == 0) {
 			std:cout << "Processing event " << entry << std::endl;
-			printf("No. of events with at least 1 tagged hadronic tau jets = %i\n",numTauJet1s);
-			printf("No. of events with at least 2 tagged hadronic tau jets = %i\n",numTauJet2s);
+			//printf("No. of events with at least 1 tagged hadronic tau jets = %i\n",numTauJet1s);
+			printf("No. of events with at least 2 tagged hadronic tau jets = %i\n",nevents);
 			//printf("No. of events with 1 gen tau- jet = %i\n",numGenTau1s);
 			//printf("No. of events with 1 gen tau+ jet = %i\n",numGenTau2s);
 
@@ -262,7 +262,8 @@ int create_dataset(string file_n, int label) {
 
 				
 
-
+				if(m_tau1tau2 >= 120){
+					nevents++;
 					fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i\n", 
 					m_jet1jet2, deltaR_jet1jet2, m_bjet1bjet2, deltaR_bjet1bjet2, deltaR_tau1tau2,
 					tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, 
@@ -271,6 +272,7 @@ int create_dataset(string file_n, int label) {
 					jet2_pt, jet2_eta, jet2_phi, jet2_cef, jet2_nef, bjet2_pt, bjet2_eta, bjet2_phi, bjet2_cef, bjet2_nef, isSig);
 	//printf("No. of tau jets = %i\n",numTauJets);  
 				}
+			}
 				/*
 				int found_ntaus = 0, found_leptau = 0, found_hadtau =0;
 		float neu1_pT=0., neu1_eta, neu1_phi, neu2_pT=0., neu2_eta, neu2_phi;
@@ -388,8 +390,8 @@ int create_dataset(string file_n, int label) {
 				}
 				*/
 			}
-			printf("No. of events with at least 1 tagged tau jets = %i\n",numTauJet1s);
-			printf("No. of events with at least 2 tagged tau jets = %i\n",numTauJet2s);
+			//printf("No. of events with at least 1 tagged tau jets = %i\n",numTauJet1s);
+			printf("No. of events with at least 2 tagged tau jets = %i\n",nevents);
 			//printf("No. of events with 1 gen tau- jet = %i\n",numGenTau1s);
 			//printf("No. of events with 1 gen tau+ jet = %i\n",numGenTau2s);
 			return 1;
