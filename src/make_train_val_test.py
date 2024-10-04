@@ -8,7 +8,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler, PowerTransformer
 from sklearn.feature_selection import SelectKBest, f_classif, chi2
 
 
-def make_sig_ws_fs(test_ws, sig, m_tt_min = 100., m_tt_max = 500., n_sig_bkg1 = 500, train_frac = 0.8, val_frac = 0.1, name = "PhivsDY", f_list = ["m_jet1jet2", "deltaR_jet1jet2"]):
+def make_sig_ws_fs(test_ws, sig, m_tt_min, m_tt_max, n_sig_bkg1, train_frac, val_frac, f_list):
 
         # CREATE an IDEAL Anomaly Detector
         # Train pure bkg vs sig+bkg in the SR only
@@ -22,7 +22,7 @@ def make_sig_ws_fs(test_ws, sig, m_tt_min = 100., m_tt_max = 500., n_sig_bkg1 = 
                 # jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef,
                 # jet2_pt, jet2_eta, jet2_phi, jet2_cef, jet2_nef, bjet2_pt, bjet2_eta, bjet2_phi, bjet2_cef, bjet2_nef, isSig
 
-                print(sig.shape, bkg1.shape)
+                print(sig.shape)
                 sig.columns = [ "m_jet1jet2", "deltaR_jet1jet2", "m_bjet1bjet2", "deltaR_bjet1bjet2", "deltaR_tau1tau2",
                                 "tau1_pt", "tau1_eta", "tau1_phi", "tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m",
                                 "m_tau1tau2","pt_tau1tau2", "eta_tau1tau2", "phi_tau1tau2", "met_met", "met_eta", "met_phi", "n_jets", "n_bjets",
@@ -53,8 +53,6 @@ def make_sig_ws_fs(test_ws, sig, m_tt_min = 100., m_tt_max = 500., n_sig_bkg1 = 
                 print("No. of samples in SR in sig")
                 print(sig_sigregion.shape[0])
 
-                # shuffle the background indices
-                bkg1_sigregion = bkg1_sigregion.sample(frac=1).reset_index(drop=True)
 
 
         sig_bkg1_idxs = np.random.choice(range(0,sig_sigregion.shape[0]),size=n_sig_bkg1)
@@ -84,7 +82,7 @@ def make_sig_ws_fs(test_ws, sig, m_tt_min = 100., m_tt_max = 500., n_sig_bkg1 = 
         
         return train_sig, val_sig, test_sig, train_sig_ws, val_sig_ws, test_sig_ws, feature_list.to_list()
 
-def make_bkg_ws_fs(test_ws, bkg1, m_tt_min = 100., m_tt_max = 500., n_bkg1 = -1, train_frac = 0.8, val_frac = 0.1, name = "PhivsDY", f_list = ["m_jet1jet2", "deltaR_jet1jet2"]):
+def make_bkg_ws_fs(test_ws, bkg1, m_tt_min, m_tt_max, n_bkg1, train_frac, val_frac, f_list):
 
         # CREATE an IDEAL Anomaly Detector
         # Train pure bkg vs sig+bkg in the SR only
@@ -98,7 +96,7 @@ def make_bkg_ws_fs(test_ws, bkg1, m_tt_min = 100., m_tt_max = 500., n_bkg1 = -1,
                 # jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef,
                 # jet2_pt, jet2_eta, jet2_phi, jet2_cef, jet2_nef, bjet2_pt, bjet2_eta, bjet2_phi, bjet2_cef, bjet2_nef, isSig
 
-                print(sig.shape, bkg1.shape)
+                print(bkg1.shape)
                 bkg1.columns = [ "m_jet1jet2", "deltaR_jet1jet2", "m_bjet1bjet2", "deltaR_bjet1bjet2", "deltaR_tau1tau2",
                                 "tau1_pt", "tau1_eta", "tau1_phi", "tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m",
                                 "m_tau1tau2","pt_tau1tau2", "eta_tau1tau2", "phi_tau1tau2", "met_met", "met_eta", "met_phi", "n_jets", "n_bjets",
@@ -198,9 +196,9 @@ def make_bkg_ws_fs(test_ws, bkg1, m_tt_min = 100., m_tt_max = 500., n_bkg1 = -1,
 def preprocess(train, val, test):
         print(train.shape)
         n_features = train.shape[1] - 1
-        #scaler = StandardScaler()
+        scaler = StandardScaler()
         #scaler = MinMaxScaler()
-        scaler = PowerTransformer()
+        #scaler = PowerTransformer()
         scaler.fit(np.vstack((train,val))[:,0:n_features])
         train[:,0:n_features] = scaler.transform(train[:,0:n_features])
         test[:,0:n_features] = scaler.transform(test[:,0:n_features])

@@ -21,6 +21,11 @@ from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import roc_curve
 from argparse import ArgumentParser
 
+from make_train_val_test import *
+from train_test_bdt import *
+from train_test_nn import *
+#from plotter import plot_pre_postprocessed
+
 parser = ArgumentParser(description='Train sig vs bkg for identifying CATHODE vars')
 parser.add_argument("--name",  default="Phi250vsDY", help="file name extension for residuals and pulls")
 parser.add_argument("--sig", default="2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag", help = "name of the .csv file for the signal")
@@ -111,12 +116,13 @@ else:
         bkg1 = np.vstack((x1_bkg, x2_bkg, y_bkg)).T
 
 # DY
-train_bkg1, val_bkg1, test_bkg1, train_bkg1_ws, val_bkg1_ws, test_bk1g_ws, n_bkg1 = make_bkg_ws_fs(test_ws, bkg1, options.m_tt_min, options.m_tt_max, -1, train_frac, val_frac, f_list)
+train_bkg1, val_bkg1, test_bkg1, train_bkg1_ws, val_bkg1_ws, test_bkg1_ws, n_bkg1 = make_bkg_ws_fs(options.test_ws, bkg1, options.m_tt_min, options.m_tt_max, -1, train_frac, val_frac, f_list)
 # ttbar
-train_bkg2, val_bkg2, test_bkg2, train_bkg2_ws, val_bkg2_ws, test_bkg2_ws, n_bkg2 = make_bkg_ws_fs(test_ws, bkg2, options.m_tt_min, options.m_tt_max, 25659, train_frac, val_frac, f_list)
-n_sig_bkg1 = options.sigma * np.sqrt(n_bkg1 + n_bkg2)
+train_bkg2, val_bkg2, test_bkg2, train_bkg2_ws, val_bkg2_ws, test_bkg2_ws, n_bkg2 = make_bkg_ws_fs(options.test_ws, bkg2, options.m_tt_min, options.m_tt_max, 25659, train_frac, val_frac, f_list)
+n_sig_bkg1 = int(options.sigma * np.sqrt(n_bkg1 + n_bkg2))
+print(n_bkg1, n_bkg2, options.sigma, n_sig_bkg1)
 # signal 
-train_sig, val_sig, test_sig, train_sig_ws, val_sig_ws, test_sig_ws, feature_list = make_sig_ws_fs(test_ws, sig, options.m_tt_min, options.m_tt_max, n_sig_bkg1, train_frac, val_frac, f_list)
+train_sig, val_sig, test_sig, train_sig_ws, val_sig_ws, test_sig_ws, feature_list = make_sig_ws_fs(options.test_ws, sig, options.m_tt_min, options.m_tt_max, n_sig_bkg1, train_frac, val_frac, f_list)
 
 # sets with all true labels for full supervision and ROC curve
 train = np.vstack((train_sig,train_bkg1,train_bkg2))
@@ -144,8 +150,8 @@ n_features = len(feature_list[:-1])
 if options.BDT:
 
         print("Using a HistGradientBoostingClassifier...")
-        if options.full_supervision: train_test_BDT(train, val, test, options.sigma, full_supervision=True, n_folds=50)
-        else: train_test_BDT(train_ws, val_ws, test, options.sigma, full_supervision=False, n_folds=50)
+        if options.full_supervision: train_test_BDT(train, val, test, options.name, options.sigma, full_supervision=True, n_folds=50)
+        else: train_test_BDT(train_ws, val_ws, test, options.name, options.sigma, full_supervision=False, n_folds=50)
                 
 else:
         gpu_boole = torch.cuda.is_available()
@@ -197,7 +203,7 @@ else:
 ===========================
 '''
 
-if options.plot_pre_post: plot_pre_postprocessed(train, val, test, train_ws, val_ws, test_ws)
+#if options.plot_pre_post: plot_pre_postprocessed(train, val, test, train_ws, val_ws, test_ws)
         
 
 if options.feature_imp:

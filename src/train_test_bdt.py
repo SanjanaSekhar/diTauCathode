@@ -1,15 +1,18 @@
 from sklearn.ensemble import HistGradientBoostingClassifier,GradientBoostingClassifier, RandomForestClassifier
 from boosted_decision_tree import HGBClassifier
 from pickle import dump, load
+import os, sys
+import numpy as np
 
 sys.setrecursionlimit(10000)
 
-def train_test_BDT(train, val, test, sigma, full_supervision=False, n_folds=50):        
+def train_test_BDT(train, val, test,  name, sigma, full_supervision=False, n_folds=50):        
         
         pred_list_all = []
         #kf = KFold(n_splits = 10)
         train = np.vstack((train,val))
-        name = options.name+"_sig%.1f"%sigma+("_fs" if full_supervision else "")
+        n_features = train.shape[1]-1
+        name = name+"_sigma%.1f"%sigma+"%s"%("_fs" if full_supervision else "")
         #for i,(train_i,val_i) in enumerate(kf.split(train)):
         for i in range(n_folds):
                 np.random.shuffle(train)
@@ -22,7 +25,7 @@ def train_test_BDT(train, val, test, sigma, full_supervision=False, n_folds=50):
                 print(">> Training BDT with %ith fold as validation"%i)
                 #bdt = HGBClassifier(max_iters=None, early_stopping=True, verbose=True)
                 #bdt.fit(train_kf[:,:n_features],train_kf[:,n_features], val_kf[:,:n_features], val_kf[:,n_features])
-                bdt = HistGradientBoostingClassifier(max_iter=1000, early_stopping=True, learning_rate = 0.2, validation_fraction=0.2, warm_start=True)
+                bdt = HistGradientBoostingClassifier(max_iter=500, early_stopping=True, validation_fraction=0.2, warm_start=True)
                 #bdt = RandomForestClassifier(n_estimators = 200, warm_start = True)
                 bdt.fit(train[:,:n_features],train[:,n_features])
                 pred_list = bdt.predict_proba(test[:,:n_features])[:,1]
