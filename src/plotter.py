@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt 
 import os 
 import pandas as pd 
-from sklearn.metrics import roc_curve
+from sklearn.metrics import roc_curve, confusion_matrix
 from matplotlib.backends.backend_pdf import PdfPages
 
 def plot_features(sig,bkg1,bkg2):
@@ -29,7 +29,7 @@ def plot_features(sig,bkg1,bkg2):
 
 	    plt.figure(figsize=(10,7))
 	    plt.hist(bkg1[col], label = "DY + 0/1/2 jets", bins = 30, histtype = "step")
-	    plt.hist(bkg2[col], label = "ttbar + 2 jets", bins = 30, histtype = "step")
+	    plt.hist(bkg2[col], label = "ttbar + 0/1/2 jets", bins = 30, histtype = "step")
 	    plt.hist(sig[col], label = "T'(1000) + S (250) + 2 jets", bins = 30, histtype = "step")
 	    plt.legend()
 	    plt.title("Distribution of %s"%col)
@@ -126,21 +126,47 @@ def plot_pre_postprocessed(train, val, test, train_ws, val_ws, test_ws):
 
 def plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title):
 	
-	tpr_list, bkg_rej_list, sic_list = [],[],[]
-
+	tpr_list, bkg_rej_list, bkg_eff_list, sic_list = [],[],[],[]
+	# thresholds = np.linspace(0.25,1.8,40)
 	for l,n in zip(ws_lists,ws_names):
-		fpr, tpr, _ = roc_curve(l[0], l[1])
-		#print(n, fpr, tpr)
+		tpr, tnr, fpr = [],[],[]
+		fpr, tpr, thresholds = roc_curve(l[0],l[1])
+		# print("thresholds shape: ",thresholds.shape, "for ",n)
+		# for thresh in thresholds:
+		# 	pred = np.array(l[1]>thresh).astype(int)
+		# 	tn, fp, fn, tp = confusion_matrix(l[0],pred).ravel()
+		# 	tpr.append(tp/(tp+fn))
+		# 	tnr.append(tn/(tn+fp))
+		# 	fpr.append(fp/(tn+fp))
+		
+		# #print(tnr, fpr, tpr)
+		# fpr = np.array(fpr)
+		# tnr = np.array(tnr)
+		# tpr = np.array(tpr)
 		bkg_rej = 1 / (fpr+0.001)
+		bkg_eff_list.append(fpr)
 		sic = tpr / np.sqrt(fpr+0.001)
 		tpr_list.append(tpr)
 		bkg_rej_list.append(bkg_rej)
 		sic_list.append(sic)
 
 	for l,n in zip(fs_lists,fs_names):
-		fpr, tpr, _ = roc_curve(l[0], l[1])
-		#print(n, fpr, tpr)
+		tpr, tnr, fpr = [],[],[]
+		fpr, tpr, thresholds = roc_curve(l[0],l[1])
+		# print("thresholds shape: ",thresholds.shape, "for ",n)
+		# for thresh in thresholds:
+		# 	pred = np.array(l[1]>thresh).astype(int)
+		# 	tn, fp, fn, tp = confusion_matrix(l[0],pred).ravel()
+		# 	tpr.append(tp/(tp+fn))
+		# 	tnr.append(tn/(tn+fp))
+		# 	fpr.append(fp/(tn+fp))
+		
+		# #print(tnr, fpr, tpr)
+		# fpr = np.array(fpr)
+		# tnr = np.array(tnr)
+		# tpr = np.array(tpr)
 		bkg_rej = 1 / (fpr+0.001)
+		bkg_eff_list.append(fpr)
 		sic = tpr / np.sqrt(fpr+0.001)
 		tpr_list.append(tpr)
 		bkg_rej_list.append(bkg_rej)
@@ -148,7 +174,7 @@ def plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title):
 
 	names = ws_names + fs_names
 
-	random_tpr = np.linspace(0, 1, len(fpr))
+	random_tpr = np.linspace(0, 1, len(tpr))
 	random_bkg_rej = 1 / (random_tpr+0.001)
 	random_sic = random_tpr / np.sqrt(random_tpr+0.001)
 
@@ -158,7 +184,7 @@ def plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title):
 		print("Plotting ",names[i])
 		plt.plot(tpr_list[i], bkg_rej_list[i], label=names[i])
 	plt.plot(random_tpr, random_bkg_rej, label="random")
-	plt.xlabel("True Positive Rate")
+	plt.xlabel("Signal Efficiency (True Positive Rate)")
 	plt.ylabel("Background Rejection")
 	plt.yscale("log")
 	plt.legend()
@@ -170,11 +196,11 @@ def plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title):
 	plt.figure(figsize=(8,8))
 	for i in range(len(names)):
 		print("Plotting ",names[i])
-		plt.plot(tpr_list[i], sic_list[i], label=names[i])
+		plt.plot(bkg_eff_list[i], sic_list[i], label=names[i])
 	plt.plot(random_tpr, random_sic, label="random")
-	plt.xlabel("True Positive Rate")
+	plt.xlabel("Background Efficiency (False Positive Rate)")
 	plt.ylabel("Significance Improvement")
-	plt.legend(loc="upper right")
+	plt.legend()
 	plt.title(plt_title)
 	plt.savefig("plots/SIC_%s.png"%plt_title)
 	plt.close()
@@ -190,43 +216,21 @@ def plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title):
 
 #injections = ["0.100","0.050","0.010","0.005"]
 #injections = ["0.100"]#,"0.200","0.300","0.400","0.500","0.600","0.700","0.800","0.900"]
-masses = [250]
-bkgs = ["DY"]
-
-
-# name: losses/fpr_tpr_TS750vsttbar-case3_fs_sig0.010.txt
-
-# for mass in masses:
-# 	for bkg in bkgs:
-# 		ws_lists, ws_names, fs_lists, fs_names = [],[],[],[]
-		
-# 		ws_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case1_sig0.010.txt"%(mass,bkg)))
-# 		ws_names.append(r"IAD: $m_{\tau 1}, m_{\tau 2}, \Delta R_{\tau\tau}$, MET")
-# 		fs_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case1_fs_sig0.010.txt"%(mass,bkg)))
-# 		fs_names.append(r"FS: $m_{\tau 1}, m_{\tau 2}, \Delta R_{\tau\tau}$, MET")
-
-# 		ws_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case2_sig0.010.txt"%(mass,bkg)))
-# 		ws_names.append(r"IAD: $m_{jj}, \Delta R_{jj}, \Delta R_{\tau\tau}$, MET")
-# 		fs_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case2_fs_sig0.010.txt"%(mass,bkg)))
-# 		fs_names.append(r"FS: $m_{jj}, \Delta R_{jj}, \Delta R_{\tau\tau}$, MET")
-
-# 		ws_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case3_sig0.010.txt"%(mass,bkg)))
-# 		ws_names.append(r"IAD: $m_{jj}, \Delta R_{jj}, m_{\tau 1}, m_{\tau 2}$")
-# 		fs_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case3_fs_sig0.010.txt"%(mass,bkg)))
-# 		fs_names.append(r"FS: $m_{jj}, \Delta R_{jj}, m_{\tau 1}, m_{\tau 2}$")
-
-# 		ws_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case4_sig0.010.txt"%(mass,bkg)))
-# 		ws_names.append(r"IAD: $m_{jj}, \Delta R_{jj}, m_{\tau 1}, \Delta R_{\tau\tau}$")
-# 		fs_lists.append(np.loadtxt("losses/fpr_tpr_TS%ivs%s-case4_fs_sig0.010.txt"%(mass,bkg)))
-# 		fs_names.append(r"FS: $m_{jj}, \Delta R_{jj}, m_{\tau 1}, \Delta R_{\tau\tau}$")
-
-# 		plt_title = "TS%ivs%s_cases_sig0.01"%(mass,bkg) 
-# 		plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
-
-#  create mode 100644 losses/fpr_tpr_bdt_Phi250vsDY_sig0.010_N50.txt
-#  create mode 100644 losses/fpr_tpr_bdt_Phi250vsDY_sig0.010_fs_fs_N50.txt
-#  create mode 100644 losses/fpr_tpr_bdt_Phi250vsDY_sig0.050_N50.txt
-#  create mode 100644 losses/fpr_tpr_bdt_Phi250vsDY_sig0.050_fs_fs_N50.txt
+'''
+sigmas = [2,2.4,3,4,5]
+sigs = ["Phi250",'VAL','HNL',"TS250"]
+# losses/fpr_tpr_bdt_VAL_sigma3.0_N50.txt
+# losses/fpr_tpr_bdt_VAL_sigma2.0_fs_fs_N50.txt
+for sig in sigs:
+	ws_lists, ws_names, fs_lists, fs_names = [],[],[],[]
+	for sigma in sigmas:
+		ws_lists.append(np.loadtxt("losses/fpr_tpr_bdt_%s_sigma%.1f_N50.txt"%(sig,sigma)))
+		ws_names.append(r"BDT IAD with $S/\sqrt{B}$=%.1f"%sigma)
+		fs_lists.append(np.loadtxt("losses/fpr_tpr_bdt_%s_sigma%.1f_fs_fs_N50.txt"%(sig, sigma)))
+		fs_names.append(r"BDT Full Sup with $S/\sqrt{B}$=%.1f"%sigma)
+	
+	plt_title = "%s_BDT_sigma_scan"%(sig) 
+	plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
 
 for mass in masses:
 	for bkg in bkgs:
@@ -264,3 +268,4 @@ for mass in masses:
 		# fs_names.append("BDT Full Sup with N=50 ensembles (90%% signal)")
 		plt_title = "Phi%ivs%s_BDT_hgb_skl_sig0.010"%(mass,bkg) 
 		plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
+'''
