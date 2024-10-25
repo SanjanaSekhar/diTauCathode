@@ -262,7 +262,7 @@ int create_dataset(string file_n, int label) {
 
 				
 
-				if(m_tau1tau2 >= 120){
+				//if(m_tau1tau2 >= 120){
 					nevents++;
 					fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i\n", 
 					m_jet1jet2, deltaR_jet1jet2, m_bjet1bjet2, deltaR_bjet1bjet2, deltaR_tau1tau2,
@@ -271,7 +271,7 @@ int create_dataset(string file_n, int label) {
 					jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, 
 					jet2_pt, jet2_eta, jet2_phi, jet2_cef, jet2_nef, bjet2_pt, bjet2_eta, bjet2_phi, bjet2_cef, bjet2_nef, isSig);
 	//printf("No. of tau jets = %i\n",numTauJets);  
-				}
+			//	}
 			}
 				/*
 				int found_ntaus = 0, found_leptau = 0, found_hadtau =0;

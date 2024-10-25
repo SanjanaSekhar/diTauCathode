@@ -23,7 +23,7 @@ def plot_features(sig,bkg1,bkg2,sig_label):
 	                "jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef", "label"]
     bkg1.columns = sig.columns
     bkg2.columns = sig.columns
-    pp = PdfPages('plots/TS250_ttbar_DY_features.pdf')
+    pp = PdfPages('plots/%s_DY_ttbar_distributions.pdf'%sig_label)
 
     for col in sig.columns:
 
@@ -207,7 +207,7 @@ def plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title):
 
 sig_list = ["2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag","eVLQ_TPrimeTPrimeToTTPhiPhiToTauTauAll_TpM1000_PhiM250_NoMisTag",
         "HeavyN_vbsNToTauTau_NM250_2J_LO" , "VAL_dyVfVfToXiCXiCToTauSTauS_XiM1000_VfM250_MinMass120_NoMisTag"]
-sig = pd.read_csv("csv_files/.csv")
+
 
 bkg1 = pd.read_csv("csv_files/SM_dyToTauTau_0J1J2J_MinMass120_3M.csv")
 bkg2 = pd.read_csv("csv_files/SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M.csv")

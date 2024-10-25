@@ -28,7 +28,7 @@ void plot_qcd_distributions() {
 
 	int debug = 0; 
 	gSystem->Load("libDelphes");
-	int isSig = label;
+	
 
 	char infile[200], outfile[200];
 	string csv_path = "/uscms/home/ssekhar/nobackup/CATHODE_ditau/Delphes/";
@@ -101,6 +101,7 @@ void plot_qcd_distributions() {
 		bool filledBjet1 = false, filledBjet2 = false;
 		bool found_gtau1 = false, found_gtau2 = false;
 		int numJets = 0;
+		tau1_pt = 0, tau2_pt = 0, pt_tau1tau2 = 0;
 		n_jets = 0; n_bjets = 0; n_taus = 0; n_extra_jets = 0;
 		jet1_m = 0., jet1_pt = 0.; bjet1_m = 0., bjet1_pt = 0.;
 		jet1_eta = 0., jet1_phi = 0., bjet1_eta = 0., bjet1_phi = 0.,jet1_ehadeem = 0, bjet1_ehadeem = 0.;
@@ -108,7 +109,7 @@ void plot_qcd_distributions() {
 		jet2_m = 0., jet2_pt = 0.; bjet2_m = 0., bjet2_pt = 0.;
         jet2_eta = 0., jet2_phi = 0., bjet2_eta = 0., bjet2_phi = 0.,jet2_ehadeem = 0, bjet2_ehadeem = 0.;
         jet2_cef = 0., jet2_nef = 0.,bjet2_cef = 0., bjet2_nef = 0.;
-		deltaR_tau1tau2 = 0.,deltaR_jet1jet2 = 0;
+		deltaR_tau1tau2 = 0.,deltaR_jet1jet2 = 0, m_jet1jet2 = 0, m_tau1tau2 = 0;
 		TLorentzVector tau1_p4, jet1_p4;
 		
 			
@@ -124,15 +125,17 @@ void plot_qcd_distributions() {
 					filledJet1 = true;
 				}
 				else{
+				if(!filledJet2){
 					jet2_pt = jet->PT;
 					jet2_eta = jet->Eta;
 					jet2_phi = jet->Phi;
 					m_jet1jet2 = (jet1_p4 + jet->P4()).M();
 					deltaR_jet1jet2 = pow((pow((jet1_eta - jet2_eta),2) +  pow((jet1_phi - jet2_phi),2)),0.5);
-					pt_tau1tau2 = (jet1_p4 + jet->P4()).Pt();
+					pt_jet1jet2 = (jet1_p4 + jet->P4()).Pt();
 					filledJet2 = true;
 				}
-				if(filledJet2) n_extra_jets++;
+				else n_extra_jets++;
+				}
 				if (jet->BTag == 1) {
 					n_bjets++;
 					bjet1_pt = jet->PT;
@@ -171,42 +174,49 @@ void plot_qcd_distributions() {
 				arr_jet1pt[k] = jet1_pt;
 				k++;
 			}
-			m_jj->Fill(m_jet1jet2);
-			m_tautau->Fill(m_tau1tau2);
-			n_ex_jets->Fill(n_extra_jets);
-			n_tauH->Fill(n_taus);
-			dR_jj->Fill(deltaR_jet1jet2);
-			dR_tautau->Fill(deltaR_tau1tau2);
-			pT_j1->Fill(jet1_pt);
-			pT_j2->Fill(jet2_pt);
-			pT_tau1->Fill(tau1_pt);
-			pT_tau2->Fill(tau2_pt);
-			pT_tautau->Fill(pt_tau1tau2);
-			pT_jj->Fill(pt_jet1jet2);
+
+			
+			m_jj.Fill(m_jet1jet2);
+			m_tautau.Fill(m_tau1tau2);
+			n_ex_jets.Fill(n_extra_jets);
+			n_tauH.Fill(n_taus);
+			dR_jj.Fill(deltaR_jet1jet2);
+			dR_tautau.Fill(deltaR_tau1tau2);
+			
+			pT_j1.Fill(jet1_pt);
+			
+			//pT_j2.Fill(jet2_pt);
+			
+			pT_tau1.Fill(tau1_pt);
+			pT_tau2.Fill(tau2_pt);
+			
+			pT_tautau.Fill(pt_tau1tau2);
+			//pT_jj.Fill(pt_jet1jet2);
+			
 
 			
 		}
 		string outputFileName = "Histos_" + file_n + ".root";
 		TFile outputFile(outputFileName.c_str(), "RECREATE");
 		
-		m_jj->Write();
-		m_tautau->Write();
-		n_ex_jets->Write();
-		n_tauH->Write();
-		dR_jj->Write();
-		dR_tautau->Write();
-		pT_j1->Write();
-		pT_j2->Write();
-		pT_tau1->Write();
-		pT_tau2->Write();
-		pT_tautau->Write();
-		pT_jj->Write();
+		m_jj.Write();
+		m_tautau.Write();
+		n_ex_jets.Write();
+		n_tauH.Write();
+		dR_jj.Write();
+		dR_tautau.Write();
+		pT_j1.Write();
+		pT_j2.Write();
+		pT_tau1.Write();
+		pT_tau2.Write();
+		pT_tautau.Write();
+		pT_jj.Write();
 
 		outputFile.Close();
 
 		TCanvas *c = new TCanvas("c", "Histograms", 200, 10, 900, 700);
 		auto g = new TGraph(k,arr_mtt,arr_ntaus);
-		g->setTitle("No. of fake hadronic taus per event vs m_{#tau#tau}; m_{#tau#tau}; No. of fake #tau_H");
+		g->SetTitle("No. of fake hadronic taus per event vs m_{#tau#tau}; m_{#tau#tau}; No. of fake #tau_H");
 		g->Draw("AC*");
 
 		c->Print("ntaus_vs_mtt_QCD.png");
@@ -214,7 +224,7 @@ void plot_qcd_distributions() {
 
 		TCanvas *c2 = new TCanvas("c2", "Histograms", 200, 10, 900, 700);
 		auto g2 = new TGraph(k,arr_mjj,arr_ntaus);
-		g2->setTitle("No. of fake hadronic taus per event vs m_{jj}; m_{jj}; No. of fake #tau_H");
+		g2->SetTitle("No. of fake hadronic taus per event vs m_{jj}; m_{jj}; No. of fake #tau_H");
 		g2->Draw("AC*");
 
 		c2->Print("ntaus_vs_mjj_QCD.png");
@@ -222,7 +232,7 @@ void plot_qcd_distributions() {
 
 		TCanvas *c3 = new TCanvas("c3", "Histograms", 200, 10, 900, 700);
 		auto g3 = new TGraph(k,arr_jet1pt,arr_ntaus);
-		g3->setTitle("No. of fake hadronic taus per event vs pT_j1; pT_j1; No. of fake #tau_H");
+		g3->SetTitle("No. of fake hadronic taus per event vs pT_j1; pT_j1; No. of fake #tau_H");
 		g3->Draw("AC*");
 
 		c3->Print("ntaus_vs_pTj1_QCD.png");

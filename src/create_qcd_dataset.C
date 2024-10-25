@@ -22,7 +22,7 @@ R__LOAD_LIBRARY(libDelphes)
 
 class TFile;
 
-int create_dataset(string file_n, int label) {
+int create_qcd_dataset(string file_n, int label) {
 
 
 	int debug = 0; 
@@ -102,9 +102,10 @@ int create_dataset(string file_n, int label) {
 				 Jet *jet = (Jet*) branchJet->At(i);
 				if (jet->BTag == 1) n_bjets++;
 				else {if (jet->TauTag == 0) n_jets++;}
+				}
 			}
-			}
-			
+			else continue;
+		
 			for (int i = 0; i < branchJet->GetEntries(); ++i) {
 
 					Jet *jet = (Jet*) branchJet->At(i);
