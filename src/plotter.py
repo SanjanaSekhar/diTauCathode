@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn.metrics import roc_curve, confusion_matrix
 from matplotlib.backends.backend_pdf import PdfPages
 
-def plot_features(sig,bkg1,bkg2):
+def plot_features(sig,bkg1,bkg2,sig_label):
 
 
 	# Format of csv file:
@@ -30,7 +30,7 @@ def plot_features(sig,bkg1,bkg2):
 	    plt.figure(figsize=(10,7))
 	    plt.hist(bkg1[col], label = "DY + 0/1/2 jets", bins = 30, histtype = "step")
 	    plt.hist(bkg2[col], label = "ttbar + 0/1/2 jets", bins = 30, histtype = "step")
-	    plt.hist(sig[col], label = "T'(1000) + S (250) + 2 jets", bins = 30, histtype = "step")
+	    plt.hist(sig[col], label = sig_label, bins = 30, histtype = "step")
 	    plt.legend()
 	    plt.title("Distribution of %s"%col)
 	    plt.xlabel(col)
@@ -205,14 +205,16 @@ def plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title):
 	plt.savefig("plots/SIC_%s.png"%plt_title)
 	plt.close()
 
+sig_list = ["2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag","eVLQ_TPrimeTPrimeToTTPhiPhiToTauTauAll_TpM1000_PhiM250_NoMisTag",
+        "HeavyN_vbsNToTauTau_NM250_2J_LO" , "VAL_dyVfVfToXiCXiCToTauSTauS_XiM1000_VfM250_MinMass120_NoMisTag"]
+sig = pd.read_csv("csv_files/.csv")
 
-#sig = pd.read_csv("csv_files/2HDM-vbfPhiToTauTau-M750_2J_MinMass350_NoMisTag.csv", lineterminator='\n')
-#sig = pd.read_csv("csv_files/2HDM-TSToTauTau-M750_2J_MinMass350_NoMisTag.csv")
-# sig = pd.read_csv("csv_files/eVLQ_T-M1000_S-M250_NoMisTag.csv")
-# bkg1 = pd.read_csv("csv_files/SM_dyToTauTau_0J1J2J_MinMass120_1M.csv")
-# bkg2 = pd.read_csv("csv_files/SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_NoMisTag_MadSpin_1M.csv")
+bkg1 = pd.read_csv("csv_files/SM_dyToTauTau_0J1J2J_MinMass120_3M.csv")
+bkg2 = pd.read_csv("csv_files/SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M.csv")
 
-#plot_features(sig, bkg1, bkg2)
+for sig in sig_list:
+	sig__ = pd.read_csv("csv_files/%s.csv"%sig)
+	plot_features(sig__, bkg1, bkg2, sig)
 
 #injections = ["0.100","0.050","0.010","0.005"]
 #injections = ["0.100"]#,"0.200","0.300","0.400","0.500","0.600","0.700","0.800","0.900"]
