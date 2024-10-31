@@ -172,7 +172,8 @@ void plot_qcd_distributions() {
 				} 			
 				
 			}
-			if(n_taus > 0) {
+			/*
+			if(n_taus > ) {
 				arr_mjj[k] = m_jet1jet2;
 				arr_mtt[k] = m_tau1tau2;
 				arr_ntaus[k] = n_taus;
@@ -180,7 +181,7 @@ void plot_qcd_distributions() {
 				k++;
 				if(k%50==0) cout << k << " fake tau/ditau events found\n" ;
 			}
-
+			*/
 			
 			m_jj.Fill(m_jet1jet2);
 			if(n_taus > 1) m_tautau.Fill(m_tau1tau2);
@@ -228,7 +229,7 @@ void plot_qcd_distributions() {
 		pT_tautau_dRcut.Write();
 
 		outputFile.Close();
-
+		/*
 		TCanvas *c = new TCanvas("c", "Histograms", 200, 10, 900, 700);
 		auto g = new TGraph(k,arr_mtt,arr_ntaus);
 		g->SetTitle("No. of fake hadronic taus per event vs m_{#tau#tau}; m_{#tau#tau}; No. of fake #tau_H");
@@ -253,6 +254,6 @@ void plot_qcd_distributions() {
 		c3->Print("ntaus_vs_pTj1_QCD.png");
 		delete c3;
 
-
+		*/
 }
 
