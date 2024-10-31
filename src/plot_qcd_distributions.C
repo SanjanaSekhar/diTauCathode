@@ -85,10 +85,10 @@ void plot_qcd_distributions() {
 	TH1F dR_jj("dR_jj", "dR_jj", 30, -2, 2);
 	TH1F dR_tautau("dR_tautau", "dR_tautau", 30, -2, 2);
     // after dR < 2 cut
-	TH1F m_jj_dRcut("m_jj", "m_jj", 150, 0.0, 1500.0);
-	TH1F m_tautau_dRcut("m_tautau", "m_tautau", 100, 0.0, 500.0);
-	TH1F pT_tautau_dRcut("pT_tautau", "pT_tautau", 100, 0.0, 400.0);
-	TH1F pT_jj_dRcut("pT_jj", "pT_jj", 100, 0.0, 600.0);
+	TH1F m_jj_dRcut("m_jj_dRcut", "m_jj_dRcut", 100, 0.0, 1500.0);
+	TH1F m_tautau_dRcut("m_tautau_dRcut", "m_tautau_dRcut", 70, 0.0, 500.0);
+	TH1F pT_tautau_dRcut("pT_tautau_dRcut", "pT_tautau_dRcut", 70, 0.0, 400.0);
+	TH1F pT_jj_dRcut("pT_jj_dRcut", "pT_jj_dRcut", 70, 0.0, 600.0);
 	
 	float arr_mjj[10000], arr_mtt[10000], arr_ntaus[10000], arr_jet1pt[10000]; int k = 0; 
 

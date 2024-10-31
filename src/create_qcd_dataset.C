@@ -22,7 +22,7 @@ R__LOAD_LIBRARY(libDelphes)
 
 class TFile;
 
-int create_qcd_dataset(string file_n, int label) {
+int create_qcd_dataset(string file_n, float xsec, int label) {
 
 
 	int debug = 0; 
@@ -50,17 +50,19 @@ int create_qcd_dataset(string file_n, int label) {
 	Long64_t numberOfEntries = treeReader->GetEntries();
 	int n_frac = 200;
 		// Get pointers to branches used in this analysis
-	
+	float lumi = 138.;
+
 	TClonesArray *branchJet = treeReader->UseBranch("Jet");
 	TClonesArray *branchParticle = treeReader->UseBranch("Particle");
 	TClonesArray *branchMET = treeReader->UseBranch("MissingET");
 	TClonesArray *branchMu = treeReader->UseBranch("Muon");
 	TClonesArray *branchEl = treeReader->UseBranch("Electron");
 	TClonesArray *branchGenJet = treeReader->UseBranch("GenJet");
+	TClonesArray *branchWeight = treeReader->UseBranch("Weight");
 
 	float tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, tau2_m, m_tau1tau2, pt_tau1tau2, eta_tau1tau2, phi_tau1tau2, met_met, met_eta, met_phi, tau1_d1, tau1_d2, tau2_d1, tau2_d2;
         int n_jets, n_bjets, n_jets_all;
-        float m_jet1jet2, m_bjet1bjet2;
+        float m_jet1jet2, m_bjet1bjet2, evt_weight;
 	float tau1_ncharged, tau1_nneutrals, tau1_ehadeem, tau2_ncharged, tau2_nneutrals, tau2_ehadeem;
 	float jet1_m, jet1_pt, jet1_eta, jet1_phi, bjet1_m, bjet1_pt, bjet1_eta, bjet1_phi, jet1_ehadeem, bjet1_ehadeem, jet1_cef, jet1_nef, bjet1_cef, bjet1_nef;
 	float jet2_m, jet2_pt, jet2_eta, jet2_phi, bjet2_m, bjet2_pt, bjet2_eta, bjet2_phi, jet2_ehadeem, bjet2_ehadeem, jet2_cef, jet2_nef, bjet2_cef, bjet2_nef;
@@ -70,16 +72,29 @@ int create_qcd_dataset(string file_n, int label) {
 	std::cout << "Running on " << n_frac << " out of " << numberOfEntries << " events" << std::endl;
 	int numTauJet1s = 0, numTauJet2s = 0, numGenTau1s = 0, numGenTau2s = 0, numGenTauJet1s = 0, numGenTauJet2s = 0;
 	int nevents = 0;
+	float sum_weights = 0.;
 //  numberOfEntries = 1000;
+	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
+		treeReader->ReadEntry(entry);
+		Weight *wt0 = (Weight*) branchWeight->At(entry);
+		sum_weights += wt0->Weight;
+
+	}
 	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
 	//for (Long64_t entry = 0; entry < n_frac; ++entry) {	
 		if (entry % 20000 == 0) {
 			std:cout << "Processing event " << entry << std::endl;
 		
 		}
+		//event weights
 		treeReader->ReadEntry(entry);
+		Weight *wt = (Weight*) branchWeight->At(entry);
+		evt_weight = wt->Weight;
+		evt_weight *= (xsec * 1000 * lumi)/sum_weights;
+
+
 		bool filled = false;
-		bool filledTau = false, filledGenTau = false;
+		bool filledTau1 = false, filledTau2 = false, filledGenTau = false;
 		bool filledJet1 = false, filledJet2 = false;
 		bool filledBjet1 = false, filledBjet2 = false;
 		bool found_gtau1 = false, found_gtau2 = false;
@@ -91,27 +106,26 @@ int create_qcd_dataset(string file_n, int label) {
 		jet2_m = 0., jet2_pt = 0.; bjet2_m = 0., bjet2_pt = 0.;
         jet2_eta = 0., jet2_phi = 0., bjet2_eta = 0., bjet2_phi = 0.,jet2_ehadeem = 0, bjet2_ehadeem = 0.;
         jet2_cef = 0., jet2_nef = 0.,bjet2_cef = 0., bjet2_nef = 0.;
-		TLorentzVector jet1_p4, bjet1_p4;
+		TLorentzVector jet1_p4, bjet1_p4, tau1_p4;
 			
 			// set aside 2 highest pT jets assuming they are hadronic taus
 			// use the remaining jets to check for jets and bjets
-			n_jets_all = branchJet->GetEntries();
-			if(n_jets_all > 2) // this means there are two "fake taus" and some more jets
-			{
-				for (int i = 2; i < branchJet->GetEntries(); i++){
+			for (int i = 0; i < branchJet->GetEntries(); i++){
 				 Jet *jet = (Jet*) branchJet->At(i);
-				if (jet->BTag == 1) n_bjets++;
-				else {if (jet->TauTag == 0) n_jets++;}
+				 if (!jet) continue;
+				 n_jets_all ++;
+				if (n_jets_all > 2 and jet->BTag == 1) n_bjets++;
+				if (n_jets_all > 2 and jet->BTag == 0) n_jets++;
 				}
-			}
-			else continue;
+			
+			//else continue;
 		
 			for (int i = 0; i < branchJet->GetEntries(); ++i) {
 
 					Jet *jet = (Jet*) branchJet->At(i);
 					MissingET *met = (MissingET*) branchMET->At(0);
 				if (!jet) continue;
-				if(n_bjets > 0){
+				if(n_bjets > 0 and !filledTau2){
 					if (jet->BTag == 1){
 						if(!filledBjet1){
 							bjet1_m = (jet->P4()).M();
@@ -140,8 +154,8 @@ int create_qcd_dataset(string file_n, int label) {
 						}
 					}		
 				}
-				if(n_jets > 0){
-					if (jet->TauTag == 0 and jet->BTag == 0){
+				if(n_jets > 0 and !filledTau2){
+					if (jet->BTag == 0){
 						if(!filledJet1){
 							jet1_m = (jet->P4()).M();
 							jet1_pt = jet->PT;
@@ -169,45 +183,42 @@ int create_qcd_dataset(string file_n, int label) {
 						}
 					}		
 				}
-			}
-
-				//assume: jet1 and jet2 are fake taus 
-
-				Jet *jet = (Jet*) branchJet->At(0);
-				MissingET *met = (MissingET*) branchMET->At(0);
+			
+				if(!filledTau1){
+					tau1_pt = jet->PT;
+					tau1_eta = jet->Eta;
+					tau1_phi = jet->Phi;
+					tau1_m = (jet->P4()).M();
+					//for(int i=0; i<5; i++) n_subj[i] = (jet->Tau)[i];
+					met_met = met->MET;
+					met_eta = met->Eta;
+					met_phi = met->Phi;
+					tau1_ncharged = jet->NCharged;
+					tau1_nneutrals = jet->NNeutrals;
+					tau1_ehadeem = jet->EhadOverEem;
+					tau1_p4 = jet->P4();
+					filledTau1 = true;
+				}
+				if(filledTau1 and !filledTau2){
+					m_tau1tau2 = (tau1_p4 + jet->P4()).M();
+					pt_tau1tau2 = (tau1_p4 + jet->P4()).Pt();
+					eta_tau1tau2 = (tau1_p4 + jet->P4()).Eta();	
+					phi_tau1tau2 = (tau1_p4 + jet->P4()).Phi();
+					tau2_pt = jet->PT;
+					tau2_eta = jet->Eta;
+					tau2_phi = jet->Phi;
+					tau2_m = (jet->P4()).M();
+					tau2_ncharged = jet->NCharged;
+					tau2_nneutrals = jet->NNeutrals;
+					tau2_ehadeem = jet->EhadOverEem; 
 				
-				tau1_pt = jet->PT;
-				tau1_eta = jet->Eta;
-				tau1_phi = jet->Phi;
-				tau1_m = (jet->P4()).M();
-				//for(int i=0; i<5; i++) n_subj[i] = (jet->Tau)[i];
-				met_met = met->MET;
-				met_eta = met->Eta;
-				met_phi = met->Phi;
-				tau1_ncharged = jet->NCharged;
-				tau1_nneutrals = jet->NNeutrals;
-				tau1_ehadeem = jet->EhadOverEem;
-
-				Jet *jet2 = (Jet*) branchJet->At(1);
+					filledTau2 = true;
+				}
 				
-				m_tau1tau2 = (jet->P4() + jet2->P4()).M();
-				pt_tau1tau2 = (jet->P4() + jet2->P4()).Pt();
-				eta_tau1tau2 = (jet->P4() + jet2->P4()).Eta();	
-				phi_tau1tau2 = (jet->P4() + jet2->P4()).Phi();
-				tau2_pt = jet2->PT;
-				tau2_eta = jet2->Eta;
-				tau2_phi = jet2->Phi;
-				tau2_m = (jet2->P4()).M();
-				tau2_ncharged = jet2->NCharged;
-				tau2_nneutrals = jet2->NNeutrals;
-				tau2_ehadeem = jet2->EhadOverEem; 
-				
-
-				filledTau = true;
 							
 						
 		
-			if(filledTau) {
+			if(filledTau2) {
 				float deltaR_jet1jet2, deltaR_bjet1bjet2, deltaR_tau1tau2;
 
 				
@@ -224,16 +235,16 @@ int create_qcd_dataset(string file_n, int label) {
 
 				
 
-				if(m_tau1tau2 >= 120){
+				// if(m_tau1tau2 >= 120){
 					nevents++;
 					fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i\n", 
 					m_jet1jet2, deltaR_jet1jet2, m_bjet1bjet2, deltaR_bjet1bjet2, deltaR_tau1tau2,
 					tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, 
 					tau2_m, m_tau1tau2, pt_tau1tau2, eta_tau1tau2, phi_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
 					jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, 
-					jet2_pt, jet2_eta, jet2_phi, jet2_cef, jet2_nef, bjet2_pt, bjet2_eta, bjet2_phi, bjet2_cef, bjet2_nef, isSig);
+					jet2_pt, jet2_eta, jet2_phi, jet2_cef, jet2_nef, bjet2_pt, bjet2_eta, bjet2_phi, bjet2_cef, bjet2_nef, evt_weight, isSig);
 	//printf("No. of tau jets = %i\n",numTauJets);  
-				}
+				// }
 			}
 				
 			}

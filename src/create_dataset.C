@@ -22,12 +22,13 @@ R__LOAD_LIBRARY(libDelphes)
 
 class TFile;
 GenParticle* getMother(TClonesArray *branchParticle, const GenParticle *particle);
-int create_dataset(string file_n, int label) {
+int create_dataset(string file_n, float xsec, int label) {
 
 
 	int debug = 0; 
 	gSystem->Load("libDelphes");
 	int isSig = label;
+
 
 	char infile[200], outfile[200];
 	string csv_path = "/uscms/home/ssekhar/nobackup/CATHODE_ditau/Delphes/";
@@ -57,20 +58,30 @@ int create_dataset(string file_n, int label) {
 	TClonesArray *branchMu = treeReader->UseBranch("Muon");
 	TClonesArray *branchEl = treeReader->UseBranch("Electron");
 	TClonesArray *branchGenJet = treeReader->UseBranch("GenJet");
+	TClonesArray *branchWeight = treeReader->UseBranch("Weight");
 
 	float tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, tau2_m, m_tau1tau2, pt_tau1tau2, eta_tau1tau2, phi_tau1tau2, met_met, met_eta, met_phi, tau1_d1, tau1_d2, tau2_d1, tau2_d2;
         int n_jets, n_bjets;
         float m_jet1jet2, m_bjet1bjet2;
 	float tau1_ncharged, tau1_nneutrals, tau1_ehadeem, tau2_ncharged, tau2_nneutrals, tau2_ehadeem;
 	float jet1_m, jet1_pt, jet1_eta, jet1_phi, bjet1_m, bjet1_pt, bjet1_eta, bjet1_phi, jet1_ehadeem, bjet1_ehadeem, jet1_cef, jet1_nef, bjet1_cef, bjet1_nef;
-	float jet2_m, jet2_pt, jet2_eta, jet2_phi, bjet2_m, bjet2_pt, bjet2_eta, bjet2_phi, jet2_ehadeem, bjet2_ehadeem, jet2_cef, jet2_nef, bjet2_cef, bjet2_nef;
+	float jet2_m, jet2_pt, jet2_eta, jet2_phi, bjet2_m, bjet2_pt, bjet2_eta, bjet2_phi, jet2_ehadeem, bjet2_ehadeem, jet2_cef, jet2_nef, bjet2_cef, bjet2_nef, evt_weight;
 	Float_t n_subj[5];
 	Double_t jet_pt[5], bjet_pt[5];
 	Int_t sorted_jet_idx[5], sorted_bjet_idx[5];	
 	std::cout << "Running on " << n_frac << " out of " << numberOfEntries << " events" << std::endl;
 	int numTauJet1s = 0, numTauJet2s = 0, numGenTau1s = 0, numGenTau2s = 0, numGenTauJet1s = 0, numGenTauJet2s = 0;
 	int nevents = 0;
+
+	float sum_weights = 0.;
 //  numberOfEntries = 1000;
+	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
+		treeReader->ReadEntry(entry);
+		Weight *wt0 = (Weight*) branchWeight->At(entry);
+		sum_weights += wt0->Weight;
+
+	}
+
 	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
 	//for (Long64_t entry = 0; entry < n_frac; ++entry) {	
 		if (entry % 20000 == 0) {
@@ -83,6 +94,10 @@ int create_dataset(string file_n, int label) {
 		
 		}
 		treeReader->ReadEntry(entry);
+		Weight *wt = (Weight*) branchWeight->At(entry);
+		evt_weight = wt->Weight;
+		evt_weight *= (xsec * 1000 * lumi)/sum_weights;
+
 		bool filled = false;
 		bool filledTau = false, filledGenTau = false;
 		bool filledJet1 = false, filledJet2 = false;
@@ -104,42 +119,7 @@ int create_dataset(string file_n, int label) {
 				if (jet->BTag == 1) n_bjets++;
 				else {if (jet->TauTag == 0) n_jets++;}
 			}
-			//cout << "n_jets = " << n_jets << " n_bjets = " << n_bjets<< endl;
-			// if(n_jets > 0) {
-			// Double_t jet_pt[n_jets];
-
-			// int j = 0, k = 0;
-			// for (int i = 0; i < branchJet->GetEntries(); i++){
-			// 	 Jet *jet = (Jet*) branchJet->At(i);
-            //                     //if (jet->BTag == 1) {bjet_pt[j] = jet->PT; j++;}
-            //                     if (jet->TauTag == 0) {jet_pt[k] = jet->PT; k++;}
-            //             }
-			// Int_t sorted_jet_idx[n_jets];
-			// if(n_jets > 1) {
-			// 	TMath::Sort(n_jets, jet_pt, sorted_jet_idx);
-			// 	//if(n_bjets > 1) TMath::Sort(n_bjets, bjet_pt, sorted_bjet_idx);
-			// 	for(int i = 0; i < n_jets; i++)
-			// 		cout << sorted_jet_idx[i] << " ";
-			// 	}
-			// }
-			// if(n_bjets > 0){
-			// Double_t bjet_pt[n_bjets];
-
-            //             int j = 0, k = 0;
-            //             for (int i = 0; i < branchJet->GetEntries(); i++){
-            //                      Jet *jet = (Jet*) branchJet->At(i);
-            //                     if (jet->BTag == 1) {bjet_pt[j] = jet->PT; j++;}
-            //                     //else {if (jet->TauTag == 0) {jet_pt[k] = jet->PT; k++;}}
-            //             }
-            //             Int_t sorted_bjet_idx[n_bjets];
-            //             //if(n_jets > 1) TMath::Sort(n_jets, jet_pt, sorted_jet_idx);
-            //             if(n_bjets > 1) {
-			// 	TMath::Sort(n_bjets, bjet_pt, sorted_bjet_idx);
-			// 	for(int i = 0; i < n_bjets; i++)
-			// 		cout << sorted_bjet_idx[i] << " ";
-			// 	}
-			// }
-
+			
 			for (int i = 0; i < branchJet->GetEntries(); ++i) {
 
 					Jet *jet = (Jet*) branchJet->At(i);
@@ -264,12 +244,12 @@ int create_dataset(string file_n, int label) {
 
 				//if(m_tau1tau2 >= 120){
 					nevents++;
-					fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i\n", 
+					fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i\n", 
 					m_jet1jet2, deltaR_jet1jet2, m_bjet1bjet2, deltaR_bjet1bjet2, deltaR_tau1tau2,
 					tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, 
 					tau2_m, m_tau1tau2, pt_tau1tau2, eta_tau1tau2, phi_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
 					jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, 
-					jet2_pt, jet2_eta, jet2_phi, jet2_cef, jet2_nef, bjet2_pt, bjet2_eta, bjet2_phi, bjet2_cef, bjet2_nef, isSig);
+					jet2_pt, jet2_eta, jet2_phi, jet2_cef, jet2_nef, bjet2_pt, bjet2_eta, bjet2_phi, bjet2_cef, bjet2_nef, evt_weight, isSig);
 	//printf("No. of tau jets = %i\n",numTauJets);  
 			//	}
 			}
