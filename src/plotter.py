@@ -37,7 +37,8 @@ def plot_features(sig,bkg1,bkg2,sig_label):
 	    plt.yscale('log')
 	    #plt.ylim(np.amin([sig[col].min(),bkg1[col].min(),bkg2[col].min()]), np.amax([sig[col].max(),bkg1[col].max(),bkg2[col].max()])*10)
 	    plt.ylabel("No. of di-tau events (hadronic)")
-	    pp.savefig()
+	    plt.xlim
+        pp.savefig()
 	    plt.close()
 	
     pp.close()

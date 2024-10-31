@@ -82,8 +82,8 @@ void plot_qcd_distributions() {
 	TH1F pT_tau1("pT_tau1", "pT_tau1", 150, 0.0, 1500.0);
 	TH1F pT_tau2("pT_tau2", "pT_tau2", 150, 0.0, 1500.0);
 	TH1F pT_tautau("pT_tautau", "pT_tautau", 150, 0.0, 1500.0);
-	TH1F dR_jj("dR_jj", "dR_jj", 20, -1, 1);
-	TH1F dR_tautau("dR_tautau", "dR_tautau", 20, -1, 1);
+	TH1F dR_jj("dR_jj", "dR_jj", 20, -1., 1.);
+	TH1F dR_tautau("dR_tautau", "dR_tautau", 20, -1., 1.);
 	
 	float arr_mjj[1000], arr_mtt[1000], arr_ntaus[1000], arr_jet1pt[1000]; int k = 0; 
 
@@ -167,14 +167,15 @@ void plot_qcd_distributions() {
 				} 			
 				
 			}
-			if(n_taus > 0) {
+			if(n_taus > 1) {
 				arr_mjj[k] = m_jet1jet2;
 				arr_mtt[k] = m_tau1tau2;
 				arr_ntaus[k] = n_taus;
 				arr_jet1pt[k] = jet1_pt;
 				k++;
+				if(k%50==0) cout << k << " fake ditau events found\n" ;
 			}
-
+			
 			
 			m_jj.Fill(m_jet1jet2);
 			m_tautau.Fill(m_tau1tau2);
@@ -185,17 +186,18 @@ void plot_qcd_distributions() {
 			
 			pT_j1.Fill(jet1_pt);
 			
-			//pT_j2.Fill(jet2_pt);
+			pT_j2.Fill(jet2_pt);
 			
 			pT_tau1.Fill(tau1_pt);
 			pT_tau2.Fill(tau2_pt);
 			
 			pT_tautau.Fill(pt_tau1tau2);
-			//pT_jj.Fill(pt_jet1jet2);
+			pT_jj.Fill(pt_jet1jet2);
 			
 
 			
 		}
+		
 		string outputFileName = "Histos_" + file_n + ".root";
 		TFile outputFile(outputFileName.c_str(), "RECREATE");
 		
@@ -213,7 +215,7 @@ void plot_qcd_distributions() {
 		pT_jj.Write();
 
 		outputFile.Close();
-
+		
 		TCanvas *c = new TCanvas("c", "Histograms", 200, 10, 900, 700);
 		auto g = new TGraph(k,arr_mtt,arr_ntaus);
 		g->SetTitle("No. of fake hadronic taus per event vs m_{#tau#tau}; m_{#tau#tau}; No. of fake #tau_H");
