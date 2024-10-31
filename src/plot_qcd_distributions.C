@@ -73,19 +73,24 @@ void plot_qcd_distributions() {
 	int nevents = 0;
 
 	TH1F m_jj("m_jj", "m_jj", 150, 0.0, 1500.0);
-	TH1F m_tautau("m_tautau", "m_tautau", 150, 0.0, 1500.0);
-	TH1F pT_j1("pT_j1", "pT_j1", 150, 0.0, 1500.0);
-	TH1F pT_j2("pT_j2", "pT_j2", 150, 0.0, 1500.0);
-	TH1F pT_jj("pT_jj", "pT_jj", 150, 0.0, 1500.0);
-	TH1F n_tauH("n_tauH", "n_tauH", 15, -0.5, 14.5);
-	TH1F n_ex_jets("n_extra_jets", "n_extra_jets", 15, -0.5, 14.5);
-	TH1F pT_tau1("pT_tau1", "pT_tau1", 150, 0.0, 1500.0);
-	TH1F pT_tau2("pT_tau2", "pT_tau2", 150, 0.0, 1500.0);
-	TH1F pT_tautau("pT_tautau", "pT_tautau", 150, 0.0, 1500.0);
-	TH1F dR_jj("dR_jj", "dR_jj", 20, -1., 1.);
-	TH1F dR_tautau("dR_tautau", "dR_tautau", 20, -1., 1.);
+	TH1F m_tautau("m_tautau", "m_tautau", 100, 0.0, 500.0);
+	TH1F pT_j1("pT_j1", "pT_j1", 80, 0.0, 300.0);
+	TH1F pT_j2("pT_j2", "pT_j2", 80, 0.0, 300.0);
+	TH1F pT_jj("pT_jj", "pT_jj", 100, 0.0, 600.0);
+	TH1F n_tauH("n_tauH", "n_tauH", 7, -0.5, 5);
+	TH1F n_ex_jets("n_extra_jets", "n_extra_jets", 15, -0.5, 10.5);
+	TH1F pT_tau1("pT_tau1", "pT_tau1", 50, 0.0, 200.0);
+	TH1F pT_tau2("pT_tau2", "pT_tau2", 50, 0.0, 200.0);
+	TH1F pT_tautau("pT_tautau", "pT_tautau", 100, 0.0, 400.0);
+	TH1F dR_jj("dR_jj", "dR_jj", 30, -2, 2);
+	TH1F dR_tautau("dR_tautau", "dR_tautau", 30, -2, 2);
+    // after dR < 2 cut
+	TH1F m_jj_dRcut("m_jj", "m_jj", 150, 0.0, 1500.0);
+	TH1F m_tautau_dRcut("m_tautau", "m_tautau", 100, 0.0, 500.0);
+	TH1F pT_tautau_dRcut("pT_tautau", "pT_tautau", 100, 0.0, 400.0);
+	TH1F pT_jj_dRcut("pT_jj", "pT_jj", 100, 0.0, 600.0);
 	
-	float arr_mjj[1000], arr_mtt[1000], arr_ntaus[1000], arr_jet1pt[1000]; int k = 0; 
+	float arr_mjj[10000], arr_mtt[10000], arr_ntaus[10000], arr_jet1pt[10000]; int k = 0; 
 
 //  numberOfEntries = 1000;
 	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
@@ -167,37 +172,41 @@ void plot_qcd_distributions() {
 				} 			
 				
 			}
-			if(n_taus > 1) {
+			if(n_taus > 0) {
 				arr_mjj[k] = m_jet1jet2;
 				arr_mtt[k] = m_tau1tau2;
 				arr_ntaus[k] = n_taus;
 				arr_jet1pt[k] = jet1_pt;
 				k++;
-				if(k%50==0) cout << k << " fake ditau events found\n" ;
+				if(k%50==0) cout << k << " fake tau/ditau events found\n" ;
 			}
-			
+
 			
 			m_jj.Fill(m_jet1jet2);
-			m_tautau.Fill(m_tau1tau2);
+			if(n_taus > 1) m_tautau.Fill(m_tau1tau2);
 			n_ex_jets.Fill(n_extra_jets);
 			n_tauH.Fill(n_taus);
 			dR_jj.Fill(deltaR_jet1jet2);
-			dR_tautau.Fill(deltaR_tau1tau2);
+			if(n_taus > 1) dR_tautau.Fill(deltaR_tau1tau2);
 			
 			pT_j1.Fill(jet1_pt);
-			
 			pT_j2.Fill(jet2_pt);
-			
-			pT_tau1.Fill(tau1_pt);
-			pT_tau2.Fill(tau2_pt);
-			
-			pT_tautau.Fill(pt_tau1tau2);
 			pT_jj.Fill(pt_jet1jet2);
-			
+
+			if(n_taus > 0) pT_tau1.Fill(tau1_pt);
+			if(n_taus > 1) pT_tau2.Fill(tau2_pt);
+			if(n_taus > 1) pT_tautau.Fill(pt_tau1tau2);
+
+			if(deltaR_tau1tau2 < 2.){
+				m_jj_dRcut.Fill(m_jet1jet2);
+				pT_jj_dRcut.Fill(pt_jet1jet2);
+				if(n_taus > 1){
+				m_tautau_dRcut.Fill(m_tau1tau2);
+				pT_tautau_dRcut.Fill(pt_tau1tau2);
+			}}
 
 			
 		}
-		
 		string outputFileName = "Histos_" + file_n + ".root";
 		TFile outputFile(outputFileName.c_str(), "RECREATE");
 		
@@ -213,13 +222,17 @@ void plot_qcd_distributions() {
 		pT_tau2.Write();
 		pT_tautau.Write();
 		pT_jj.Write();
+		m_jj_dRcut.Write();
+		pT_jj_dRcut.Write();
+		m_tautau_dRcut.Write();
+		pT_tautau_dRcut.Write();
 
 		outputFile.Close();
-		
+
 		TCanvas *c = new TCanvas("c", "Histograms", 200, 10, 900, 700);
 		auto g = new TGraph(k,arr_mtt,arr_ntaus);
 		g->SetTitle("No. of fake hadronic taus per event vs m_{#tau#tau}; m_{#tau#tau}; No. of fake #tau_H");
-		g->Draw("AC*");
+		g->Draw("");
 
 		c->Print("ntaus_vs_mtt_QCD.png");
 		delete c;
@@ -227,7 +240,7 @@ void plot_qcd_distributions() {
 		TCanvas *c2 = new TCanvas("c2", "Histograms", 200, 10, 900, 700);
 		auto g2 = new TGraph(k,arr_mjj,arr_ntaus);
 		g2->SetTitle("No. of fake hadronic taus per event vs m_{jj}; m_{jj}; No. of fake #tau_H");
-		g2->Draw("AC*");
+		g2->Draw("");
 
 		c2->Print("ntaus_vs_mjj_QCD.png");
 		delete c2;
@@ -235,7 +248,7 @@ void plot_qcd_distributions() {
 		TCanvas *c3 = new TCanvas("c3", "Histograms", 200, 10, 900, 700);
 		auto g3 = new TGraph(k,arr_jet1pt,arr_ntaus);
 		g3->SetTitle("No. of fake hadronic taus per event vs pT_j1; pT_j1; No. of fake #tau_H");
-		g3->Draw("AC*");
+		g3->Draw("");
 
 		c3->Print("ntaus_vs_pTj1_QCD.png");
 		delete c3;
