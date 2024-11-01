@@ -49,9 +49,11 @@ def plot_features(sig_labels,bkg_labels):
             print(col)
             plt.figure(figsize=(10,7))
             for b, l in zip(bkg, bkg_labels):
-                if 'm_' in col: plt.hist(b[col], label = l, bins = 100, histtype = "step", weights = b["event_weight"])
-                else: plt.hist(b[col], label = l, bins = 40, histtype = "step", weights = b["event_weight"])
-            if col != "event_weight": plt.hist(sig[col], label = sig__, bins = 30, histtype = "step")
+                if 'm_' in col: plt.hist(b[col], label = l, bins = 200, histtype = "step", weights = b["event_weight"])
+                else: plt.hist(b[col], label = l, bins = 50, histtype = "step", weights = b["event_weight"])
+            if col != "event_weight": 
+                if 'm_' in col: plt.hist(sig[col], label = sig__, bins = 200, histtype = "step")
+                else: plt.hist(sig[col], label = sig__, bins = 50, histtype = "step")
             plt.legend()
             plt.title("Distribution of %s"%col)
             plt.xlabel(col)
