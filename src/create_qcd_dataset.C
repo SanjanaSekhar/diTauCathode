@@ -34,8 +34,7 @@ int create_qcd_dataset(string file_n, float xsec, int label) {
 	string in_path = "root://cmseos.fnal.gov//store/user/tvami/diTauCathode/";
 	//string file_name = "LQ_nonResScalarLQ-M1000_2J";
 	string file_name = file_n.c_str();
-	sprintf(infile,"%s%s.root",in_path.c_str(),file_name.c_str());
-	TFile * fin = TFile::Open(infile);
+	
 	FILE *fout;
 	sprintf(outfile,"%s/diTauCathode/csv_files/%s.csv",csv_path.c_str(),file_name.c_str());
 	fout = fopen(outfile, "w");
@@ -44,7 +43,11 @@ int create_qcd_dataset(string file_n, float xsec, int label) {
 	
 
 	TChain chain("Delphes");
-	chain.Add(infile);
+	for(int i = 1; i<=6; i++){
+		sprintf(infile,"%s%s_Part%i.root",in_path.c_str(),file_name.c_str(),i);
+		chain.Add(infile);
+	}
+	
 
 	ExRootTreeReader *treeReader = new ExRootTreeReader(&chain);
 	Long64_t numberOfEntries = treeReader->GetEntries();

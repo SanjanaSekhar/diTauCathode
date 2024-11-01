@@ -29,23 +29,24 @@ int create_dataset(string file_n, float xsec, int label) {
 	gSystem->Load("libDelphes");
 	int isSig = label;
         float lumi = 138.;
-
+	int n_files = 3;
 	char infile[200], outfile[200];
 	string csv_path = "/uscms/home/ssekhar/nobackup/CATHODE_ditau/Delphes/";
 	string in_path = "root://cmseos.fnal.gov//store/user/tvami/diTauCathode/";
 	//string file_name = "LQ_nonResScalarLQ-M1000_2J";
 	string file_name = file_n.c_str();
-	sprintf(infile,"%s%s.root",in_path.c_str(),file_name.c_str());
-	TFile * fin = TFile::Open(infile);
+	
+	//TFile * fin = TFile::Open(infile);
 	FILE *fout;
 	sprintf(outfile,"%s/diTauCathode/csv_files/%s.csv",csv_path.c_str(),file_name.c_str());
 	fout = fopen(outfile, "w");
-	
-	std::cout << "Sample used is " << file_name.c_str() << std::endl;
-	
-
 	TChain chain("Delphes");
-	chain.Add(infile);
+	std::cout << "Sample used is " << file_name.c_str() << std::endl;
+	for(int i=1; i<=n_files, i++){
+		sprintf(infile,"%s%s_Part%i.root",in_path.c_str(),file_name.c_str(),i);
+		chain.Add(infile);
+	}
+	
 
 	ExRootTreeReader *treeReader = new ExRootTreeReader(&chain);
 	Long64_t numberOfEntries = treeReader->GetEntries();
@@ -255,122 +256,7 @@ int create_dataset(string file_n, float xsec, int label) {
 	//printf("No. of tau jets = %i\n",numTauJets);  
 			//	}
 			}
-				/*
-				int found_ntaus = 0, found_leptau = 0, found_hadtau =0;
-		float neu1_pT=0., neu1_eta, neu1_phi, neu2_pT=0., neu2_eta, neu2_phi;
-		TLorentzVector neu1_p4, neu2_p4, el_p4, mu_p4, met_p4;
-		float delR = 9999.;
-		for (int m=0; m < branchParticle->GetEntries();++m){
-
-			if(found_ntaus=2) break;
-
-			GenParticle *p = (GenParticle*) branchParticle->At(m);
-				// only select final state electrons or muons
-			if(!p or p->Status!=1) continue;
 				
-				if(p->PID == 11 or p->PID == -11){ //electrons
-					GenParticle *genMom = getMother(branchParticle, p);
-					if(genMom->PID == 15 or genMom->PID == -15) {
-						
-						if(genMom->D1 > genMom->D2){
-							cout << "Daughter list invalid" << endl;
-							continue;
-						}
-						
-						// search for neutrinos
-						for(int u = genMom->D1; u < genMom->D2; u++){
-
-							GenParticle *d1 = (GenParticle*) branchParticle->At(u);
-							if(d1==p or !d1) continue;
-							if(!neu1_p4){ neu1_p4 = d1.P4(); }
-							else{ neu2_p4 = d1.P4();}
-						}
-						//search for reco electron
-						for(u = 0; u < branchEl->GetEntries(); u++){
-							Electron *e = (Electron*) branchEl->At(u);
-							if(!e) continue;
-							delR = e.P4().DeltaR(p.P4());
-							if(delR < 0.1){
-								cout << "found electron at DeltaR = " << delR << "from gen_electron daughter" << endl;
-								el_p4 = e.P4();
-							}
-						}
-						// search for missingET
-						for(u = 0; u < branchMET->GetEntries(); u++){
-							MissingET *met = (Electron*) branchMET->At(u);
-							if(!met) continue;
-							delR = met.P4().DeltaR(neu1_p4+neu2_p4);
-							if(delR < 0.1){
-								cout << "found MET at DeltaR = " << delR << "from gen_neutrino daughters" << endl;
-								met_p4 = met.P4();
-							}
-						}
-						if(!el_p4 or !met_p4) cout << "Could not find electron daughter or MET" << endl;
-						else{
-						cout << "found leptonic tau with electron and met daughters" << endl;
-						found_leptau ++;
-						tau1_p4 = el_p4 + met_p4;
-						tau1_m = tau1_p4.M();
-						tau1_pt = tau1_p4.Pt();
-						tau1_eta = tau1_p4.Eta();
-						tau1_phi = tau1_p4.Phi();
-						}
-					}
-				}
-
-				if(p->PID == 13 or p->PID == -13){ //muons
-					GenParticle *genMom = getMother(branchParticle, p);
-					if(genMom->PID == 15 or genMom->PID == -15) {
-						
-						if(genMom->D1 > genMom->D2){
-							cout << "Daughter list invalid" << endl;
-							continue;
-						}
-						
-						// search for neutrinos
-						for(int u = genMom->D1; u < genMom->D2; u++){
-
-							GenParticle *d1 = (GenParticle*) branchParticle->At(u);
-							if(d1==p or !d1) continue;
-							if(!neu1_p4){ neu1_p4 = d1.P4(); }
-							else{ neu2_p4 = d1.P4();}
-						}
-						//search for reco muon
-						for(u = 0; u < branchMu->GetEntries(); u++){
-							Muon *mu = (Muon*) branchEl->At(u);
-							if(!mu) continue;
-							delR = mu.P4().DeltaR(p.P4());
-							if(delR < 0.1){
-								cout << "found electron at DeltaR = " << delR << "from gen_electron daughter" << endl;
-								mu_p4 = mu.P4();
-							}
-						}
-						// search for missingET
-						for(u = 0; u < branchMET->GetEntries(); u++){
-							MissingET *met = (Electron*) branchMET->At(u);
-							if(!met) continue;
-							delR = met.P4().DeltaR(neu1_p4+neu2_p4);
-							if(delR < 0.1){
-								cout << "found MET at DeltaR = " << delR << "from gen_neutrino daughters" << endl;
-								met_p4 = met.P4();
-							}
-						}
-						if(!el_p4 or !met_p4) cout << "Could not find electron daughter or MET" << endl;
-						else{
-						cout << "found leptonic tau with electron and met daughters" << endl;
-						found_leptau ++;
-						tau1_p4 = el_p4 + met_p4;
-						tau1_m = tau1_p4.M();
-						tau1_pt = tau1_p4.Pt();
-						tau1_eta = tau1_p4.Eta();
-						tau1_phi = tau1_p4.Phi();
-						}
-					}
-				}	
-
-
-				}
-				*/
 			}
 			//printf("No. of events with at least 1 tagged tau jets = %i\n",numTauJet1s);
 			printf("No. of events with at least 2 tagged tau jets = %i\n",nevents);
