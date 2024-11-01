@@ -213,13 +213,16 @@ def plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title):
 sig_list = ["2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag","eVLQ_TPrimeTPrimeToTTPhiPhiToTauTauAll_TpM1000_PhiM250_NoMisTag",
         "HeavyN_vbsNToTauTau_NM250_2J_LO" , "VAL_dyVfVfToXiCXiCToTauSTauS_XiM1000_VfM250_MinMass120_NoMisTag"]
 
+bkg_list = ["SM_dyToTauTau_0J1J2J_MinMass120_3M", "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M", "SM_QCD_JJ_0J1J2J_MinMass120_LO_6M"]
+bkg = []
 
-bkg1 = pd.read_csv("csv_files/SM_dyToTauTau_0J1J2J_MinMass120_3M.csv")
-bkg2 = pd.read_csv("csv_files/SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M.csv")
+for b in bkg_list:
+	bkg.append(pd.read_csv("csv_files/%s.csv"%b))
+
 
 for sig in sig_list:
 	sig__ = pd.read_csv("csv_files/%s.csv"%sig)
-	plot_features(sig__, bkg1, bkg2, sig)
+	plot_features(sig__, bkg, sig, bkg_list)
 
 #injections = ["0.100","0.050","0.010","0.005"]
 #injections = ["0.100"]#,"0.200","0.300","0.400","0.500","0.600","0.700","0.800","0.900"]
