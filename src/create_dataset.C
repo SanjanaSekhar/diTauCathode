@@ -28,7 +28,7 @@ int create_dataset(string file_n, float xsec, int label) {
 	int debug = 0; 
 	gSystem->Load("libDelphes");
 	int isSig = label;
-
+        float lumi = 138.;
 
 	char infile[200], outfile[200];
 	string csv_path = "/uscms/home/ssekhar/nobackup/CATHODE_ditau/Delphes/";
@@ -58,7 +58,7 @@ int create_dataset(string file_n, float xsec, int label) {
 	TClonesArray *branchMu = treeReader->UseBranch("Muon");
 	TClonesArray *branchEl = treeReader->UseBranch("Electron");
 	TClonesArray *branchGenJet = treeReader->UseBranch("GenJet");
-	TClonesArray *branchWeight = treeReader->UseBranch("Weight");
+	TClonesArray *branchEvent = treeReader->UseBranch("Event");
 
 	float tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, tau2_m, m_tau1tau2, pt_tau1tau2, eta_tau1tau2, phi_tau1tau2, met_met, met_eta, met_phi, tau1_d1, tau1_d2, tau2_d1, tau2_d2;
         int n_jets, n_bjets;
@@ -69,18 +69,19 @@ int create_dataset(string file_n, float xsec, int label) {
 	Float_t n_subj[5];
 	Double_t jet_pt[5], bjet_pt[5];
 	Int_t sorted_jet_idx[5], sorted_bjet_idx[5];	
-	std::cout << "Running on " << n_frac << " out of " << numberOfEntries << " events" << std::endl;
+	//std::cout << "Running on " << n_frac << " out of " << numberOfEntries << " events" << std::endl;
 	int numTauJet1s = 0, numTauJet2s = 0, numGenTau1s = 0, numGenTau2s = 0, numGenTauJet1s = 0, numGenTauJet2s = 0;
 	int nevents = 0;
 
 	float sum_weights = 0.;
-//  numberOfEntries = 1000;
+        //numberOfEntries = 1000;
 	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
 		treeReader->ReadEntry(entry);
-		Weight *wt0 = (Weight*) branchWeight->At(entry);
-		sum_weights += wt0->Weight;
+		HepMCEvent *evt0 = (HepMCEvent*) branchEvent->At(0);
+		if(evt0) sum_weights += evt0->Weight;
 
 	}
+	std::cout << "sum of weights = " << sum_weights << "\n";
 
 	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
 	//for (Long64_t entry = 0; entry < n_frac; ++entry) {	
@@ -94,9 +95,10 @@ int create_dataset(string file_n, float xsec, int label) {
 		
 		}
 		treeReader->ReadEntry(entry);
-		Weight *wt = (Weight*) branchWeight->At(entry);
-		evt_weight = wt->Weight;
-		evt_weight *= (xsec * 1000 * lumi)/sum_weights;
+		HepMCEvent *evt = (HepMCEvent*) branchEvent->At(0);
+		if(!evt) continue;
+		evt_weight = evt->Weight;
+		if(isSig == 0) evt_weight *= (xsec * 1000 * lumi)/sum_weights;
 
 		bool filled = false;
 		bool filledTau = false, filledGenTau = false;

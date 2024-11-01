@@ -14,7 +14,7 @@ def plot_features(sig,bkg,sig_label,bkg_labels):
 	# tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, 
 	# tau2_m, m_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
 	# jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, isSig
-    print(sig.shape, bkg.shape)
+    print(sig.shape, bkg[1].shape)
 	
     sig.columns = ["m_jet1jet2", "deltaR_jet1jet2", "m_bjet1bjet2", "deltaR_bjet1bjet2", "deltaR_tau1tau2",
                     "tau1_pt", "tau1_eta", "tau1_phi", "tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m",
@@ -22,28 +22,32 @@ def plot_features(sig,bkg,sig_label,bkg_labels):
 			        "jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", "bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef",
 	                "jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef", "event_weight","label"]
     
-	for i in range(len(bkg)):
-		bkg[i].columns = sig.columns
+    for i in range(len(bkg)):
+        bkg[i].columns = sig.columns
 
-	sig = sig[["m_jet1jet2", "deltaR_jet1jet2","m_tau1tau2", "pt_tau1tau2","deltaR_tau1tau2","met_met","n_jets", "n_bjets", "event_weight"]]
+    sig = sig[["m_jet1jet2", "deltaR_jet1jet2","m_tau1tau2", "pt_tau1tau2","deltaR_tau1tau2","met_met","n_jets", "n_bjets", "event_weight"]]
 
-	for i in range(len(bkg)):
-		bkg[i].columns = sig.columns
+
+    for i in range(len(bkg)):
+        bkg[i] = bkg[i][["m_jet1jet2", "deltaR_jet1jet2","m_tau1tau2", "pt_tau1tau2","deltaR_tau1tau2","met_met","n_jets", "n_bjets", "event_weight"]]
     
     pp = PdfPages('plots/%s_DY_ttbar_QCD_distributions.pdf'%sig_label)
+    print("Plotting ", sig_label)
 
     for col in sig.columns:
-	    plt.figure(figsize=(10,7))
-		for b, l in zip(bkg, bkg_labels):
-	    	plt.hist(b[col], label = l, bins = 30, histtype = "step", weights = b["event_weight"])
-	    plt.hist(sig[col], label = sig_label, bins = 30, histtype = "step", weights = sig["event_weight"])
-	    plt.legend()
-	    plt.title("Distribution of %s"%col)
-	    plt.xlabel(col)
-		plt.yscale('log')
-	    if 'm_' in col: plt.xlim(0,500)
+        print(col)
+        plt.figure(figsize=(10,7))
+        for b, l in zip(bkg, bkg_labels):
+            plt.hist(b[col], label = l, bins = 30, histtype = "step", weights = b["event_weight"])
+
+        plt.hist(sig[col], label = sig_label, bins = 30, histtype = "step")
+        plt.legend()
+        plt.title("Distribution of %s"%col)
+        plt.xlabel(col)
+        plt.yscale('log')
+        if 'm_' in col: plt.xlim(0,500)
         pp.savefig()
-	    plt.close()
+        plt.close()
 	
     pp.close()
 
@@ -210,10 +214,12 @@ def plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title):
 	plt.savefig("plots/SIC_%s.png"%plt_title)
 	plt.close()
 
-sig_list = ["2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag","eVLQ_TPrimeTPrimeToTTPhiPhiToTauTauAll_TpM1000_PhiM250_NoMisTag",
-        "HeavyN_vbsNToTauTau_NM250_2J_LO" , "VAL_dyVfVfToXiCXiCToTauSTauS_XiM1000_VfM250_MinMass120_NoMisTag"]
+sig_list = [#"2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag",
+            #"eVLQ_TPrimeTPrimeToTTPhiPhiToTauTauAll_TpM1000_PhiM250_NoMisTag",
+            #"HeavyN_vbsNToTauTau_NM250_2J_LO"] 
+            "VAL_dyVfVfToXiCXiCToTauSTauS_XiM1000_VfM250_MinMass120_NoMisTag"]
 
-bkg_list = ["SM_dyToTauTau_0J1J2J_MinMass120_3M", "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M", "SM_QCD_JJ_0J1J2J_MinMass120_LO_6M"]
+bkg_list = ["SM_dyToTauTau_0J1J2J_MinMass120_3M", "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M"]#, "SM_QCD_JJ_0J1J2J_MinMass120_LO_6M"]
 bkg = []
 
 for b in bkg_list:
