@@ -48,9 +48,9 @@ def plot_features(sig_labels,bkg_labels):
         for col in sig.columns:
             print(col)
             plt.figure(figsize=(10,7))
-            for b, l in zip(bkg, bkg_labels):
-                if 'm_' in col: plt.hist(b[col], label = l, bins = 200, histtype = "step", weights = b["event_weight"])
-                else: plt.hist(b[col], label = l, bins = 50, histtype = "step", weights = b["event_weight"])
+            #for b, l in zip(bkg, bkg_labels):
+            if 'm_' in col: plt.hist([bkg[0][col],bkg[1][col],bkg[2][col]], label = bkg_labels, bins = 200, stacked = True,  histtype = "step", weights = [bkg[0]["event_weight"],bkg[1]["event_weight"],bkg[2]["event_weight"]])
+            else: plt.hist([bkg[0][col],bkg[1][col],bkg[2][col]], label = bkg_labels, bins = 50, stacked = True, histtype = "step", weights = [bkg[0]["event_weight"],bkg[1]["event_weight"],bkg[2]["event_weight"]])
             if col != "event_weight": 
                 if 'm_' in col: plt.hist(sig[col], label = sig__, bins = 200, histtype = "step")
                 else: plt.hist(sig[col], label = sig__, bins = 50, histtype = "step")

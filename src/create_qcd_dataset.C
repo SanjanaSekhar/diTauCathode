@@ -58,7 +58,7 @@ int create_qcd_dataset(string file_n, float xsec, int label) {
 	TClonesArray *branchMu = treeReader->UseBranch("Muon");
 	TClonesArray *branchEl = treeReader->UseBranch("Electron");
 	TClonesArray *branchGenJet = treeReader->UseBranch("GenJet");
-	TClonesArray *branchEvent = treeReader->UseBranch("Weight");
+	TClonesArray *branchEvent = treeReader->UseBranch("Event");
 
 	float tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, tau2_m, m_tau1tau2, pt_tau1tau2, eta_tau1tau2, phi_tau1tau2, met_met, met_eta, met_phi, tau1_d1, tau1_d2, tau2_d1, tau2_d2;
         int n_jets, n_bjets, n_jets_all;
@@ -72,28 +72,27 @@ int create_qcd_dataset(string file_n, float xsec, int label) {
 	//std::cout << "Running on " << n_frac << " out of " << numberOfEntries << " events" << std::endl;
 	int numTauJet1s = 0, numTauJet2s = 0, numGenTau1s = 0, numGenTau2s = 0, numGenTauJet1s = 0, numGenTauJet2s = 0;
 	int nevents = 0;
-	long double sum_weights = 0., evt_weight = 0.;
+	float sum_weights = 0., evt_weight = 0.;
         //numberOfEntries = 30000;
+        /*
 	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
 		treeReader->ReadEntry(entry);
 		HepMCEvent *wt0 = (HepMCEvent*) branchEvent->At(0);
 		if(!wt0) continue;
-		//if(wt0->Weight==0) continue;
                 if(entry % 100000 == 0) {
 			std::cout << "calculating sum of event weights: "  << entry << "\n";
-			std::cout << "Sum of weights = " << std::setprecision(30) << sum_weights << "\n";
+			std::cout << "Sum of weights = "  << sum_weights << "\n";
 		
 		}
-		//printf("wt0->Weight = %.30f\n",wt0->Weight);
 		sum_weights += wt0->Weight;
 			
 
-	}
-	std::cout << "Sum of weights = " << std::setprecision(30) << sum_weights << "\n";
+	}*/
+	std::cout << "Sum of weights = "  << sum_weights << "\n";
 	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
 	//for (Long64_t entry = 0; entry < n_frac; ++entry) {	
-		if (entry % 20000 == 0) {
-			std:cout << "Processing event " << entry << std::endl;
+		if (entry % 100000 == 0) {
+			std::cout << "Processing event " << entry << std::endl;
 		
 		}
 		//event weights
@@ -101,8 +100,9 @@ int create_qcd_dataset(string file_n, float xsec, int label) {
 		HepMCEvent *wt = (HepMCEvent*) branchEvent->At(0);
 		if(!wt) continue;
 		evt_weight = wt->Weight;
+		if(entry % 100000 == 0) cout << "Event weight =  " << evt_weight;
 		evt_weight *= (xsec * 1000 * lumi)/sum_weights;
-
+		if(entry % 100000 == 0) cout << " after scaling =  " << evt_weight << endl;
 
 		bool filled = false;
 		bool filledTau1 = false, filledTau2 = false, filledGenTau = false;
@@ -227,7 +227,7 @@ int create_qcd_dataset(string file_n, float xsec, int label) {
 				}
 				
 							
-						
+			}			
 		
 			if(filledTau2) {
 				float deltaR_jet1jet2, deltaR_bjet1bjet2, deltaR_tau1tau2;
@@ -248,7 +248,7 @@ int create_qcd_dataset(string file_n, float xsec, int label) {
 
 				// if(m_tau1tau2 >= 120){
 					nevents++;
-					fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f, %.30f,%i\n", 
+					fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f, %f,%i\n", 
 					m_jet1jet2, deltaR_jet1jet2, m_bjet1bjet2, deltaR_bjet1bjet2, deltaR_tau1tau2,
 					tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, 
 					tau2_m, m_tau1tau2, pt_tau1tau2, eta_tau1tau2, phi_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
@@ -256,7 +256,7 @@ int create_qcd_dataset(string file_n, float xsec, int label) {
 					jet2_pt, jet2_eta, jet2_phi, jet2_cef, jet2_nef, bjet2_pt, bjet2_eta, bjet2_phi, bjet2_cef, bjet2_nef, evt_weight, isSig);
 	//printf("No. of tau jets = %i\n",numTauJets);  
 				// }
-			}
+			
 				
 			}
 			}			
