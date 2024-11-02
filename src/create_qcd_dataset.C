@@ -22,13 +22,14 @@ R__LOAD_LIBRARY(libDelphes)
 
 class TFile;
 
-int create_qcd_dataset(string file_n, float xsec, int label) {
+int create_qcd_dataset() {
 
 
 	int debug = 0; 
 	gSystem->Load("libDelphes");
-	int isSig = label;
-
+	int isSig = 0;
+	string file_n = "SM_QCD_JJ_0J1J2J_MinMass120_LO_1M";
+	float xsec = 437700;
 	char infile[200], outfile[200];
 	string csv_path = "/uscms/home/ssekhar/nobackup/CATHODE_ditau/Delphes/";
 	string in_path = "root://cmseos.fnal.gov//store/user/tvami/diTauCathode/";
@@ -77,7 +78,7 @@ int create_qcd_dataset(string file_n, float xsec, int label) {
 	int nevents = 0;
 	float sum_weights = 0., evt_weight = 0.;
         //numberOfEntries = 30000;
-        /*
+        
 	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
 		treeReader->ReadEntry(entry);
 		HepMCEvent *wt0 = (HepMCEvent*) branchEvent->At(0);
@@ -90,7 +91,7 @@ int create_qcd_dataset(string file_n, float xsec, int label) {
 		sum_weights += wt0->Weight;
 			
 
-	}*/
+	}
 	std::cout << "Sum of weights = "  << sum_weights << "\n";
 	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
 	//for (Long64_t entry = 0; entry < n_frac; ++entry) {	

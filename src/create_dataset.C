@@ -29,7 +29,7 @@ int create_dataset(string file_n, float xsec, int label) {
 	gSystem->Load("libDelphes");
 	int isSig = label;
         float lumi = 138.;
-	int n_files = 3;
+	int n_files = 2;
 	char infile[200], outfile[200];
 	string csv_path = "/uscms/home/ssekhar/nobackup/CATHODE_ditau/Delphes/";
 	string in_path = "root://cmseos.fnal.gov//store/user/tvami/diTauCathode/";
@@ -42,7 +42,7 @@ int create_dataset(string file_n, float xsec, int label) {
 	fout = fopen(outfile, "w");
 	TChain chain("Delphes");
 	std::cout << "Sample used is " << file_name.c_str() << std::endl;
-	for(int i=1; i<=n_files, i++){
+	for(int i=1; i<=n_files; i++){
 		sprintf(infile,"%s%s_Part%i.root",in_path.c_str(),file_name.c_str(),i);
 		chain.Add(infile);
 	}

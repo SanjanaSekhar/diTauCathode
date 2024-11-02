@@ -232,7 +232,7 @@ sig_list = ["2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag",
             "HeavyN_vbsNToTauTau_NM250_2J_LO", 
             "VAL_dyVfVfToXiCXiCToTauSTauS_XiM1000_VfM250_MinMass120_NoMisTag"]
 
-bkg_list = ["SM_dyToTauTau_0J1J2J_MinMass120_3M", "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M"]#, "SM_QCD_JJ_0J1J2J_MinMass120_LO_6M"]
+bkg_list = ["SM_dyToTauTau_0J1J2J_MinMass120_3M", "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M", "SM_QCD_JJ_0J1J2J_MinMass120_LO_6M"]
 '''
 bkg = []
 
