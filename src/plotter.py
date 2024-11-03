@@ -51,13 +51,13 @@ def plot_features(sig_labels,bkg_labels):
         # need to normali
         for col in sig.columns[:-1]:
             print(col)
-            plt.figure(figsize=(10,9))
+            plt.figure(figsize=(7,6))
             counts, bins = [],[]
             
             for i in range(len(bkg)):
-                    if 'm_' in col: plt.hist(bkg[i][col], label = bkg_labels[i], bins = 200, weights = bkg[i]["event_weight"],density = True, histtype="step")
+                    if 'm_' in col: plt.hist(bkg[i][col], label = bkg_labels[i], bins = 200, weights = bkg[i]["event_weight"],density = True, histtype="stepfilled")
                     
-                    else: plt.hist(bkg[i][col], label = bkg_labels[i], bins = 50, weights = bkg[i]["event_weight"], density=True, histtype = "step")
+                    else: plt.hist(bkg[i][col], label = bkg_labels[i], bins = 50, weights = bkg[i]["event_weight"], density=True, histtype = "stepfilled")
             
             if 'm_' in col: plt.hist(sig[col], label = sig__, bins = 200, density=True, histtype = "step")
             else: plt.hist(sig[col], label = sig__, bins = 50, density=True, histtype = "step")
