@@ -27,7 +27,7 @@ def plot_features(sig_labels,bkg_labels):
     for i in range(len(bkg)):
         bkg[i].columns = columns
         bkg[i] = bkg[i][["m_jet1jet2", "deltaR_jet1jet2","m_tau1tau2", "pt_tau1tau2","deltaR_tau1tau2","met_met","n_jets", "n_bjets", "event_weight"]]
-    
+    bkg[2]["event_weight"] = bkg[2]["event_weight"] * 0.0001 
     for sig__ in sig_labels:
         sig = pd.read_csv("csv_files/%s.csv" % sig__)
 
@@ -45,13 +45,13 @@ def plot_features(sig_labels,bkg_labels):
         pp = PdfPages('plots/%s_DY_ttbar_QCD_distributions.pdf'%sig__)
         print("Plotting ", sig__)
         
-        bkg[2]["event_weight"] = bkg[2]["event_weight"] * 0.0001
+        print(bkg[2]["event_weight"])
         for col in sig.columns:
             print(col)
             plt.figure(figsize=(10,7))
             #for b, l in zip(bkg, bkg_labels):
-            if 'm_' in col: plt.hist([bkg[0][col],bkg[1][col],bkg[2][col]], label = bkg_labels, bins = 200, stacked = True, density=True, histtype = "step", weights = [bkg[0]["event_weight"],bkg[1]["event_weight"],bkg[2]["event_weight"]])
-            else: plt.hist([bkg[0][col],bkg[1][col],bkg[2][col]], label = bkg_labels, bins = 50, stacked = True, density=True, histtype = "step", weights = [bkg[0]["event_weight"],bkg[1]["event_weight"],bkg[2]["event_weight"]])
+            if 'm_' in col: plt.hist([bkg[2][col],bkg[1][col],bkg[0][col]], label = bkg_labels, bins = 200,  density=True, histtype = "barstacked", weights = [bkg[2]["event_weight"],bkg[1]["event_weight"],bkg[0]["event_weight"]])
+            else: plt.hist([bkg[2][col],bkg[1][col],bkg[0][col]], label = bkg_labels, bins = 50,  density=True, histtype = "barstacked", weights = [bkg[2]["event_weight"],bkg[1]["event_weight"],bkg[0]["event_weight"]])
             if col != "event_weight": 
                 if 'm_' in col: plt.hist(sig[col], label = sig__, bins = 200, density=True, histtype = "step")
                 else: plt.hist(sig[col], label = sig__, bins = 50, density=True, histtype = "step")
