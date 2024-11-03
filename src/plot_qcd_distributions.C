@@ -59,6 +59,7 @@ void plot_qcd_distributions() {
 	TClonesArray *branchMu = treeReader->UseBranch("Muon");
 	TClonesArray *branchEl = treeReader->UseBranch("Electron");
 	TClonesArray *branchGenJet = treeReader->UseBranch("GenJet");
+        TClonesArray *branchEvent = treeReader->UseBranch("Event");
 
 	float tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, tau2_m, m_tau1tau2, pt_tau1tau2, eta_tau1tau2, phi_tau1tau2, met_met, met_eta, met_phi, tau1_d1, tau1_d2, tau2_d1, tau2_d2;
         int n_jets, n_bjets, n_taus, n_extra_jets;
@@ -100,6 +101,8 @@ void plot_qcd_distributions() {
 		
 		}
 		treeReader->ReadEntry(entry);
+		//LHEFEvent *evt0 = (LHEFEvent*) branchEvent->At(0);
+		//printf("%0.30f ",evt0->Weight);
 		bool filled = false;
 		bool filledTau1 = false, filledTau2 = false;
 		bool filledJet1 = false, filledJet2 = false;

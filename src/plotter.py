@@ -44,7 +44,8 @@ def plot_features(sig_labels,bkg_labels):
 
         pp = PdfPages('plots/%s_DY_ttbar_QCD_distributions.pdf'%sig__)
         print("Plotting ", sig__)
-
+        
+        bkg[2]["event_weight"] = bkg[2]["event_weight"] * 0.0001
         for col in sig.columns:
             print(col)
             plt.figure(figsize=(10,7))
