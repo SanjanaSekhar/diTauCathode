@@ -29,7 +29,7 @@ int create_qcd_dataset() {
 	gSystem->Load("libDelphes");
 	int isSig = 0;
 	string file_n = "SM_QCD_JJ_0J1J2J_MinMass120_LO_1M";
-	float xsec = 437700;
+	float xsec = 437700; // in pb
 	char infile[200], outfile[200];
 	string csv_path = "/uscms/home/ssekhar/nobackup/CATHODE_ditau/Delphes/";
 	string in_path = "root://cmseos.fnal.gov//store/user/tvami/diTauCathode/";
@@ -75,10 +75,11 @@ int create_qcd_dataset() {
 	Int_t sorted_jet_idx[5], sorted_bjet_idx[5];	
 	//std::cout << "Running on " << n_frac << " out of " << numberOfEntries << " events" << std::endl;
 	int numTauJet1s = 0, numTauJet2s = 0, numGenTau1s = 0, numGenTau2s = 0, numGenTauJet1s = 0, numGenTauJet2s = 0;
-	int nevents = 0;
-	float sum_weights = 0., evt_weight = 0.;
+	int nevents = 0, neg_mjj = 0;
+	float sum_weights = 2.49425e+12; 
+	float evt_weight = 0.;
         //numberOfEntries = 30000;
-        
+        /*
 	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
 		treeReader->ReadEntry(entry);
 		HepMCEvent *wt0 = (HepMCEvent*) branchEvent->At(0);
@@ -91,7 +92,7 @@ int create_qcd_dataset() {
 		sum_weights += wt0->Weight;
 			
 
-	}
+	}*/
 	std::cout << "Sum of weights = "  << sum_weights << "\n";
 	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
 	//for (Long64_t entry = 0; entry < n_frac; ++entry) {	
@@ -104,9 +105,9 @@ int create_qcd_dataset() {
 		HepMCEvent *wt = (HepMCEvent*) branchEvent->At(0);
 		if(!wt) continue;
 		evt_weight = wt->Weight;
-		if(entry % 100000 == 0) cout << "Event weight =  " << evt_weight;
+		//if(entry % 100000 == 0) cout << "Event weight =  " << evt_weight;
 		evt_weight *= (xsec * 1000 * lumi)/sum_weights;
-		if(entry % 100000 == 0) cout << " after scaling =  " << evt_weight << endl;
+		//if(entry % 100000 == 0) cout << " after scaling =  " << evt_weight << endl;
 
 		bool filled = false;
 		bool filledTau1 = false, filledTau2 = false, filledGenTau = false;
@@ -151,7 +152,7 @@ int create_qcd_dataset() {
 							bjet1_nef = jet->NeutralEnergyFraction;
 							bjet1_cef = jet->ChargedEnergyFraction;
 							filledBjet1 = true;
-							if(n_bjets==2) bjet1_p4 = jet->P4();
+							if(n_bjets > 1) bjet1_p4 = jet->P4();
 						}
 						else{
 							
@@ -180,7 +181,7 @@ int create_qcd_dataset() {
 							jet1_nef = jet->NeutralEnergyFraction;
 							jet1_cef = jet->ChargedEnergyFraction;
 							filledJet1 = true;
-							if(n_jets==2) jet1_p4 = jet->P4();
+							if(n_jets > 1) jet1_p4 = jet->P4();
 						}
 						else{
 							if(filledJet1 and n_jets > 1){
@@ -248,8 +249,18 @@ int create_qcd_dataset() {
 				deltaR_jet1jet2 = pow((pow((jet1_eta - jet2_eta),2) +  pow((jet1_phi - jet2_phi),2)),0.5);
 				deltaR_bjet1bjet2 = pow((pow((bjet1_eta - bjet2_eta),2) +  pow((bjet1_phi - bjet2_phi),2)),0.5);
 
-				
+				if(m_jet1jet2 < 0)                                                                                                                                                                          { //printf("m_jj is negative: m_jet1jet2, jet1_m, jet1_pt, jet2_m, jet2_pt,n_jets - %f,%f,%f,%f,%f,%i\n",m_jet1jet2, jet1_m, jet1_pt, jet2_m, jet2_pt,n_jets);
+                                jet1_pt = 0., jet1_eta = 0., jet1_phi = 0., jet1_m = 0., jet1_ehadeem = 0.,m_jet1jet2 = 0.;
+                                jet2_pt = 0., jet2_eta = 0., jet2_phi = 0., jet2_m = 0., jet2_ehadeem = 0., m_jet1jet2 = 0;
+                                neg_mjj ++ ;
 
+                                }				
+				if(m_bjet1bjet2 < 0)                                                                                                                                                                          { //printf("m_jj is negative: m_jet1jet2, jet1_m, jet1_pt, jet2_m, jet2_pt,n_jets - %f,%f,%f,%f,%f,%i\n",m_jet1jet2, jet1_m, jet1_pt, jet2_m, jet2_pt,n_jets);
+                                bjet1_pt = 0., bjet1_eta = 0., bjet1_phi = 0., bjet1_m = 0., bjet1_ehadeem = 0.,m_bjet1bjet2 = 0.;
+                                bjet2_pt = 0., bjet2_eta = 0., bjet2_phi = 0., bjet2_m = 0., bjet2_ehadeem = 0., m_bjet1bjet2 = 0;
+                                neg_mjj ++ ;
+
+                                }
 				// if(m_tau1tau2 >= 120){
 					nevents++;
 					fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f, %f,%i\n", 
@@ -263,7 +274,10 @@ int create_qcd_dataset() {
 			
 				
 			}
-			}			
+
+			}
+			printf("No. of events with at least 2 tagged tau jets = %i\n",nevents);
+                        printf("No. of events with negative m_JJ = %i\n",neg_mjj);			
 			return 1;
 		}
 

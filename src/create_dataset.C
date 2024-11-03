@@ -22,7 +22,7 @@ R__LOAD_LIBRARY(libDelphes)
 
 class TFile;
 GenParticle* getMother(TClonesArray *branchParticle, const GenParticle *particle);
-int create_dataset(string file_n, float xsec, int label) {
+int create_dataset(string file_n, int label) {
 
 
 	int debug = 0; 
@@ -35,7 +35,10 @@ int create_dataset(string file_n, float xsec, int label) {
 	string in_path = "root://cmseos.fnal.gov//store/user/tvami/diTauCathode/";
 	//string file_name = "LQ_nonResScalarLQ-M1000_2J";
 	string file_name = file_n.c_str();
-	
+	// DY xsec: 17.37 pb
+	// ttbar xsec: 13.4918 pb
+	float xsec = 13.4918;
+	if(isSig) xsec = -1; 
 	//TFile * fin = TFile::Open(infile);
 	FILE *fout;
 	sprintf(outfile,"%s/diTauCathode/csv_files/%s.csv",csv_path.c_str(),file_name.c_str());
@@ -72,10 +75,13 @@ int create_dataset(string file_n, float xsec, int label) {
 	Int_t sorted_jet_idx[5], sorted_bjet_idx[5];	
 	//std::cout << "Running on " << n_frac << " out of " << numberOfEntries << " events" << std::endl;
 	int numTauJet1s = 0, numTauJet2s = 0, numGenTau1s = 0, numGenTau2s = 0, numGenTauJet1s = 0, numGenTauJet2s = 0;
-	int nevents = 0;
+	int nevents = 0, neg_mjj = 0;
+	// sum of weights = 5.10332e+07 for DY
+	// sum of weights = 1.40821e+07 for ttbar
 
-	float sum_weights = 0.;
-        //numberOfEntries = 1000;
+	float sum_weights = 1.40821e+07; 
+        //numberOfEntries = 50000;
+        /*
 	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
 		treeReader->ReadEntry(entry);
 		HepMCEvent *evt0 = (HepMCEvent*) branchEvent->At(0);
@@ -83,9 +89,9 @@ int create_dataset(string file_n, float xsec, int label) {
 
 	}
 	std::cout << "sum of weights = " << sum_weights << "\n";
-
+	*/
 	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
-	//for (Long64_t entry = 0; entry < n_frac; ++entry) {	
+	//for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {	
 		if (entry % 20000 == 0) {
 			std:cout << "Processing event " << entry << std::endl;
 			//printf("No. of events with at least 1 tagged hadronic tau jets = %i\n",numTauJet1s);
@@ -99,6 +105,7 @@ int create_dataset(string file_n, float xsec, int label) {
 		HepMCEvent *evt = (HepMCEvent*) branchEvent->At(0);
 		if(!evt) continue;
 		evt_weight = evt->Weight;
+		if(evt_weight < 0) cout << "evt_weight is negative: " << evt_weight << endl;
 		if(isSig == 0) evt_weight *= (xsec * 1000 * lumi)/sum_weights;
 
 		bool filled = false;
@@ -119,6 +126,7 @@ int create_dataset(string file_n, float xsec, int label) {
 			
 			for (int i = 0; i < branchJet->GetEntries(); i++){
 				 Jet *jet = (Jet*) branchJet->At(i);
+				if (!jet) continue;
 				if (jet->BTag == 1) n_bjets++;
 				else {if (jet->TauTag == 0) n_jets++;}
 			}
@@ -168,7 +176,7 @@ int create_dataset(string file_n, float xsec, int label) {
 							jet1_nef = jet->NeutralEnergyFraction;
 							jet1_cef = jet->ChargedEnergyFraction;
 							filledJet1 = true;
-							if(n_jets==2) jet1_p4 = jet->P4();
+							if(n_jets>1) jet1_p4 = jet->P4();
 						}
 						else{
 							if(filledJet1 and n_jets > 1){
@@ -237,8 +245,23 @@ int create_dataset(string file_n, float xsec, int label) {
 				if (n_bjets == 0) {bjet1_pt = 0., bjet1_eta = 0., bjet1_phi = 0., bjet1_ehadeem = 0., m_bjet1bjet2 = 0.;}
 				if (n_jets < 2) {jet2_pt = 0., jet2_eta = 0., jet2_phi = 0., jet2_ehadeem = 0., m_jet1jet2 = jet1_m;}
                 if (n_bjets < 2) {bjet2_pt = 0., bjet2_eta = 0., bjet2_phi = 0., bjet2_ehadeem = 0., m_bjet1bjet2 = bjet1_m;}
+				//if(n_jets > 0){printf("m_jet1jet2, jet1_m, jet1_pt, jet2_m, jet2_pt,n_jets - %f,%f,%f,%f,%f,%i\n",m_jet1jet2, jet1_m, jet1_pt, jet2_m, jet2_pt,n_jets);}
+				if(m_jet1jet2 < 0)
+				{ //printf("m_jj is negative: m_jet1jet2, jet1_m, jet1_pt, jet2_m, jet2_pt,n_jets - %f,%f,%f,%f,%f,%i\n",m_jet1jet2, jet1_m, jet1_pt, jet2_m, jet2_pt,n_jets);
+				n_jets = 0;
+				jet1_pt = 0., jet1_eta = 0., jet1_phi = 0., jet1_m = 0., jet1_ehadeem = 0.,m_jet1jet2 = 0.;
+				jet2_pt = 0., jet2_eta = 0., jet2_phi = 0., jet2_m = 0., jet2_ehadeem = 0., m_jet1jet2 = 0;
+				neg_mjj ++ ; 
+				
+				}
+				  if(m_bjet1bjet2 < 0)
+                                { //printf("m_bjj is negative: m_jet1jet2, jet1_m, jet1_pt, jet2_m, jet2_pt,n_jets - %f,%f,%f,%f,%f,%i\n",m_jet1jet2, jet1_m, jet1_pt, jet2_m, jet2_pt,n_jets);
+                                n_bjets = 0;
+                                bjet1_pt = 0., bjet1_eta = 0., bjet1_phi = 0., bjet1_m = 0., bjet1_ehadeem = 0.,m_bjet1bjet2 = 0.;
+                                bjet2_pt = 0., bjet2_eta = 0., bjet2_phi = 0., bjet2_m = 0., bjet2_ehadeem = 0., m_bjet1bjet2 = 0;
+                                neg_mjj ++ ;
 
-
+                                }
 				deltaR_tau1tau2 = pow((pow((tau1_eta - tau2_eta),2) +  pow((tau1_phi - tau2_phi),2)),0.5);
 				deltaR_jet1jet2 = pow((pow((jet1_eta - jet2_eta),2) +  pow((jet1_phi - jet2_phi),2)),0.5);
 				deltaR_bjet1bjet2 = pow((pow((bjet1_eta - bjet2_eta),2) +  pow((bjet1_phi - bjet2_phi),2)),0.5);
@@ -260,7 +283,7 @@ int create_dataset(string file_n, float xsec, int label) {
 			}
 			//printf("No. of events with at least 1 tagged tau jets = %i\n",numTauJet1s);
 			printf("No. of events with at least 2 tagged tau jets = %i\n",nevents);
-			//printf("No. of events with 1 gen tau- jet = %i\n",numGenTau1s);
+			printf("No. of events with negative m_JJ = %i\n",neg_mjj);
 			//printf("No. of events with 1 gen tau+ jet = %i\n",numGenTau2s);
 			return 1;
 		}
