@@ -29,7 +29,7 @@ def plot_features(sig_labels,bkg_labels):
         bkg[i] = bkg[i][["m_jet1jet2", "deltaR_jet1jet2","m_tau1tau2", "pt_tau1tau2","deltaR_tau1tau2","met_met","n_jets", "n_bjets", "event_weight"]]
     bkg[2]["event_weight"] = bkg[2]["event_weight"] * 0.0001
     for i in range(len(bkg)):
-        bkg[i] = bkg[i].loc[b["m_jet1jet2"]>0]
+        bkg[i] = bkg[i].loc[bkg[i]["m_jet1jet2"]>0]
     print(bkg[2]["m_jet1jet2"])
     for sig__ in sig_labels:
         sig = pd.read_csv("csv_files/%s.csv" % sig__)
