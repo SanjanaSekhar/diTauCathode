@@ -169,7 +169,7 @@ int create_qcd_dataset() {
 						}
 					}		
 				}
-				if(n_jets > 0 and !filledTau2){
+				if(n_jets > 0 and filledTau2){
 					if (jet->BTag == 0){
 						if(!filledJet1){
 							jet1_m = (jet->P4()).M();
