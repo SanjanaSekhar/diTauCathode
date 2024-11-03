@@ -28,9 +28,8 @@ def plot_features(sig_labels,bkg_labels):
         bkg[i].columns = columns
         bkg[i] = bkg[i][["m_jet1jet2", "deltaR_jet1jet2","m_tau1tau2", "pt_tau1tau2","deltaR_tau1tau2","met_met","n_jets", "n_bjets", "event_weight"]]
     bkg[2]["event_weight"] = bkg[2]["event_weight"] * 0.0001
-    
-    
-     
+    print("deltaR_tau1tau2 in DY: ",bkg[0]["deltaR_tau1tau2"].min(),bkg[0]["deltaR_tau1tau2"].max()) 
+
         
     for sig__ in sig_labels:
         sig = pd.read_csv("csv_files/%s.csv" % sig__)
@@ -54,8 +53,8 @@ def plot_features(sig_labels,bkg_labels):
             print(col)
             plt.figure(figsize=(10,9))
             #for b, l in zip(bkg, bkg_labels):
-            if 'm_' in col: plt.hist([bkg[2][col],bkg[1][col],bkg[0][col]], label = bkg_labels, bins = 200,  density=True, histtype = "stepfilled", weights = [bkg[2]["event_weight"],bkg[1]["event_weight"],bkg[0]["event_weight"]])
-            else: plt.hist([bkg[2][col],bkg[1][col],bkg[0][col]], label = bkg_labels, bins = 50,  density=True, histtype = "stepfilled", weights = [bkg[2]["event_weight"],bkg[1]["event_weight"],bkg[0]["event_weight"]])
+            if 'm_' in col: plt.hist([bkg[2][col],bkg[1][col],bkg[0][col]], label = bkg_labels, bins = 200,  density=True, histtype = "step", weights = [bkg[2]["event_weight"],bkg[1]["event_weight"],bkg[0]["event_weight"]])
+            else: plt.hist([bkg[2][col],bkg[1][col],bkg[0][col]], label = bkg_labels, bins = 50,  density=True, histtype = "step", weights = [bkg[2]["event_weight"],bkg[1]["event_weight"],bkg[0]["event_weight"]])
             if col != "event_weight": 
                 if 'm_' in col: plt.hist(sig[col], label = sig__, bins = 200, density=True, histtype = "step")
                 else: plt.hist(sig[col], label = sig__, bins = 50, density=True, histtype = "step")
