@@ -45,7 +45,7 @@ def plot_features(sig_labels,bkg_labels):
         pp = PdfPages('plots/%s_DY_ttbar_QCD_distributions.pdf'%sig__)
         print("Plotting ", sig__)
         
-        print(bkg[2]["event_weight"])
+        #print(bkg[2]["event_weight"])
         for col in sig.columns:
             print(col)
             plt.figure(figsize=(10,7))
@@ -59,7 +59,7 @@ def plot_features(sig_labels,bkg_labels):
             plt.title("Distribution of %s"%col)
             plt.xlabel(col)
             plt.yscale('log')
-            if 'm_' in col: plt.xlim(0,500)
+            #if 'm_' in col: plt.xlim(0,500)
             pp.savefig()
             plt.close()
 	
