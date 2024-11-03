@@ -64,8 +64,9 @@ def plot_features(sig_labels,bkg_labels):
             plt.legend()
             plt.title("Distribution of %s"%col)
             plt.xlabel(col)
-            plt.yscale('log')
-            #if 'm_' in col: plt.xlim(0,500)
+            #plt.yscale('log')
+            if 'm_' in col: plt.xlim(0,1000)
+            
             pp.savefig()
             plt.close()
 	
