@@ -30,10 +30,6 @@ def plot_features(sig_labels,bkg_labels):
     bkg[2]["event_weight"] = bkg[2]["event_weight"] * 0.0001
     
     
-    for i in range(len(bkg)):
-        print(bkg[i].shape)
-        print(bkg[i].loc[bkg[i]["m_jet1jet2"] < 0])
-        print(bkg[i].shape)
      
         
     for sig__ in sig_labels:
@@ -56,7 +52,7 @@ def plot_features(sig_labels,bkg_labels):
         #print(bkg[2]["event_weight"])
         for col in sig.columns:
             print(col)
-            plt.figure(figsize=(10,7))
+            plt.figure(figsize=(10,9))
             #for b, l in zip(bkg, bkg_labels):
             if 'm_' in col: plt.hist([bkg[2][col],bkg[1][col],bkg[0][col]], label = bkg_labels, bins = 200,  density=True, histtype = "stepfilled", weights = [bkg[2]["event_weight"],bkg[1]["event_weight"],bkg[0]["event_weight"]])
             else: plt.hist([bkg[2][col],bkg[1][col],bkg[0][col]], label = bkg_labels, bins = 50,  density=True, histtype = "stepfilled", weights = [bkg[2]["event_weight"],bkg[1]["event_weight"],bkg[0]["event_weight"]])
@@ -66,7 +62,7 @@ def plot_features(sig_labels,bkg_labels):
             plt.legend()
             plt.title("Distribution of %s"%col)
             plt.xlabel(col)
-            plt.yscale('log')
+            #plt.yscale('log')
             if 'm_' in col: plt.xlim(0,500)
             
             pp.savefig()
