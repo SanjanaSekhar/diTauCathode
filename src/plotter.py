@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn.metrics import roc_curve, confusion_matrix
 from matplotlib.backends.backend_pdf import PdfPages
 
-def plot_features(sig_labels,bkg_labels):
+def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 
 
 	# Format of csv file:
@@ -22,7 +22,7 @@ def plot_features(sig_labels,bkg_labels):
                     "jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef", "event_weight","label"]
 
     bkg = []
-    for b in bkg_labels:
+    for b in bkgs:
         bkg.append(pd.read_csv("csv_files/%s.csv" % b))
     for i in range(len(bkg)):
         bkg[i].columns = columns
@@ -31,7 +31,7 @@ def plot_features(sig_labels,bkg_labels):
     print("deltaR_tau1tau2 in DY: ",bkg[0]["deltaR_tau1tau2"].min(),bkg[0]["deltaR_tau1tau2"].max()) 
 
         
-    for sig__ in sig_labels:
+    for sig__,sig_label in zip(sigs,sig_labels):
         sig = pd.read_csv("csv_files/%s.csv" % sig__)
 
         sig.columns = ["m_jet1jet2", "deltaR_jet1jet2", "m_bjet1bjet2", "deltaR_bjet1bjet2", "deltaR_tau1tau2",
@@ -51,7 +51,7 @@ def plot_features(sig_labels,bkg_labels):
         # need to normali
         for col in sig.columns[:-1]:
             print(col)
-            plt.figure(figsize=(7,6))
+            plt.figure(figsize=(6,5))
             counts, bins = [],[]
             
             for i in range(len(bkg)):
@@ -59,8 +59,8 @@ def plot_features(sig_labels,bkg_labels):
                     
                     else: plt.hist(bkg[i][col], label = bkg_labels[i], bins = 50, weights = bkg[i]["event_weight"], density=True, histtype = "stepfilled")
             
-            if 'm_' in col: plt.hist(sig[col], label = sig__, bins = 200, density=True, histtype = "step")
-            else: plt.hist(sig[col], label = sig__, bins = 50, density=True, histtype = "step")
+            if 'm_' in col: plt.hist(sig[col], label = sig_label, bins = 200, density=True, histtype = "step")
+            else: plt.hist(sig[col], label = sig_label, bins = 50, density=True, histtype = "step")
             plt.legend()
             plt.title("Distribution of %s"%col)
             plt.xlabel(col)
@@ -241,6 +241,8 @@ sig_list = ["2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag",
             "VAL_dyVfVfToXiCXiCToTauSTauS_XiM1000_VfM250_MinMass120_NoMisTag"]
 
 bkg_list = ["SM_dyToTauTau_0J1J2J_MinMass120_3M", "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M", "SM_QCD_JJ_0J1J2J_MinMass120_LO_6M"]
+sig_names = ["250 GeV heavy Higgs (VBF)", "250 GeV scalar from T'", "250 GeV HNL", "250 GeV VAL"]
+bkg_names = ["DY + 0/1/2 jets", "ttbar + 0/1/2 jets", "QCD multijet"]
 '''
 bkg = []
 
@@ -251,7 +253,7 @@ for b in bkg_list:
 for sig in sig_list:
 	sig__ = pd.read_csv("csv_files/%s.csv"%sig)
 '''
-plot_features(sig_list, bkg_list)
+plot_features(sig_list, sig_names, bkg_list, bkg_names)
 
 #injections = ["0.100","0.050","0.010","0.005"]
 #injections = ["0.100"]#,"0.200","0.300","0.400","0.500","0.600","0.700","0.800","0.900"]
