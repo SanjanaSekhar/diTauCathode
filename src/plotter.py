@@ -48,21 +48,24 @@ def plot_features(sig_labels,bkg_labels):
         pp = PdfPages('plots/%s_DY_ttbar_QCD_distributions.pdf'%sig__)
         print("Plotting ", sig__)
         
-        #print(bkg[2]["event_weight"])
-        for col in sig.columns:
+        # need to normali
+        for col in sig.columns[:-1]:
             print(col)
             plt.figure(figsize=(10,9))
-            #for b, l in zip(bkg, bkg_labels):
-            if 'm_' in col: plt.hist([bkg[2][col],bkg[1][col],bkg[0][col]], label = bkg_labels, bins = 200,  density=True, histtype = "step", weights = [bkg[2]["event_weight"],bkg[1]["event_weight"],bkg[0]["event_weight"]])
-            else: plt.hist([bkg[2][col],bkg[1][col],bkg[0][col]], label = bkg_labels, bins = 50,  density=True, histtype = "step", weights = [bkg[2]["event_weight"],bkg[1]["event_weight"],bkg[0]["event_weight"]])
-            if col != "event_weight": 
-                if 'm_' in col: plt.hist(sig[col], label = sig__, bins = 200, density=True, histtype = "step")
-                else: plt.hist(sig[col], label = sig__, bins = 50, density=True, histtype = "step")
+            counts, bins = [],[]
+            
+            for i in range(len(bkg)):
+                    if 'm_' in col: plt.hist(bkg[i][col], label = bkg_labels[i], bins = 200, weights = bkg[i]["event_weight"],density = True, histtype="step")
+                    
+                    else: plt.hist(bkg[i][col], label = bkg_labels[i], bins = 50, weights = bkg[i]["event_weight"], density=True, histtype = "step")
+            
+            if 'm_' in col: plt.hist(sig[col], label = sig__, bins = 200, density=True, histtype = "step")
+            else: plt.hist(sig[col], label = sig__, bins = 50, density=True, histtype = "step")
             plt.legend()
             plt.title("Distribution of %s"%col)
             plt.xlabel(col)
             #plt.yscale('log')
-            if 'm_' in col: plt.xlim(0,500)
+            if 'm_' in col: plt.xlim(0,800)
             
             pp.savefig()
             plt.close()
