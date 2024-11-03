@@ -56,8 +56,8 @@ def plot_features(sig_labels,bkg_labels):
             print(col)
             plt.figure(figsize=(10,7))
             #for b, l in zip(bkg, bkg_labels):
-            if 'm_' in col: plt.hist([bkg[2][col],bkg[1][col],bkg[0][col]], label = bkg_labels, bins = 200,  density=True, histtype = "barstacked", weights = [bkg[2]["event_weight"],bkg[1]["event_weight"],bkg[0]["event_weight"]])
-            else: plt.hist([bkg[2][col],bkg[1][col],bkg[0][col]], label = bkg_labels, bins = 50,  density=True, histtype = "barstacked", weights = [bkg[2]["event_weight"],bkg[1]["event_weight"],bkg[0]["event_weight"]])
+            if 'm_' in col: plt.hist([bkg[2][col],bkg[1][col],bkg[0][col]], label = bkg_labels, bins = 200,  density=True, histtype = "stepfilled",stacked=True, weights = [bkg[2]["event_weight"],bkg[1]["event_weight"],bkg[0]["event_weight"]])
+            else: plt.hist([bkg[2][col],bkg[1][col],bkg[0][col]], label = bkg_labels, bins = 50,  density=True, histtype = "stepfilled",stacked=True, weights = [bkg[2]["event_weight"],bkg[1]["event_weight"],bkg[0]["event_weight"]])
             if col != "event_weight": 
                 if 'm_' in col: plt.hist(sig[col], label = sig__, bins = 200, density=True, histtype = "step")
                 else: plt.hist(sig[col], label = sig__, bins = 50, density=True, histtype = "step")
