@@ -58,9 +58,9 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
             plt.figure(figsize=(6,5))
             counts, bins = [],[]
             
-            #for i in range(len(bkg))[::-1]:
-            if 'm_' in col or 'pt' in col or 'met' in col: plt.hist([bkg[2][col],bkg[1][col],bkg[0][col]], label = bkg_labels, bins = 150, weights = [bkg[2]["event_weight"], bkg[1]["event_weight"], bkg[0]["event_weight"]], stacked=True, density = True, histtype="stepfilled")
-            else: plt.hist([bkg[2][col],bkg[1][col],bkg[0][col]], label = bkg_labels, bins = 40, weights = [bkg[2]["event_weight"],bkg[1]["event_weight"],bkg[0]["event_weight"]], stacked=True, density=True, histtype = "stepfilled")
+            for i in range(len(bkg))[::-1]:
+                if 'm_' in col or 'pt' in col or 'met' in col: plt.hist(bkg[i][col], label = bkg_labels[i], bins = 150, weights = bkg[i]["event_weight"],density = True, histtype="stepfilled")
+                else: plt.hist(bkg[i][col], label = bkg_labels[i], bins = 40, weights = bkg[i]["event_weight"],  density=True, histtype = "stepfilled")
             
             if 'm_' in col or 'pt' in col or 'met' in col: plt.hist(sig[col], label = sig_label, bins = 150, density=True, histtype = "step")
             else: plt.hist(sig[col], label = sig_label, bins = 40, density=True, histtype = "step")
