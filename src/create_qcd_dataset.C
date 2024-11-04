@@ -215,7 +215,8 @@ int create_qcd_dataset() {
 					tau1_p4 = jet->P4();
 					filledTau1 = true;
 				}
-				if(filledTau1 and !filledTau2){
+				else{
+					if(!filledTau2){
 					m_tau1tau2 = (tau1_p4 + jet->P4()).M();
 					pt_tau1tau2 = (tau1_p4 + jet->P4()).Pt();
 					eta_tau1tau2 = (tau1_p4 + jet->P4()).Eta();	
@@ -230,7 +231,7 @@ int create_qcd_dataset() {
 				
 					filledTau2 = true;
 				}
-				
+			}
 							
 			}			
 		
@@ -246,6 +247,7 @@ int create_qcd_dataset() {
 
 
 				deltaR_tau1tau2 = pow((pow((tau1_eta - tau2_eta),2) +  pow((tau1_phi - tau2_phi),2)),0.5);
+				//printf("tau1_eta, tau1_phi, tau2_eta, tau2_phi, deltaR_tau1tau2 : %f %f %f %f %f\n", tau1_eta, tau1_phi, tau2_eta, tau2_phi, deltaR_tau1tau2);
 				deltaR_jet1jet2 = pow((pow((jet1_eta - jet2_eta),2) +  pow((jet1_phi - jet2_phi),2)),0.5);
 				deltaR_bjet1bjet2 = pow((pow((bjet1_eta - bjet2_eta),2) +  pow((bjet1_phi - bjet2_phi),2)),0.5);
 
@@ -259,7 +261,6 @@ int create_qcd_dataset() {
                                 bjet1_pt = 0., bjet1_eta = 0., bjet1_phi = 0., bjet1_m = 0., bjet1_ehadeem = 0.,m_bjet1bjet2 = 0.;
                                 bjet2_pt = 0., bjet2_eta = 0., bjet2_phi = 0., bjet2_m = 0., bjet2_ehadeem = 0., m_bjet1bjet2 = 0;
                                 neg_mjj ++ ;
-
                                 }
 				// if(m_tau1tau2 >= 120){
 					nevents++;
@@ -269,10 +270,7 @@ int create_qcd_dataset() {
 					tau2_m, m_tau1tau2, pt_tau1tau2, eta_tau1tau2, phi_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
 					jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, 
 					jet2_pt, jet2_eta, jet2_phi, jet2_cef, jet2_nef, bjet2_pt, bjet2_eta, bjet2_phi, bjet2_cef, bjet2_nef, evt_weight, isSig);
-	//printf("No. of tau jets = %i\n",numTauJets);  
-				// }
-			
-				
+	//printf("No. of tau jets = %i\n",numTauJets);  }
 			}
 
 			}

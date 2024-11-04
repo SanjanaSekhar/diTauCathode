@@ -31,7 +31,8 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 
 
     bkg[2]["event_weight"] = bkg[2]["event_weight"] * 0.0001
-    print("mjj in QCD: ",bkg[2]["m_jet1jet2"].min(),bkg[0]["m_jet1jet2"].max()) 
+    print("mjj in QCD: ",bkg[2]["m_jet1jet2"].min(),bkg[2]["m_jet1jet2"].max()) 
+    print("deltaR_tau1tau2 in QCD: ",bkg[2]["deltaR_tau1tau2"].min(),bkg[2]["deltaR_tau1tau2"].max())
 
         
     for sig__,sig_label in zip(sigs,sig_labels):
@@ -59,10 +60,10 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
             
             for i in range(len(bkg))[::-1]:
                     if 'm_' in col or 'pt' in col or 'met' in col: plt.hist(bkg[i][col], label = bkg_labels[i], bins = 150, weights = bkg[i]["event_weight"],density = True, histtype="stepfilled")
-                    else: plt.hist(bkg[i][col], label = bkg_labels[i], bins = 20, weights = bkg[i]["event_weight"], density=True, histtype = "stepfilled")
+                    else: plt.hist(bkg[i][col], label = bkg_labels[i], bins = 30, weights = bkg[i]["event_weight"], density=True, histtype = "stepfilled")
             
             if 'm_' in col or 'pt' in col or 'met' in col: plt.hist(sig[col], label = sig_label, bins = 150, density=True, histtype = "step")
-            else: plt.hist(sig[col], label = sig_label, bins = 20, density=True, histtype = "step")
+            else: plt.hist(sig[col], label = sig_label, bins = 30, density=True, histtype = "step")
             
             plt.legend()
             plt.title("Distribution of %s"%col)
