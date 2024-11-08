@@ -82,12 +82,14 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 
         sig.columns = columns
         sig["deltaeta_tau1tau2"] = abs(sig['tau1_eta'] - sig['tau2_eta'])
-        sig = sig[["m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", "event_weight"]]
+        sig = sig[[#"m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", 
+                "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", 
+                "event_weight"]]
         # pp = PdfPages('plots/%s_DY_ttbar_QCD_distributions.pdf'%sig__)
         print(sig_label)
         
         
-        for col in sig.columns:
+        for col in sig.columns[:-1]:
             stack = ROOT.THStack(col, col)
             print("Plotting ", col)
             for i in range(len(bkg)):
@@ -97,13 +99,13 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
                     if 'n' in col: n_bkg[i].Fill(entry, wt)
 				
                 if 'm' or 'pt' in col: 
-                    m_bkg[i].Scale(1./m_bkg[i].Integral())
+                    #m_bkg[i].Scale(1./m_bkg[i].Integral())
                     stack.Add(m_bkg[i])
                 if 'delta' in col: 
-                    delta_bkg[i].Scale(1./delta_bkg[i].Integral())
+                    #delta_bkg[i].Scale(1./delta_bkg[i].Integral())
                     stack.Add(delta_bkg[i])
                 if 'n' in col: 
-                    n_bkg[i].Scale(1./n_bkg[i].Integral())
+                    #n_bkg[i].Scale(1./n_bkg[i].Integral())
                     stack.Add(n_bkg[i])
             print("Filled bkg histograms")
             for entry in sig[col]:
@@ -111,11 +113,11 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
                 if 'delta' in col: delta_sig.Fill(entry)
                 if 'n' in col: n_sig.Fill(entry)
 			
-
+            '''
             if 'm' or 'pt' in col: m_sig.Scale(1./m_sig.Integral())
             if 'delta' in col: delta_sig.Scale(1./delta_sig.Integral())
             if 'n' in col: n_sig.Scale(1./n_sig.Integral())
-
+            '''
             print("Filled sig histogram")
 
             c = ROOT.TCanvas("c1", "Stack canvas", 800, 600)
