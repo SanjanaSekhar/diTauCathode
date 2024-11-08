@@ -20,126 +20,128 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 	# tau2_m, m_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
 	# jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, isSig
 
-	
-	m_sig = ROOT.TH1F("m_sig", "m_sig", 150, 0.0, 1000.0)
-	delta_sig = ROOT.TH1F("delta_sig","delta_sig",30, -5, 5)
-	n_sig = ROOT.TH1F("n_sig","n_sig", 20,0,20)
-	m_bkg, delta_bkg, n_bkg = [],[],[]
-	
-	m_sig.Sumw2()
-	delta_sig.Sumw2()
-	n_sig.Sumw2()
-
-	for i in range(len(bkg)):
-		m_bkg.append(m_sig.Clone("m_bkg%i" %i))
-		delta_bkg.append(delta_sig.Clone("delta_bkg%i" %i))
-		n_bkg.append(n_sig.Clone("n_bkg%i" %i))
-		m_bkg[i].Sumw2()
-		delta_bkg[i].Sumw2()
-		n_bkg[i].Sumw2()
-
-
-    columns = ["m_jet1jet2", "deltaR_jet1jet2", "m_bjet1bjet2", "deltaR_bjet1bjet2", "deltaR_tau1tau2",
-                    "tau1_pt", "tau1_eta", "tau1_phi", "tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m",
-                    "m_tau1tau2", "pt_tau1tau2", "eta_tau1tau2", "phi_tau1tau2","met_met", "met_eta", "met_phi", "n_jets", "n_bjets",
-                    "jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", "bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef",
-                    "jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef", "event_weight","label"]
-
+    m_sig = ROOT.TH1F("m_sig", "m_sig", 150, 0.0, 1000.0)
+    delta_sig = ROOT.TH1F("delta_sig","delta_sig",30, -5, 5)
+    n_sig = ROOT.TH1F("n_sig","n_sig", 20,0,20)
+    m_bkg, delta_bkg, n_bkg = [],[],[]
+    m_sig.Sumw2()
+    delta_sig.Sumw2()
+    n_sig.Sumw2()
+    
+    for i in range(len(bkgs)):
+        m_bkg.append(m_sig.Clone("m_bkg%i" %i))
+        delta_bkg.append(delta_sig.Clone("delta_bkg%i" %i))
+        n_bkg.append(n_sig.Clone("n_bkg%i" %i))
+        m_bkg[i].Sumw2()
+        delta_bkg[i].Sumw2()
+        n_bkg[i].Sumw2()
+    
+    columns = ["m_jet1jet2", "deltaR_jet1jet2", "m_bjet1bjet2", "deltaR_bjet1bjet2", "deltaR_tau1tau2","tau1_pt", "tau1_eta", "tau1_phi", 
+                "tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m","m_tau1tau2", "pt_tau1tau2", "eta_tau1tau2", "phi_tau1tau2",
+                "met_met", "met_eta", "met_phi", "n_jets", "n_bjets","jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", 
+                "bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef","jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", 
+                "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef", "event_weight","label"]
+    
     bkg = []
     for b in bkgs:
         bkg.append(pd.read_csv("csv_files/%s.csv" % b))
+
+
     for i in range(len(bkg)):
         bkg[i].columns = columns
-		bkg[i]["deltaeta_tau1tau2"] = abs(bkg[i]['tau1_eta'] - bkg[i]['tau2_eta'])
+        bkg[i]["deltaeta_tau1tau2"] = abs(bkg[i]['tau1_eta'] - bkg[i]['tau2_eta'])
         bkg[i] = bkg[i][["m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", "event_weight"]]
 
     bkg[2]["event_weight"] = bkg[2]["event_weight"] * 0.0001
     #print("mjj in QCD: ",bkg[2]["m_jet1jet2"].min(),bkg[2]["m_jet1jet2"].max()) 
     #print("deltaR_tau1tau2 in QCD: ",bkg[2]["deltaR_tau1tau2"].min(),bkg[2]["deltaR_tau1tau2"].max())
 
-	colors = [kBlue, kGreen, kYellow]
-	for i in range(len(bkg)):
-		m_bkg[i].SetFillColor(colors[i])
-		delta_bkg[i].SetFillColor(colors[i])
-		n_bkg[i].SetFillColor(colors[i])
+    colors = [kBlue, kGreen, kYellow]
 
-	m_sig.SetLineColor(kRed)
-	delta_sig.SetLineColor(kRed)
-	n_sig.SetLineColor(kRed)
+    for i in range(len(bkg)):
+        m_bkg[i].SetFillColor(colors[i])
+        delta_bkg[i].SetFillColor(colors[i])
+        n_bkg[i].SetFillColor(colors[i])
 
-	m_sig.SetLineWidth(2)
-	delta_sig.SetLineWidth(2)
-	n_sig.SetLineWidth(2)
+    m_sig.SetLineColor(kRed)
+    delta_sig.SetLineColor(kRed)
+    n_sig.SetLineColor(kRed)
+
+    m_sig.SetLineWidth(2)
+    delta_sig.SetLineWidth(2)
+    n_sig.SetLineWidth(2)
 
         
     for sig__,sig_label in zip(sigs,sig_labels):
         sig = pd.read_csv("csv_files/%s.csv" % sig__)
 
         sig.columns = columns
-		sig["deltaeta_tau1tau2"] = abs(sig['tau1_eta'] - sig['tau2_eta'])
-		sig = sig[["m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", "event_weight"]]
-
+        sig["deltaeta_tau1tau2"] = abs(sig['tau1_eta'] - sig['tau2_eta'])
+        sig = sig[["m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", "event_weight"]]
         # pp = PdfPages('plots/%s_DY_ttbar_QCD_distributions.pdf'%sig__)
         print(sig_label)
         
         
-        for col in sig.columns[:-1]:
-			stack = ROOT.THStack(col, "Stacked Histograms")
+        for col in sig.columns:
+            stack = ROOT.THStack(col, "Stacked Histograms")
             print("Plotting ", col)
-			for i in range(len(bkg)):
-				for entry in bkg[i][col]:
-					if 'm' or 'pt' in col: m_bkg[i].Fill(entry)
-					if 'delta' in col: delta_bkg[i].Fill(entry)
-					if 'n' in col: n_bkg[i].Fill(entry)
+            for i in range(len(bkg)):
+                for entry in bkg[i][col]:
+                    if 'm' or 'pt' in col: m_bkg[i].Fill(entry)
+                    if 'delta' in col: delta_bkg[i].Fill(entry)
+                    if 'n' in col: n_bkg[i].Fill(entry)
 				
-				if 'm' or 'pt' in col: 
-					m_bkg[i].Scale(1./m_bkg[i].Integral())
-					stack.Add(m_bkg[i])
-				if 'delta' in col: 
-					delta_bkg[i].Scale(1./delta_bkg[i].Integral())
-					stack.Add(delta_bkg[i])
-				if 'n' in col: 
-					n_bkg[i].Scale(1./n_bkg[i].Integral())
-					stack.Add(n_bkg[i])
+                if 'm' or 'pt' in col: 
+                    m_bkg[i].Scale(1./m_bkg[i].Integral())
+                    stack.Add(m_bkg[i])
+                if 'delta' in col: 
+                    delta_bkg[i].Scale(1./delta_bkg[i].Integral())
+                    stack.Add(delta_bkg[i])
+                if 'n' in col: 
+                    n_bkg[i].Scale(1./n_bkg[i].Integral())
+                    stack.Add(n_bkg[i])
 
-			for entry in sig[col]:
-				if 'm' or 'pt' in col: m_sig.Fill(entry)
-				if 'delta' in col: delta_sig.Fill(entry)
-				if 'n' in col: n_sig.Fill(entry)
+            for entry in sig[col]:
+                if 'm' or 'pt' in col: m_sig.Fill(entry)
+                if 'delta' in col: delta_sig.Fill(entry)
+                if 'n' in col: n_sig.Fill(entry)
 			
-			if 'm' or 'pt' in col: m_sig.Scale(1./m_sig.Integral())
-			if 'delta' in col: delta_sig.Scale(1./delta_sig.Integral())
-			if 'n' in col: n_sig.Scale(1./n_sig.Integral())
-			
-				
-			c = ROOT.TCanvas("c1", "Stack canvas", 800, 600)
-			stack.Draw("hist")
-			if 'm' or 'pt' in col: m_sig.Draw("hist same")
-			if 'delta' in col: delta_sig.Draw("hist same")
-			if 'n' in col: n_sig.Draw("hist same")
 
-			leg = ROOT.TLegend()
-			for i in range(len(bkg)):
-				if 'm' or 'pt' in col: leg.AddEntry(m_bkg[i], bkg_labels[i])
-				if 'delta' in col: leg.AddEntry(delta_bkg[i], bkg_labels[i])
-				if 'n' in col: leg.AddEntry(n_bkg[i], bkg_labels[i])
+            if 'm' or 'pt' in col: m_sig.Scale(1./m_sig.Integral())
+            if 'delta' in col: delta_sig.Scale(1./delta_sig.Integral())
+            if 'n' in col: n_sig.Scale(1./n_sig.Integral())
 			
-			if 'm' or 'pt' in col: leg.AddEntry(m_sig, sig_label)
-			if 'delta' in col: leg.AddEntry(delta_sig, sig_label)
-			if 'n' in col: leg.AddEntry(n_sig, sig_label)
 
-			leg.Draw()
-			c.Print(sig_label+"_"+col+".png")
-			c.Delete()
+            c = ROOT.TCanvas("c1", "Stack canvas", 800, 600)
+            stack.Draw("hist")
+            if 'm' or 'pt' in col: m_sig.Draw("hist same")
+            if 'delta' in col: delta_sig.Draw("hist same")
+            if 'n' in col: n_sig.Draw("hist same")
 
-			for i in range(len(bkg)):
-				m_bkg[i].Reset()
-				delta_bkg[i].Reset()
-				n_bkg[i].Reset()
+
+            leg = ROOT.TLegend()
+            for i in range(len(bkg)):
+                if 'm' or 'pt' in col: leg.AddEntry(m_bkg[i], bkg_labels[i])
+                if 'delta' in col: leg.AddEntry(delta_bkg[i], bkg_labels[i])
+                if 'n' in col: leg.AddEntry(n_bkg[i], bkg_labels[i])
 			
-			m_sig.Reset()
-			delta_sig.Reset()
-			n_sig.Reset()
+            if 'm' or 'pt' in col: leg.AddEntry(m_sig, sig_label)
+            if 'delta' in col: leg.AddEntry(delta_sig, sig_label)
+            if 'n' in col: leg.AddEntry(n_sig, sig_label)
+
+            leg.Draw()
+            c.Print(sig_label+"_"+col+".png")
+            c.Delete()
+
+            for i in range(len(bkg)):
+                m_bkg[i].Reset()
+                delta_bkg[i].Reset()
+                n_bkg[i].Reset()
+			
+
+            m_sig.Reset()
+            delta_sig.Reset()
+            n_sig.Reset()
 
 
 def plot_pre_postprocessed(train, val, test, train_ws, val_ws, test_ws):
