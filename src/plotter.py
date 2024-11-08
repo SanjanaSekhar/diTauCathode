@@ -60,7 +60,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 
     for i in range(len(bkg)):
 
-		m_bkg[i].SetLineColor(colors[i])
+        m_bkg[i].SetLineColor(colors[i])
         delta_bkg[i].SetLineColor(colors[i])
         n_bkg[i].SetLineColor(colors[i])
 
@@ -105,7 +105,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
                 if 'n' in col: 
                     n_bkg[i].Scale(1./n_bkg[i].Integral())
                     stack.Add(n_bkg[i])
-
+            print("Filled bkg histograms")
             for entry in sig[col]:
                 if 'm' or 'pt' in col: m_sig.Fill(entry)
                 if 'delta' in col: delta_sig.Fill(entry)
@@ -115,10 +115,11 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
             if 'm' or 'pt' in col: m_sig.Scale(1./m_sig.Integral())
             if 'delta' in col: delta_sig.Scale(1./delta_sig.Integral())
             if 'n' in col: n_sig.Scale(1./n_sig.Integral())
-			
+
+            print("Filled sig histogram")
 
             c = ROOT.TCanvas("c1", "Stack canvas", 800, 600)
-			stack.SetTitle("Distribution of "+col)
+            stack.SetTitle("Distribution of "+col)
             stack.Draw("hist")
             if 'm' or 'pt' in col: m_sig.Draw("hist same")
             if 'delta' in col: delta_sig.Draw("hist same")
@@ -137,17 +138,22 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 
             leg.Draw()
             c.Print("plots/"+sig__+"_"+col+".png")
-            
+            print("plotted hists")
 
             for i in range(len(bkg)):
                 m_bkg[i].Reset()
                 delta_bkg[i].Reset()
                 n_bkg[i].Reset()
 			
+            print("reset bkg hists")
 
             m_sig.Reset()
             delta_sig.Reset()
             n_sig.Reset()
+            
+            print("reset sig hists")
+            
+            stack.Delete()
 
 
 def plot_pre_postprocessed(train, val, test, train_ws, val_ws, test_ws):
