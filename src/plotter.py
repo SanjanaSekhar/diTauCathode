@@ -59,6 +59,11 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
     colors = [kBlue, kGreen, kYellow]
 
     for i in range(len(bkg)):
+
+		m_bkg[i].SetLineColor(colors[i])
+        delta_bkg[i].SetLineColor(colors[i])
+        n_bkg[i].SetLineColor(colors[i])
+
         m_bkg[i].SetFillColor(colors[i])
         delta_bkg[i].SetFillColor(colors[i])
         n_bkg[i].SetFillColor(colors[i])
@@ -83,13 +88,13 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
         
         
         for col in sig.columns:
-            stack = ROOT.THStack(col, "Stacked Histograms")
+            stack = ROOT.THStack(col, col)
             print("Plotting ", col)
             for i in range(len(bkg)):
-                for entry in bkg[i][col]:
-                    if 'm' or 'pt' in col: m_bkg[i].Fill(entry)
-                    if 'delta' in col: delta_bkg[i].Fill(entry)
-                    if 'n' in col: n_bkg[i].Fill(entry)
+                for entry,wt in zip(bkg[i][col], bkg[i]["event_weight"]):
+                    if 'm' or 'pt' in col: m_bkg[i].Fill(entry, wt)
+                    if 'delta' in col: delta_bkg[i].Fill(entry, wt)
+                    if 'n' in col: n_bkg[i].Fill(entry, wt)
 				
                 if 'm' or 'pt' in col: 
                     m_bkg[i].Scale(1./m_bkg[i].Integral())
@@ -113,6 +118,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 			
 
             c = ROOT.TCanvas("c1", "Stack canvas", 800, 600)
+			stack.SetTitle("Distribution of "+col)
             stack.Draw("hist")
             if 'm' or 'pt' in col: m_sig.Draw("hist same")
             if 'delta' in col: delta_sig.Draw("hist same")
@@ -130,8 +136,8 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
             if 'n' in col: leg.AddEntry(n_sig, sig_label)
 
             leg.Draw()
-            c.Print(sig_label+"_"+col+".png")
-            c.Delete()
+            c.Print("plots/"+sig__+"_"+col+".png")
+            
 
             for i in range(len(bkg)):
                 m_bkg[i].Reset()
