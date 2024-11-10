@@ -16,10 +16,6 @@ R__LOAD_LIBRARY(libDelphes)
 #include "../../external/ExRootAnalysis/ExRootResult.h"
 #endif
 
-/*
- example running:
- root -l create_dataset.C
- */
 
 class TFile;
 
@@ -33,7 +29,7 @@ void plot_qcd_distributions() {
 	char infile[200], outfile[200];
 	string csv_path = "/uscms/home/ssekhar/nobackup/CATHODE_ditau/Delphes/";
 	string in_path = "root://cmseos.fnal.gov//store/user/tvami/diTauCathode/";
-    string file_n = "SM_QCD_JJ_0J1J2J_MinMass120_LO_1M_Part1";
+    string file_n = "SM_QCD_JJ_0J1J2J_MinMass120_LO_1M";
 	//string file_name = "LQ_nonResScalarLQ-M1000_2J";
 	string file_name = file_n.c_str();
 	sprintf(infile,"%s%s.root",in_path.c_str(),file_name.c_str());
@@ -43,10 +39,14 @@ void plot_qcd_distributions() {
 	fout = fopen(outfile, "w");
 	
 	std::cout << "Sample used is " << file_name.c_str() << std::endl;
-	
+	int n_files = 6;
 
 	TChain chain("Delphes");
-	chain.Add(infile);
+	for(int i = 1; i<=n_files; i++){
+		sprintf(infile,"%s%s_Part%i.root",in_path.c_str(),file_name.c_str(),i);
+		chain.Add(infile);
+	}
+	
 
 	ExRootTreeReader *treeReader = new ExRootTreeReader(&chain);
 	Long64_t numberOfEntries = treeReader->GetEntries();
@@ -67,11 +67,15 @@ void plot_qcd_distributions() {
 	float tau1_ncharged, tau1_nneutrals, tau1_ehadeem, tau2_ncharged, tau2_nneutrals, tau2_ehadeem;
 	float jet1_m, jet1_pt, jet1_eta, jet1_phi, bjet1_m, bjet1_pt, bjet1_eta, bjet1_phi, jet1_ehadeem, bjet1_ehadeem, jet1_cef, jet1_nef, bjet1_cef, bjet1_nef;
 	float jet2_m, jet2_pt, jet2_eta, jet2_phi, bjet2_m, bjet2_pt, bjet2_eta, bjet2_phi, jet2_ehadeem, bjet2_ehadeem, jet2_cef, jet2_nef, bjet2_cef, bjet2_nef;
-	float deltaR_jet1jet2, deltaR_bjet1bjet2, deltaR_tau1tau2;
+	float deltaR_jet1jet2, deltaR_bjet1bjet2, deltaR_tau1tau2, deltaeta_jet1jet2, deltaeta_tau1tau2;
 
 	std::cout << "Running on " << n_frac << " out of " << numberOfEntries << " events" << std::endl;
 	int numTauJet1s = 0, numTauJet2s = 0, numGenTau1s = 0, numGenTau2s = 0, numGenTauJet1s = 0, numGenTauJet2s = 0;
 	int nevents = 0;
+	float sum_weights = 2.49425e+12 * (n_files/6.); 
+	float evt_weight = 0.;
+	float fake_rate = 1e-4;
+	float xsec = 437700; // in pb
 
 	TH1F m_jj("m_jj", "m_jj", 150, 0.0, 1500.0);
 	TH1F m_tautau("m_tautau", "m_tautau", 100, 0.0, 500.0);
@@ -83,13 +87,20 @@ void plot_qcd_distributions() {
 	TH1F pT_tau1("pT_tau1", "pT_tau1", 50, 0.0, 200.0);
 	TH1F pT_tau2("pT_tau2", "pT_tau2", 50, 0.0, 200.0);
 	TH1F pT_tautau("pT_tautau", "pT_tautau", 100, 0.0, 400.0);
-	TH1F dR_jj("dR_jj", "dR_jj", 30, -2, 2);
-	TH1F dR_tautau("dR_tautau", "dR_tautau", 30, -2, 2);
+	TH1F dR_jj("dR_jj", "dR_jj", 30, -5, 5);
+	TH1F dR_tautau("dR_tautau", "dR_tautau", 30, -5, 5);
+	TH1F deta_jj("deta_jj", "deta_jj", 30, 0, 5);
+	TH1F deta_tautau("deta_tautau", "deta_tautau", 30, 0, 5);
     // after dR < 2 cut
 	TH1F m_jj_dRcut("m_jj_dRcut", "m_jj_dRcut", 100, 0.0, 1500.0);
 	TH1F m_tautau_dRcut("m_tautau_dRcut", "m_tautau_dRcut", 70, 0.0, 500.0);
 	TH1F pT_tautau_dRcut("pT_tautau_dRcut", "pT_tautau_dRcut", 70, 0.0, 400.0);
 	TH1F pT_jj_dRcut("pT_jj_dRcut", "pT_jj_dRcut", 70, 0.0, 600.0);
+	// after deta < 2 cut
+	TH1F m_jj_dRcut("m_jj_detacut", "m_jj_detacut", 100, 0.0, 1500.0);
+	TH1F m_tautau_dRcut("m_tautau_detacut", "m_tautau_detacut", 70, 0.0, 500.0);
+	TH1F pT_tautau_dRcut("pT_tautau_detacut", "pT_tautau_detacut", 70, 0.0, 400.0);
+	TH1F pT_jj_dRcut("pT_jj_detacut", "pT_jj_detacut", 70, 0.0, 600.0);
 	
 	float arr_mjj[10000], arr_mtt[10000], arr_ntaus[10000], arr_jet1pt[10000]; int k = 0; 
 
@@ -101,8 +112,11 @@ void plot_qcd_distributions() {
 		
 		}
 		treeReader->ReadEntry(entry);
-		//LHEFEvent *evt0 = (LHEFEvent*) branchEvent->At(0);
-		//printf("%0.30f ",evt0->Weight);
+		HepMCEvent *wt = (HepMCEvent*) branchEvent->At(0);
+		if(!wt) continue;
+		evt_weight = wt->Weight;
+		//if(entry % 100000 == 0) cout << "Event weight =  " << evt_weight;
+		evt_weight *= (xsec * 1000 * lumi)/sum_weights;
 		bool filled = false;
 		bool filledTau1 = false, filledTau2 = false;
 		bool filledJet1 = false, filledJet2 = false;
@@ -117,7 +131,7 @@ void plot_qcd_distributions() {
 		jet2_m = 0., jet2_pt = 0.; bjet2_m = 0., bjet2_pt = 0.;
         jet2_eta = 0., jet2_phi = 0., bjet2_eta = 0., bjet2_phi = 0.,jet2_ehadeem = 0, bjet2_ehadeem = 0.;
         jet2_cef = 0., jet2_nef = 0.,bjet2_cef = 0., bjet2_nef = 0.;
-		deltaR_tau1tau2 = 0.,deltaR_jet1jet2 = 0, m_jet1jet2 = 0, m_tau1tau2 = 0;
+		deltaR_tau1tau2 = 0.,deltaR_jet1jet2 = 0, deltaeta_tau1tau2 = 0.,deltaeta_jet1jet2 = 0, m_jet1jet2 = 0, m_tau1tau2 = 0;
 		TLorentzVector tau1_p4, jet1_p4;
 		
 			
@@ -125,7 +139,7 @@ void plot_qcd_distributions() {
 				Jet *jet = (Jet*) branchJet->At(i);
 				if (!jet) continue;
 				
-				if(!filledJet1){
+				if(!filledJet1 and jet->BTag == 0 and jet->TauTag == 0){
 					jet1_pt = jet->PT;
 					jet1_eta = jet->Eta;
 					jet1_phi = jet->Phi;
@@ -133,23 +147,26 @@ void plot_qcd_distributions() {
 					filledJet1 = true;
 				}
 				else{
-				if(!filledJet2){
+				if(!filledJet2 and jet->BTag == 0 and jet->TauTag == 0){
 					jet2_pt = jet->PT;
 					jet2_eta = jet->Eta;
 					jet2_phi = jet->Phi;
 					m_jet1jet2 = (jet1_p4 + jet->P4()).M();
 					deltaR_jet1jet2 = pow((pow((jet1_eta - jet2_eta),2) +  pow((jet1_phi - jet2_phi),2)),0.5);
+					deltaeta_jet1jet2 = abs(jet1_eta - jet2_eta);
 					pt_jet1jet2 = (jet1_p4 + jet->P4()).Pt();
 					filledJet2 = true;
 				}
-				else n_extra_jets++;
+				else { if (jet->BTag == 0 and jet->TauTag == 0) n_extra_jets++;}
 				}
-				if (jet->BTag == 1) {
+				if (!filledBJet1 and jet->BTag == 1) {
 					n_bjets++;
 					bjet1_pt = jet->PT;
 					bjet1_eta = jet->Eta;
 					bjet1_phi = jet->Phi;
+					filledBJet1 = true;
 				}
+				else {if (jet->BTag == 1) n_bjets++;}
 				if (jet->TauTag == 1) { // not a real tau
 					n_taus++;
 					if(!filledTau1){
@@ -169,6 +186,7 @@ void plot_qcd_distributions() {
 						eta_tau1tau2 = (tau1_p4 + jet->P4()).Eta();	
 						phi_tau1tau2 = (tau1_p4 + jet->P4()).Phi();
 						deltaR_tau1tau2 = pow((pow((tau1_eta - tau2_eta),2) +  pow((tau1_phi - tau2_phi),2)),0.5);
+						deltaeta_tau1tau2 = abs(tau1_eta - tau2_eta);
 						filledTau2 = true;
 					}
 					
@@ -186,27 +204,37 @@ void plot_qcd_distributions() {
 			}
 			*/
 			
-			m_jj.Fill(m_jet1jet2);
-			if(n_taus > 1) m_tautau.Fill(m_tau1tau2);
-			n_ex_jets.Fill(n_extra_jets);
-			n_tauH.Fill(n_taus);
-			dR_jj.Fill(deltaR_jet1jet2);
-			if(n_taus > 1) dR_tautau.Fill(deltaR_tau1tau2);
+			m_jj.Fill(m_jet1jet2, evt_weight);
+			pT_j1.Fill(jet1_pt, evt_weight);
+			pT_j2.Fill(jet2_pt, evt_weight);
+			pT_jj.Fill(pt_jet1jet2, evt_weight);
+			n_ex_jets.Fill(n_extra_jets, evt_weight);
+			n_tauH.Fill(n_taus, evt_weight);
+			dR_jj.Fill(deltaR_jet1jet2, evt_weight);
+			deta_jj.Fill(deltaeta_jet1jet2, evt_weight);
+			if(n_taus > 0) pT_tau1.Fill(tau1_pt, evt_weight);
+			if(n_taus > 1) {
+				dR_tautau.Fill(deltaR_tau1tau2, evt_weight);
+				deta_tautau.Fill(deltaeta_tau1tau2, evt_weight);
+				m_tautau.Fill(m_tau1tau2, evt_weight);
+				pT_tau2.Fill(tau2_pt, evt_weight);
+				pT_tautau.Fill(pt_tau1tau2, evt_weight);
+			}
 			
-			pT_j1.Fill(jet1_pt);
-			pT_j2.Fill(jet2_pt);
-			pT_jj.Fill(pt_jet1jet2);
-
-			if(n_taus > 0) pT_tau1.Fill(tau1_pt);
-			if(n_taus > 1) pT_tau2.Fill(tau2_pt);
-			if(n_taus > 1) pT_tautau.Fill(pt_tau1tau2);
-
+			
 			if(deltaR_tau1tau2 < 2.){
-				m_jj_dRcut.Fill(m_jet1jet2);
-				pT_jj_dRcut.Fill(pt_jet1jet2);
+				m_jj_dRcut.Fill(m_jet1jet2, evt_weight);
+				pT_jj_dRcut.Fill(pt_jet1jet2, evt_weight);
 				if(n_taus > 1){
-				m_tautau_dRcut.Fill(m_tau1tau2);
-				pT_tautau_dRcut.Fill(pt_tau1tau2);
+				m_tautau_dRcut.Fill(m_tau1tau2, evt_weight);
+				pT_tautau_dRcut.Fill(pt_tau1tau2, evt_weight);
+			}}
+			if(deltaeta_tau1tau2 < 2.){
+				m_jj_detacut.Fill(m_jet1jet2, evt_weight);
+				pT_jj_detacut.Fill(pt_jet1jet2, evt_weight);
+				if(n_taus > 1){
+				m_tautau_detacut.Fill(m_tau1tau2, evt_weight);
+				pT_tautau_detacut.Fill(pt_tau1tau2, evt_weight);
 			}}
 
 			
@@ -219,7 +247,9 @@ void plot_qcd_distributions() {
 		n_ex_jets.Write();
 		n_tauH.Write();
 		dR_jj.Write();
+		deta_jj.Write();
 		dR_tautau.Write();
+		deta_tautau.Write();
 		pT_j1.Write();
 		pT_j2.Write();
 		pT_tau1.Write();
@@ -230,6 +260,10 @@ void plot_qcd_distributions() {
 		pT_jj_dRcut.Write();
 		m_tautau_dRcut.Write();
 		pT_tautau_dRcut.Write();
+		m_jj_detacut.Write();
+		pT_jj_detacut.Write();
+		m_tautau_detacut.Write();
+		pT_tautau_detacut.Write();
 
 		outputFile.Close();
 		/*

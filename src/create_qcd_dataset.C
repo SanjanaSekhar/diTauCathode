@@ -15,11 +15,6 @@ R__LOAD_LIBRARY(libDelphes)
 #include "../../external/ExRootAnalysis/ExRootResult.h"
 #endif
 
-/*
- example running:
- root -l create_dataset.C
- */
-
 class TFile;
 
 int create_qcd_dataset() {
@@ -78,6 +73,7 @@ int create_qcd_dataset() {
 	int nevents = 0, neg_mjj = 0;
 	float sum_weights = 2.49425e+12; 
 	float evt_weight = 0.;
+	float fake_rate = 1e-4;
         //numberOfEntries = 30000;
         /*
 	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
@@ -106,7 +102,7 @@ int create_qcd_dataset() {
 		if(!wt) continue;
 		evt_weight = wt->Weight;
 		//if(entry % 100000 == 0) cout << "Event weight =  " << evt_weight;
-		evt_weight *= (xsec * 1000 * lumi)/sum_weights;
+		evt_weight *= (xsec * 1000 * lumi * fake_rate)/sum_weights;
 		//if(entry % 100000 == 0) cout << " after scaling =  " << evt_weight << endl;
 
 		bool filled = false;
@@ -124,13 +120,15 @@ int create_qcd_dataset() {
         jet2_cef = 0., jet2_nef = 0.,bjet2_cef = 0., bjet2_nef = 0.;
 		TLorentzVector jet1_p4, bjet1_p4, tau1_p4;
 			
-			// set aside 2 highest pT jets assuming they are hadronic taus
+			// set aside 2 highest pT jets that are not btagged assuming they are hadronic taus
 			// use the remaining jets to check for jets and bjets
 			for (int i = 0; i < branchJet->GetEntries(); i++){
 				 Jet *jet = (Jet*) branchJet->At(i);
 				 if (!jet) continue;
-				 n_jets_all ++;
-				if (n_jets_all > 2 and jet->BTag == 1) n_bjets++;
+				
+				if (jet->BTag == 1) n_bjets++;
+				else n_jets_all ++; 
+
 				if (n_jets_all > 2 and jet->BTag == 0) n_jets++;
 				}
 			
@@ -141,7 +139,7 @@ int create_qcd_dataset() {
 					Jet *jet = (Jet*) branchJet->At(i);
 					MissingET *met = (MissingET*) branchMET->At(0);
 				if (!jet) continue;
-				if(n_bjets > 0 and !filledTau2){
+				if(n_bjets > 0){
 					if (jet->BTag == 1){
 						if(!filledBjet1){
 							bjet1_m = (jet->P4()).M();
@@ -156,7 +154,7 @@ int create_qcd_dataset() {
 						}
 						else{
 							
-							if(filledBjet1 and n_bjets > 1){
+							if(!filledBjet2){
 								bjet2_m = (jet->P4()).M();
 								bjet2_pt = jet->PT;
 								bjet2_eta = jet->Eta;
@@ -184,7 +182,7 @@ int create_qcd_dataset() {
 							if(n_jets > 1) jet1_p4 = jet->P4();
 						}
 						else{
-							if(filledJet1 and n_jets > 1){
+							if(!filledJet2){
 								jet2_m = (jet->P4()).M();
 								jet2_pt = jet->PT;
 								jet2_eta = jet->Eta;
@@ -200,7 +198,7 @@ int create_qcd_dataset() {
 					}		
 				}
 			
-				if(!filledTau1){
+				if(!filledTau1 and jet->BTag == 0){
 					tau1_pt = jet->PT;
 					tau1_eta = jet->Eta;
 					tau1_phi = jet->Phi;
@@ -216,7 +214,7 @@ int create_qcd_dataset() {
 					filledTau1 = true;
 				}
 				else{
-					if(!filledTau2){
+					if(!filledTau2 and jet->BTag == 0){
 					m_tau1tau2 = (tau1_p4 + jet->P4()).M();
 					pt_tau1tau2 = (tau1_p4 + jet->P4()).Pt();
 					eta_tau1tau2 = (tau1_p4 + jet->P4()).Eta();	
@@ -236,7 +234,7 @@ int create_qcd_dataset() {
 			}			
 		
 			if(filledTau2) {
-				float deltaR_jet1jet2, deltaR_bjet1bjet2, deltaR_tau1tau2;
+				float deltaR_jet1jet2, deltaR_bjet1bjet2, deltaR_tau1tau2, deltaeta_tau1tau2;
 
 				
 				//printf("n_jets = %i,jet1_pt = %.2f, jet1_eta = %.2f, jet1_phi = %.2f, n_bjets = %i, bjet1_pt = %.2f, bjet1_eta = %.2f, bjet1_phi = %.2f\n",n_jets,jet1_pt, jet1_eta, jet1_phi,bjet1_pt, bjet1_eta, bjet1_phi, n_bjets);
@@ -247,7 +245,7 @@ int create_qcd_dataset() {
 
 
 				deltaR_tau1tau2 = pow((pow((tau1_eta - tau2_eta),2) +  pow((tau1_phi - tau2_phi),2)),0.5);
-				//printf("tau1_eta, tau1_phi, tau2_eta, tau2_phi, deltaR_tau1tau2 : %f %f %f %f %f\n", tau1_eta, tau1_phi, tau2_eta, tau2_phi, deltaR_tau1tau2);
+				deltaeta_tau1tau2 = abs(tau1_eta - tau2_eta);
 				deltaR_jet1jet2 = pow((pow((jet1_eta - jet2_eta),2) +  pow((jet1_phi - jet2_phi),2)),0.5);
 				deltaR_bjet1bjet2 = pow((pow((bjet1_eta - bjet2_eta),2) +  pow((bjet1_phi - bjet2_phi),2)),0.5);
 
@@ -264,8 +262,8 @@ int create_qcd_dataset() {
                                 }
 				// if(m_tau1tau2 >= 120){
 					nevents++;
-					fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f, %f,%i\n", 
-					m_jet1jet2, deltaR_jet1jet2, m_bjet1bjet2, deltaR_bjet1bjet2, deltaR_tau1tau2,
+					fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f, %f,%i\n", 
+					m_jet1jet2, deltaR_jet1jet2, m_bjet1bjet2, deltaR_bjet1bjet2, deltaR_tau1tau2, deltaeta_tau1tau2,
 					tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, 
 					tau2_m, m_tau1tau2, pt_tau1tau2, eta_tau1tau2, phi_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
 					jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, 

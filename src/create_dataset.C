@@ -147,11 +147,11 @@ int create_dataset(string file_n, int label) {
 							bjet1_nef = jet->NeutralEnergyFraction;
 							bjet1_cef = jet->ChargedEnergyFraction;
 							filledBjet1 = true;
-							if(n_bjets==2) bjet1_p4 = jet->P4();
+							if(n_bjets > 1) bjet1_p4 = jet->P4();
 						}
 						else{
 							
-							if(filledBjet1 and n_bjets > 1){
+							if(!filledBjet2){
 								bjet2_m = (jet->P4()).M();
 								bjet2_pt = jet->PT;
 								bjet2_eta = jet->Eta;
@@ -176,10 +176,10 @@ int create_dataset(string file_n, int label) {
 							jet1_nef = jet->NeutralEnergyFraction;
 							jet1_cef = jet->ChargedEnergyFraction;
 							filledJet1 = true;
-							if(n_jets>1) jet1_p4 = jet->P4();
+							if(n_jets > 1) jet1_p4 = jet->P4();
 						}
 						else{
-							if(filledJet1 and n_jets > 1){
+							if(!filledJet2){
 								jet2_m = (jet->P4()).M();
 								jet2_pt = jet->PT;
 								jet2_eta = jet->Eta;
@@ -237,7 +237,7 @@ int create_dataset(string file_n, int label) {
 			}
 		
 			if(filledTau) {
-				float deltaR_jet1jet2, deltaR_bjet1bjet2, deltaR_tau1tau2;
+				float deltaR_jet1jet2, deltaR_bjet1bjet2, deltaR_tau1tau2, deltaeta_tau1tau2;
 
 				
 				//printf("n_jets = %i,jet1_pt = %.2f, jet1_eta = %.2f, jet1_phi = %.2f, n_bjets = %i, bjet1_pt = %.2f, bjet1_eta = %.2f, bjet1_phi = %.2f\n",n_jets,jet1_pt, jet1_eta, jet1_phi,bjet1_pt, bjet1_eta, bjet1_phi, n_bjets);
@@ -263,6 +263,7 @@ int create_dataset(string file_n, int label) {
 
                                 }
 				deltaR_tau1tau2 = pow((pow((tau1_eta - tau2_eta),2) +  pow((tau1_phi - tau2_phi),2)),0.5);
+				deltaeta_tau1tau2 = abs(tau1_eta - tau2_eta);
 				deltaR_jet1jet2 = pow((pow((jet1_eta - jet2_eta),2) +  pow((jet1_phi - jet2_phi),2)),0.5);
 				deltaR_bjet1bjet2 = pow((pow((bjet1_eta - bjet2_eta),2) +  pow((bjet1_phi - bjet2_phi),2)),0.5);
 
@@ -270,8 +271,8 @@ int create_dataset(string file_n, int label) {
 
 				//if(m_tau1tau2 >= 120){
 					nevents++;
-					fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i\n", 
-					m_jet1jet2, deltaR_jet1jet2, m_bjet1bjet2, deltaR_bjet1bjet2, deltaR_tau1tau2,
+					fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i\n", 
+					m_jet1jet2, deltaR_jet1jet2, m_bjet1bjet2, deltaR_bjet1bjet2, deltaR_tau1tau2, deltaeta_tau1tau2,
 					tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, 
 					tau2_m, m_tau1tau2, pt_tau1tau2, eta_tau1tau2, phi_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
 					jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, 
