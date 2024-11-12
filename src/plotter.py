@@ -52,7 +52,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
         #bkg[i]["deltaeta_tau1tau2"] = abs(bkg[i]['tau1_eta'] - bkg[i]['tau2_eta'])
         bkg[i] = bkg[i][["m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", "event_weight"]]
 
-    bkg[2]["event_weight"] = bkg[2]["event_weight"] * 0.0001
+    #bkg[2]["event_weight"] = bkg[2]["event_weight"] * 0.0001
     #print("mjj in QCD: ",bkg[2]["m_jet1jet2"].min(),bkg[2]["m_jet1jet2"].max()) 
     #print("deltaR_tau1tau2 in QCD: ",bkg[2]["deltaR_tau1tau2"].min(),bkg[2]["deltaR_tau1tau2"].max())
 
@@ -100,24 +100,24 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
                     if 'n' in col: n_bkg[i].Fill(entry, wt)
 				
                 if 'm' or 'pt' in col: 
-                    for i in range(m_bkg[i].GetNbinsX()):
-                        binc = m_bkg[i].GetBinContent()
-                        width = m_bkg[i].GetBinWidth()
-                        m_bkg[i].SetBinContent(i,binc/width)
+                    for j in range(m_bkg[i].GetNbinsX()):
+                        binc = m_bkg[i].GetBinContent(j)
+                        width = m_bkg[i].GetBinWidth(j)
+                        m_bkg[i].SetBinContent(j,binc/width)
                     #m_bkg[i].Scale(1./m_bkg[i].Integral())
                     stack.Add(m_bkg[i])
                 if 'delta' in col: 
-                    for i in range(delta_bkg[i].GetNbinsX()):
-                        binc = delta_bkg[i].GetBinContent()
-                        width = delta_bkg[i].GetBinWidth()
-                        delta_bkg[i].SetBinContent(i,binc/width)
+                    for j in range(delta_bkg[i].GetNbinsX()):
+                        binc = delta_bkg[i].GetBinContent(j)
+                        width = delta_bkg[i].GetBinWidth(j)
+                        delta_bkg[i].SetBinContent(j,binc/width)
                     #delta_bkg[i].Scale(1./delta_bkg[i].Integral())
                     stack_delta.Add(delta_bkg[i])
                 if 'n' in col: 
-                    for i in range(n_bkg[i].GetNbinsX()):
-                        binc = n_bkg[i].GetBinContent()
-                        width = n_bkg[i].GetBinWidth()
-                        n_bkg[i].SetBinContent(i,binc/width)
+                    for j in range(n_bkg[i].GetNbinsX()):
+                        binc = n_bkg[i].GetBinContent(j)
+                        width = n_bkg[i].GetBinWidth(j)
+                        n_bkg[i].SetBinContent(j,binc/width)
                     #n_bkg[i].Scale(1./n_bkg[i].Integral())
                     stack_n.Add(n_bkg[i])
             print("Filled bkg histograms")
@@ -126,10 +126,10 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
                 if 'delta' in col: delta_sig.Fill(entry)
                 if 'n' in col: n_sig.Fill(entry)
 			
-            for i in range(m_sig.GetNbinsX()):
-                binc = m_sig.GetBinContent()
-                width = m_sig.GetBinWidth()
-                m_sig.SetBinContent(i,binc/width)
+            for j in range(m_sig.GetNbinsX()):
+                binc = m_sig.GetBinContent(j)
+                width = m_sig.GetBinWidth(j)
+                m_sig.SetBinContent(j,binc/width)
             print("Filled sig histogram")
 
             c = ROOT.TCanvas(col, col, 800, 600)
