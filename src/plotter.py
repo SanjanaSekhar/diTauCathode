@@ -191,7 +191,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 				leg_n.Draw()
 
 			if idx==0: c.Print("plots/"+sig__+".pdf(")
-			elif idx==len(sig.columns-2): c.Print("plots/"+sig__+".pdf)")
+			elif idx==len(sig.columns)-2: c.Print("plots/"+sig__+".pdf)")
 			else: c.Print("plots/"+sig__+".pdf")
 			
 
