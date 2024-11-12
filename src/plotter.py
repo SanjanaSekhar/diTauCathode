@@ -76,15 +76,15 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
     delta_sig.SetLineWidth(2)
     n_sig.SetLineWidth(2)
 
-    scale = 50 # scale signal
+    scale = 100 # scale signal
 
     for sig__,sig_label in zip(sigs,sig_labels):
         sig = pd.read_csv("csv_files/%s.csv" % sig__)
 
         sig.columns = columns
         #sig["deltaeta_tau1tau2"] = abs(sig['tau1_eta'] - sig['tau2_eta'])
-        sig = sig[["m_jet1jet2", #"m_tau1tau2", "pt_tau1tau2", "met_met", 
-                #"deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", 
+        sig = sig[["m_jet1jet2", "m_tau1tau2", #"pt_tau1tau2", "met_met", 
+                "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", 
                 "event_weight"]]
         print(sig_label)
         
@@ -121,7 +121,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
                         n_bkg[i].SetBinContent(j,binc/width)
                     #n_bkg[i].Scale(1./n_bkg[i].Integral())
                     stack_n.Add(n_bkg[i])
-            print("Filled bkg histograms")
+            #print("Filled bkg histograms")
             for entry in sig[col]:
                 if 'm' or 'pt' in col: m_sig.Fill(entry, scale)
                 if 'delta' in col: delta_sig.Fill(entry, scale)
@@ -131,7 +131,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
                 binc = m_sig.GetBinContent(j)
                 width = m_sig.GetBinWidth(j)
                 m_sig.SetBinContent(j,binc/width)
-            print("Filled sig histogram")
+            #print("Filled sig histogram")
 
             c = ROOT.TCanvas(col, col, 800, 600)
             
@@ -148,7 +148,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
                 stack_n.Draw("hist")
                 n_sig.Draw("hist same")
 
-            leg = ROOT.TLegend()
+            leg = ROOT.TLegend(0.8,0.8,1,1)
             for i in range(len(bkg)):
                 if 'm' or 'pt' in col: leg.AddEntry(m_bkg[i], bkg_labels[i])
                 if 'delta' in col: leg.AddEntry(delta_bkg[i], bkg_labels[i])
@@ -160,14 +160,14 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 
             leg.Draw()
             c.Print("plots/"+sig__+"_"+col+"_tautagged.png")
-            print("plotted hists")
+            #print("plotted hists")
 
             for i in range(len(bkg)):
                 m_bkg[i].Reset()
                 delta_bkg[i].Reset()
                 n_bkg[i].Reset()
 			
-            print("reset bkg hists")
+            #print("reset bkg hists")
 
             m_sig.Reset()
             delta_sig.Reset()
