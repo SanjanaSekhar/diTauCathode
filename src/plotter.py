@@ -76,7 +76,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 	delta_sig.SetLineWidth(2)
 	n_sig.SetLineWidth(2)
 
-	scale = 10 # scale signal
+	scale = 50 # scale signal
 
 	for sig__,sig_label in zip(sigs,sig_labels):
 		sig = pd.read_csv("csv_files/%s.csv" % sig__)
@@ -87,9 +87,8 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 				"deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", 
 				"event_weight"]]
 		print(sig_label)
-		
-		
-		for col in sig.columns[:-1]:
+        c = ROOT.TCanvas(col, col, 900, 700)
+        for col in sig.columns[:-1]:
 			if 'm' or 'pt' in col: stack = ROOT.THStack(col, col)
 			if 'delta' in col: stack_delta = ROOT.THStack(col, col)
 			if 'n' in col: stack_n = ROOT.THStack(col, col)
@@ -133,7 +132,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 				m_sig.SetBinContent(j,binc/width)
 			#print("Filled sig histogram")
 
-			c = ROOT.TCanvas(col, col, 900, 700)
+			#c = ROOT.TCanvas(col, col, 900, 700)
 			
 			if 'm' or 'pt' in col: 
 				stack.SetTitle("Distribution of "+col)
@@ -164,12 +163,12 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 				leg_delta.AddEntry(delta_sig, str(scale)+" * "+sig_label)
 				leg_delta.Draw()
 			if 'n' in col: 
-				leg_n.AddEntry(n_sig, "100 * "+sig_label)
+				leg_n.AddEntry(n_sig, str(scale)+" * "+sig_label)
 				leg_n.Draw()
 
 
 			
-			c.Print("plots/"+sig__+"_"+col+".png")
+			#c.Print("plots/"+sig__+"_"+col+".png")
 			#print("plotted hists")
 
 			for i in range(len(bkg)):
@@ -194,6 +193,8 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 			if 'n' in col: 
 				stack_n.Delete()
 				leg_n.Delete()
+
+        c.Print("plots/"+sig__+".pdf")
 			
 
 def plot_pre_postprocessed(train, val, test, train_ws, val_ws, test_ws):
