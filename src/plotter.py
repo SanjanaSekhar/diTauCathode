@@ -20,7 +20,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 	# tau2_m, m_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
 	# jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, isSig
 
-    m_sig = ROOT.TH1F("m_sig", "m_sig", 80, 0.0, 1000.0)
+    m_sig = ROOT.TH1F("m_sig", "m_sig", 20, 0.0, 100.0)
     delta_sig = ROOT.TH1F("delta_sig","delta_sig",20, 0, 5)
     n_sig = ROOT.TH1F("n_sig","n_sig", 10,0,10)
     m_bkg, delta_bkg, n_bkg = [],[],[]
@@ -76,14 +76,14 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
     delta_sig.SetLineWidth(2)
     n_sig.SetLineWidth(2)
 
-    scale = 10 # scale signal
+    scale = 50 # scale signal
 
     for sig__,sig_label in zip(sigs,sig_labels):
         sig = pd.read_csv("csv_files/%s.csv" % sig__)
 
         sig.columns = columns
         #sig["deltaeta_tau1tau2"] = abs(sig['tau1_eta'] - sig['tau2_eta'])
-        sig = sig[["m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", 
+        sig = sig[["m_jet1jet2", #"m_tau1tau2", "pt_tau1tau2", "met_met", 
                 #"deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", 
                 "event_weight"]]
         print(sig_label)
