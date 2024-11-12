@@ -83,7 +83,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
         sig.columns = columns
         #sig["deltaeta_tau1tau2"] = abs(sig['tau1_eta'] - sig['tau2_eta'])
         sig = sig[["m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", 
-                "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", 
+                #"deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", 
                 "event_weight"]]
         print(sig_label)
         
@@ -122,9 +122,9 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
                     stack_n.Add(n_bkg[i])
             print("Filled bkg histograms")
             for entry in sig[col]:
-                if 'm' or 'pt' in col: m_sig.Fill(entry)
-                if 'delta' in col: delta_sig.Fill(entry)
-                if 'n' in col: n_sig.Fill(entry)
+                if 'm' or 'pt' in col: m_sig.Fill(entry, 10)
+                if 'delta' in col: delta_sig.Fill(entry, 10)
+                if 'n' in col: n_sig.Fill(entry, 10)
 			
             for j in range(m_sig.GetNbinsX()):
                 binc = m_sig.GetBinContent(j)
@@ -349,7 +349,7 @@ sig_list = ["2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag",
 
 bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M_TauTag", "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M", "SM_dyToTauTau_0J1J2J_MinMass120_3M"]
 sig_names = ["250 GeV heavy Higgs (VBF)", "250 GeV scalar from T'", "250 GeV HNL", "250 GeV VAL"]
-bkg_names = ["DY + 0/1/2 jets", "ttbar + 0/1/2 jets", "QCD multijet (tautagged)"]
+bkg_names = ["QCD multijet (tautagged)", "ttbar + 0/1/2 jets", "DY + 0/1/2 jets"]
 '''
 bkg = []
 
