@@ -20,9 +20,9 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 	# tau2_m, m_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
 	# jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, isSig
 
-    m_sig = ROOT.TH1F("m_sig", "m_sig", 150, 0.0, 1000.0)
-    delta_sig = ROOT.TH1F("delta_sig","delta_sig",30, -5, 5)
-    n_sig = ROOT.TH1F("n_sig","n_sig", 20,0,20)
+    m_sig = ROOT.TH1F("m_sig", "m_sig", 120, 0.0, 800.0)
+    delta_sig = ROOT.TH1F("delta_sig","delta_sig",20, 0, 5)
+    n_sig = ROOT.TH1F("n_sig","n_sig", 10,0,10)
     m_bkg, delta_bkg, n_bkg = [],[],[]
     m_sig.Sumw2()
     delta_sig.Sumw2()
@@ -81,11 +81,10 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
         sig = pd.read_csv("csv_files/%s.csv" % sig__)
 
         sig.columns = columns
-        sig["deltaeta_tau1tau2"] = abs(sig['tau1_eta'] - sig['tau2_eta'])
+        #sig["deltaeta_tau1tau2"] = abs(sig['tau1_eta'] - sig['tau2_eta'])
         sig = sig[["m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", 
                 "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", 
                 "event_weight"]]
-        # pp = PdfPages('plots/%s_DY_ttbar_QCD_distributions.pdf'%sig__)
         print(sig_label)
         
         
@@ -101,12 +100,24 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
                     if 'n' in col: n_bkg[i].Fill(entry, wt)
 				
                 if 'm' or 'pt' in col: 
+                    for i in range(m_bkg[i].GetNbinsX()):
+                        binc = m_bkg[i].GetBinContent()
+                        width = m_bkg[i].GetBinWidth()
+                        m_bkg[i].SetBinContent(i,binc/width)
                     #m_bkg[i].Scale(1./m_bkg[i].Integral())
                     stack.Add(m_bkg[i])
                 if 'delta' in col: 
+                    for i in range(delta_bkg[i].GetNbinsX()):
+                        binc = delta_bkg[i].GetBinContent()
+                        width = delta_bkg[i].GetBinWidth()
+                        delta_bkg[i].SetBinContent(i,binc/width)
                     #delta_bkg[i].Scale(1./delta_bkg[i].Integral())
                     stack_delta.Add(delta_bkg[i])
                 if 'n' in col: 
+                    for i in range(n_bkg[i].GetNbinsX()):
+                        binc = n_bkg[i].GetBinContent()
+                        width = n_bkg[i].GetBinWidth()
+                        n_bkg[i].SetBinContent(i,binc/width)
                     #n_bkg[i].Scale(1./n_bkg[i].Integral())
                     stack_n.Add(n_bkg[i])
             print("Filled bkg histograms")
@@ -115,11 +126,10 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
                 if 'delta' in col: delta_sig.Fill(entry)
                 if 'n' in col: n_sig.Fill(entry)
 			
-            '''
-            if 'm' or 'pt' in col: m_sig.Scale(1./m_sig.Integral())
-            if 'delta' in col: delta_sig.Scale(1./delta_sig.Integral())
-            if 'n' in col: n_sig.Scale(1./n_sig.Integral())
-            '''
+            for i in range(m_sig.GetNbinsX()):
+                binc = m_sig.GetBinContent()
+                width = m_sig.GetBinWidth()
+                m_sig.SetBinContent(i,binc/width)
             print("Filled sig histogram")
 
             c = ROOT.TCanvas(col, col, 800, 600)
