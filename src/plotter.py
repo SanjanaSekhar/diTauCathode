@@ -20,246 +20,262 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 	# tau2_m, m_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
 	# jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, isSig
 
-    m_sig = ROOT.TH1F("m_sig", "m_sig", 80, 0.0, 600.0)
-    delta_sig = ROOT.TH1F("delta_sig","delta_sig",20, 0, 5)
-    n_sig = ROOT.TH1F("n_sig","n_sig", 10,0,10)
-    m_bkg, delta_bkg, n_bkg = [],[],[]
-    m_sig.Sumw2()
-    delta_sig.Sumw2()
-    n_sig.Sumw2()
-    
-    for i in range(len(bkgs)):
-        m_bkg.append(m_sig.Clone("m_bkg%i" %i))
-        delta_bkg.append(delta_sig.Clone("delta_bkg%i" %i))
-        n_bkg.append(n_sig.Clone("n_bkg%i" %i))
-        m_bkg[i].Sumw2()
-        delta_bkg[i].Sumw2()
-        n_bkg[i].Sumw2()
-    
-    columns = ["m_jet1jet2", "deltaR_jet1jet2", "m_bjet1bjet2", "deltaR_bjet1bjet2", "deltaR_tau1tau2","deltaeta_tau1tau2","tau1_pt", "tau1_eta", "tau1_phi", 
-                "tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m","m_tau1tau2", "pt_tau1tau2", "eta_tau1tau2", "phi_tau1tau2",
-                "met_met", "met_eta", "met_phi", "n_jets", "n_bjets","jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", 
-                "bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef","jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", 
-                "bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef", "event_weight","label"]
-    
-    bkg = []
-    for b in bkgs:
-        bkg.append(pd.read_csv("csv_files/%s.csv" % b))
+	m_sig = ROOT.TH1F("m_sig", "m_sig", 80, 0.0, 600.0)
+	delta_sig = ROOT.TH1F("delta_sig","delta_sig",20, 0, 5)
+	n_sig = ROOT.TH1F("n_sig","n_sig", 10,0,10)
+	m_bkg, delta_bkg, n_bkg = [],[],[]
+	m_sig.Sumw2()
+	delta_sig.Sumw2()
+	n_sig.Sumw2()
+	
+	for i in range(len(bkgs)):
+		m_bkg.append(m_sig.Clone("m_bkg%i" %i))
+		delta_bkg.append(delta_sig.Clone("delta_bkg%i" %i))
+		n_bkg.append(n_sig.Clone("n_bkg%i" %i))
+		m_bkg[i].Sumw2()
+		delta_bkg[i].Sumw2()
+		n_bkg[i].Sumw2()
+	
+	columns = ["m_jet1jet2", "deltaR_jet1jet2", "m_bjet1bjet2", "deltaR_bjet1bjet2", "deltaR_tau1tau2","deltaeta_tau1tau2","tau1_pt", "tau1_eta", "tau1_phi", 
+				"tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m","m_tau1tau2", "pt_tau1tau2", "eta_tau1tau2", "phi_tau1tau2",
+				"met_met", "met_eta", "met_phi", "n_jets", "n_bjets","jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", 
+				"bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef","jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", 
+				"bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef", "event_weight","label"]
+	
+	bkg = []
+	for b in bkgs:
+		bkg.append(pd.read_csv("csv_files/%s.csv" % b))
 
 
-    for i in range(len(bkg)):
-        bkg[i].columns = columns
-        #bkg[i]["deltaeta_tau1tau2"] = abs(bkg[i]['tau1_eta'] - bkg[i]['tau2_eta'])
-        bkg[i] = bkg[i][["m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", "event_weight"]]
+	for i in range(len(bkg)):
+		bkg[i].columns = columns
+		#bkg[i]["deltaeta_tau1tau2"] = abs(bkg[i]['tau1_eta'] - bkg[i]['tau2_eta'])
+		bkg[i] = bkg[i][["m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", "event_weight"]]
 
-    #bkg[0]["event_weight"] = bkg[0]["event_weight"] * 0.0001
-    #print("mjj in QCD: ",bkg[2]["m_jet1jet2"].min(),bkg[2]["m_jet1jet2"].max()) 
-    #print("deltaR_tau1tau2 in QCD: ",bkg[2]["deltaR_tau1tau2"].min(),bkg[2]["deltaR_tau1tau2"].max())
+	#bkg[0]["event_weight"] = bkg[0]["event_weight"] * 0.0001
+	#print("mjj in QCD: ",bkg[2]["m_jet1jet2"].min(),bkg[2]["m_jet1jet2"].max()) 
+	#print("deltaR_tau1tau2 in QCD: ",bkg[2]["deltaR_tau1tau2"].min(),bkg[2]["deltaR_tau1tau2"].max())
 
-    colors = [kTeal-5, kBlue-7, kPink+6]
+	colors = [kTeal-5, kBlue-7, kPink+6]
 
-    for i in range(len(bkg)):
+	for i in range(len(bkg)):
 
-        m_bkg[i].SetLineColor(colors[i])
-        delta_bkg[i].SetLineColor(colors[i])
-        n_bkg[i].SetLineColor(colors[i])
+		m_bkg[i].SetLineColor(colors[i])
+		delta_bkg[i].SetLineColor(colors[i])
+		n_bkg[i].SetLineColor(colors[i])
 
-        m_bkg[i].SetFillColor(colors[i])
-        delta_bkg[i].SetFillColor(colors[i])
-        n_bkg[i].SetFillColor(colors[i])
+		m_bkg[i].SetFillColor(colors[i])
+		delta_bkg[i].SetFillColor(colors[i])
+		n_bkg[i].SetFillColor(colors[i])
 
-    m_sig.SetLineColor(kRed)
-    delta_sig.SetLineColor(kRed)
-    n_sig.SetLineColor(kRed)
+	m_sig.SetLineColor(kRed)
+	delta_sig.SetLineColor(kRed)
+	n_sig.SetLineColor(kRed)
 
-    m_sig.SetLineWidth(2)
-    delta_sig.SetLineWidth(2)
-    n_sig.SetLineWidth(2)
+	m_sig.SetLineWidth(2)
+	delta_sig.SetLineWidth(2)
+	n_sig.SetLineWidth(2)
 
-    scale = 1000 # scale signal
+	scale = 1000 # scale signal
 
-    for sig__,sig_label in zip(sigs,sig_labels):
-        sig = pd.read_csv("csv_files/%s.csv" % sig__)
+	for sig__,sig_label in zip(sigs,sig_labels):
+		sig = pd.read_csv("csv_files/%s.csv" % sig__)
 
-        sig.columns = columns
-        #sig["deltaeta_tau1tau2"] = abs(sig['tau1_eta'] - sig['tau2_eta'])
-        sig = sig[["m_jet1jet2", "m_tau1tau2", #"pt_tau1tau2", "met_met", 
-                "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", 
-                "event_weight"]]
-        print(sig_label)
-        
-        
-        for col in sig.columns[:-1]:
-            if 'm' or 'pt' in col: stack = ROOT.THStack(col, col)
-            if 'delta' in col: stack_delta = ROOT.THStack(col, col)
-            if 'n' in col: stack_n = ROOT.THStack(col, col)
-            print("Plotting ", col)
-            for i in range(len(bkg)):
-                for entry,wt in zip(bkg[i][col], bkg[i]["event_weight"]):
-                    if 'm' or 'pt' in col: m_bkg[i].Fill(entry, wt)
-                    if 'delta' in col: delta_bkg[i].Fill(entry, wt)
-                    if 'n' in col: n_bkg[i].Fill(entry, wt)
+		sig.columns = columns
+		#sig["deltaeta_tau1tau2"] = abs(sig['tau1_eta'] - sig['tau2_eta'])
+		sig = sig[["m_jet1jet2", "m_tau1tau2", #"pt_tau1tau2", "met_met", 
+				"deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", 
+				"event_weight"]]
+		print(sig_label)
+		
+		
+		for col in sig.columns[:-1]:
+			if 'm' or 'pt' in col: stack = ROOT.THStack(col, col)
+			if 'delta' in col: stack_delta = ROOT.THStack(col, col)
+			if 'n' in col: stack_n = ROOT.THStack(col, col)
+			print("Plotting ", col)
+			for i in range(len(bkg)):
+				for entry,wt in zip(bkg[i][col], bkg[i]["event_weight"]):
+					if 'm' or 'pt' in col: m_bkg[i].Fill(entry, wt)
+					if 'delta' in col: delta_bkg[i].Fill(entry, wt)
+					if 'n' in col: n_bkg[i].Fill(entry, wt)
 				
-                if 'm' or 'pt' in col: 
-                    for j in range(m_bkg[i].GetNbinsX()):
-                        binc = m_bkg[i].GetBinContent(j)
-                        width = m_bkg[i].GetBinWidth(j)
-                        m_bkg[i].SetBinContent(j,binc/width)
-                    #m_bkg[i].Scale(1./m_bkg[i].Integral())
-                    stack.Add(m_bkg[i])
-                if 'delta' in col: 
-                    for j in range(delta_bkg[i].GetNbinsX()):
-                        binc = delta_bkg[i].GetBinContent(j)
-                        width = delta_bkg[i].GetBinWidth(j)
-                        delta_bkg[i].SetBinContent(j,binc/width)
-                    #delta_bkg[i].Scale(1./delta_bkg[i].Integral())
-                    stack_delta.Add(delta_bkg[i])
-                if 'n' in col: 
-                    for j in range(n_bkg[i].GetNbinsX()):
-                        binc = n_bkg[i].GetBinContent(j)
-                        width = n_bkg[i].GetBinWidth(j)
-                        n_bkg[i].SetBinContent(j,binc/width)
-                    #n_bkg[i].Scale(1./n_bkg[i].Integral())
-                    stack_n.Add(n_bkg[i])
-            #print("Filled bkg histograms")
-            for entry in sig[col]:
-                if 'm' or 'pt' in col: m_sig.Fill(entry, scale)
-                if 'delta' in col: delta_sig.Fill(entry, scale)
-                if 'n' in col: n_sig.Fill(entry, scale)
+				if 'm' or 'pt' in col: 
+					for j in range(m_bkg[i].GetNbinsX()):
+						binc = m_bkg[i].GetBinContent(j)
+						width = m_bkg[i].GetBinWidth(j)
+						m_bkg[i].SetBinContent(j,binc/width)
+					#m_bkg[i].Scale(1./m_bkg[i].Integral())
+					stack.Add(m_bkg[i])
+				if 'delta' in col: 
+					for j in range(delta_bkg[i].GetNbinsX()):
+						binc = delta_bkg[i].GetBinContent(j)
+						width = delta_bkg[i].GetBinWidth(j)
+						delta_bkg[i].SetBinContent(j,binc/width)
+					#delta_bkg[i].Scale(1./delta_bkg[i].Integral())
+					stack_delta.Add(delta_bkg[i])
+				if 'n' in col: 
+					for j in range(n_bkg[i].GetNbinsX()):
+						binc = n_bkg[i].GetBinContent(j)
+						width = n_bkg[i].GetBinWidth(j)
+						n_bkg[i].SetBinContent(j,binc/width)
+					#n_bkg[i].Scale(1./n_bkg[i].Integral())
+					stack_n.Add(n_bkg[i])
+			#print("Filled bkg histograms")
+			for entry in sig[col]:
+				if 'm' or 'pt' in col: m_sig.Fill(entry, scale)
+				if 'delta' in col: delta_sig.Fill(entry, scale)
+				if 'n' in col: n_sig.Fill(entry, scale)
 			
-            for j in range(m_sig.GetNbinsX()):
-                binc = m_sig.GetBinContent(j)
-                width = m_sig.GetBinWidth(j)
-                m_sig.SetBinContent(j,binc/width)
-            #print("Filled sig histogram")
+			for j in range(m_sig.GetNbinsX()):
+				binc = m_sig.GetBinContent(j)
+				width = m_sig.GetBinWidth(j)
+				m_sig.SetBinContent(j,binc/width)
+			#print("Filled sig histogram")
 
-            c = ROOT.TCanvas(col, col, 900, 700)
-            
-            if 'm' or 'pt' in col: 
-                stack.SetTitle("Distribution of "+col)
-                stack.Draw("hist")
-                m_sig.Draw("hist same")
-            if 'delta' in col: 
-                stack_delta.SetTitle("Distribution of "+col)
-                stack_delta.Draw("hist")
-                delta_sig.Draw("hist same")
-            if 'n' in col:
-                stack_n.SetTitle("Distribution of "+col)
-                stack_n.Draw("hist")
-                n_sig.Draw("hist same")
-
-            leg = ROOT.TLegend(0.7,0.7,1,1)
-            for i in range(len(bkg)):
-                if 'm' or 'pt' in col: leg.AddEntry(m_bkg[i], bkg_labels[i])
-                if 'delta' in col: leg.AddEntry(delta_bkg[i], bkg_labels[i])
-                if 'n' in col: leg.AddEntry(n_bkg[i], bkg_labels[i])
+			c = ROOT.TCanvas(col, col, 900, 700)
 			
-            if 'm' or 'pt' in col: leg.AddEntry(m_sig, str(scale)+" * "+sig_label)
-            if 'delta' in col: leg.AddEntry(delta_sig, str(scale)+" * "+sig_label)
-            if 'n' in col: leg.AddEntry(n_sig, "100 * "+sig_label)
+			if 'm' or 'pt' in col: 
+				stack.SetTitle("Distribution of "+col)
+				stack.Draw("hist")
+				m_sig.Draw("hist same")
+				leg_m = ROOT.TLegend(0.7,0.7,1,1)
+			if 'delta' in col: 
+				stack_delta.SetTitle("Distribution of "+col)
+				stack_delta.Draw("hist")
+				delta_sig.Draw("hist same")
+				leg_delta = ROOT.TLegend(0.7,0.7,1,1)
+			if 'n' in col:
+				stack_n.SetTitle("Distribution of "+col)
+				stack_n.Draw("hist")
+				n_sig.Draw("hist same")
+				leg_n = ROOT.TLegend(0.7,0.7,1,1)
 
-            leg.Draw()
-            c.Print("plots/"+sig__+"_"+col+"_tautagged.png")
-            #print("plotted hists")
-
-            for i in range(len(bkg)):
-                m_bkg[i].Reset()
-                delta_bkg[i].Reset()
-                n_bkg[i].Reset()
 			
-            #print("reset bkg hists")
+			for i in range(len(bkg)):
+				if 'm' or 'pt' in col: leg_m.AddEntry(m_bkg[i], bkg_labels[i])
+				if 'delta' in col: leg_delta.AddEntry(delta_bkg[i], bkg_labels[i])
+				if 'n' in col: leg_n.AddEntry(n_bkg[i], bkg_labels[i])
+			
+			if 'm' or 'pt' in col: 
+				leg_m.AddEntry(m_sig, str(scale)+" * "+sig_label)
+				leg_m.Draw()
+			if 'delta' in col: 
+				leg_delta.AddEntry(delta_sig, str(scale)+" * "+sig_label)
+				leg_delta.Draw()
+			if 'n' in col: 
+				leg_n.AddEntry(n_sig, "100 * "+sig_label)
+				leg_n.Draw()
 
-            m_sig.Reset()
-            delta_sig.Reset()
-            n_sig.Reset()
-            
-            #print("reset sig hists")
-            
-            if 'm' or 'pt' in col: stack.Delete()
-            if 'delta' in col: stack_delta.Delete()
-            if 'n' in col: stack_n.Delete()
-            leg.Clear()
+
+			
+			c.Print("plots/"+sig__+"_"+col+"_tautagged.png")
+			#print("plotted hists")
+
+			for i in range(len(bkg)):
+				m_bkg[i].Reset()
+				delta_bkg[i].Reset()
+				n_bkg[i].Reset()
+			
+			#print("reset bkg hists")
+
+			m_sig.Reset()
+			delta_sig.Reset()
+			n_sig.Reset()
+			
+			#print("reset sig hists")
+			
+			if 'm' or 'pt' in col: 
+				stack.Delete()
+				leg_m.Delete()
+			if 'delta' in col: 
+				stack_delta.Delete()
+				leg_delta.Delete()
+			if 'n' in col: 
+				stack_n.Delete()
+				leg_n.Delete()
+			
 
 def plot_pre_postprocessed(train, val, test, train_ws, val_ws, test_ws):
 
 
-        # plot data vs bkg for pre and post proc
-        data_pre = train_ws[train_ws[:,2]==1]
-        bkg_pre =  train_ws[train_ws[:,2]==0]
-        sig_pre = train[train[:,2]==1]
-        bkg_fs_pre = train[train[:,2]==0]
+		# plot data vs bkg for pre and post proc
+		data_pre = train_ws[train_ws[:,2]==1]
+		bkg_pre =  train_ws[train_ws[:,2]==0]
+		sig_pre = train[train[:,2]==1]
+		bkg_fs_pre = train[train[:,2]==0]
 
-        train, val, test = preprocess(train, val, test)
-        train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
+		train, val, test = preprocess(train, val, test)
+		train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
 
-        data = train_ws[train_ws[:,2]==1]
-        bkg =  train_ws[train_ws[:,2]==0]
-        sig = train[train[:,2]==1]
-        bkg_fs = train[train[:,2]==0]
-        
-        print("m_jj in data post proc (IAD):", data[:,0]) 
-        print("Plotting %s pre and post processing: m_jj"%name)
-        plt.hist(data_pre[:,0],label="Data before preprocessing",histtype='step')
-        plt.hist(bkg_pre[:,0],label="Bkg before preprocessing",histtype='step')
-        #plt.hist(data[:,0],label="Data after preprocessing",histtype='step')
-        #plt.hist(bkg[:,0],label="Bkg after preprocessing",histtype='step')
-        plt.xlim(0,4000)
-        plt.xlabel("m_jj")
-        plt.title("Distributions for IAD for %s"%name)
-        plt.legend()
-        plt.savefig("%s_m_jj_pre.png"%name)
-        plt.close()
+		data = train_ws[train_ws[:,2]==1]
+		bkg =  train_ws[train_ws[:,2]==0]
+		sig = train[train[:,2]==1]
+		bkg_fs = train[train[:,2]==0]
+		
+		print("m_jj in data post proc (IAD):", data[:,0]) 
+		print("Plotting %s pre and post processing: m_jj"%name)
+		plt.hist(data_pre[:,0],label="Data before preprocessing",histtype='step')
+		plt.hist(bkg_pre[:,0],label="Bkg before preprocessing",histtype='step')
+		#plt.hist(data[:,0],label="Data after preprocessing",histtype='step')
+		#plt.hist(bkg[:,0],label="Bkg after preprocessing",histtype='step')
+		plt.xlim(0,4000)
+		plt.xlabel("m_jj")
+		plt.title("Distributions for IAD for %s"%name)
+		plt.legend()
+		plt.savefig("%s_m_jj_pre.png"%name)
+		plt.close()
 
-        plt.hist(data[:,0],label="Data after preprocessing",histtype='step')
-        plt.hist(bkg[:,0],label="Bkg after preprocessing",histtype='step')
-        plt.xlabel("m_jj")
-        plt.title("Distributions for IAD for %s"%name)
-        plt.legend()
-        plt.savefig("%s_m_jj_post.png"%name)
-        plt.close()
+		plt.hist(data[:,0],label="Data after preprocessing",histtype='step')
+		plt.hist(bkg[:,0],label="Bkg after preprocessing",histtype='step')
+		plt.xlabel("m_jj")
+		plt.title("Distributions for IAD for %s"%name)
+		plt.legend()
+		plt.savefig("%s_m_jj_post.png"%name)
+		plt.close()
 
-        print("Plotting %s pre and post processing: deltaR_jj"%name)
-        plt.hist(data[:,1],label="Data after preprocessing",histtype='step')
-        plt.hist(bkg[:,1],label="Bkg after preprocessing",histtype='step')
-        plt.hist(data_pre[:,1],label="Data before preprocessing",histtype='step')
-        plt.hist(bkg_pre[:,1],label="Bkg before preprocessing",histtype='step')
-        plt.xlabel("deltaR_jj")
-        plt.title("Distributions for IAD for %s"%name)
-        plt.legend()
-        plt.savefig("%s_deltaR_jj_pre_post.png"%name)
-        plt.close()
-        
-        print("m_jj in sig post proc (FS):", sig[:,0])
-        print("Plotting %s pre and post processing (FS): m_jj"%name)
-        plt.hist(sig_pre[:,0],label="Signal before preprocessing",histtype='step')
-        plt.hist(bkg_fs_pre[:,0],label="Bkg before preprocessing",histtype='step')
-        #plt.hist(sig[:,0],label="Signal after preprocessing",histtype='step')
-        #plt.hist(bkg_fs[:,0],label="Bkg after preprocessing",histtype='step')
-        plt.xlim(0,4000)
-        plt.xlabel("m_jj")
-        plt.title("Distributions for FS for %s"%name)
-        plt.legend()
-        plt.savefig("%s_fs_m_jj_pre.png"%name)
-        plt.close()
+		print("Plotting %s pre and post processing: deltaR_jj"%name)
+		plt.hist(data[:,1],label="Data after preprocessing",histtype='step')
+		plt.hist(bkg[:,1],label="Bkg after preprocessing",histtype='step')
+		plt.hist(data_pre[:,1],label="Data before preprocessing",histtype='step')
+		plt.hist(bkg_pre[:,1],label="Bkg before preprocessing",histtype='step')
+		plt.xlabel("deltaR_jj")
+		plt.title("Distributions for IAD for %s"%name)
+		plt.legend()
+		plt.savefig("%s_deltaR_jj_pre_post.png"%name)
+		plt.close()
+		
+		print("m_jj in sig post proc (FS):", sig[:,0])
+		print("Plotting %s pre and post processing (FS): m_jj"%name)
+		plt.hist(sig_pre[:,0],label="Signal before preprocessing",histtype='step')
+		plt.hist(bkg_fs_pre[:,0],label="Bkg before preprocessing",histtype='step')
+		#plt.hist(sig[:,0],label="Signal after preprocessing",histtype='step')
+		#plt.hist(bkg_fs[:,0],label="Bkg after preprocessing",histtype='step')
+		plt.xlim(0,4000)
+		plt.xlabel("m_jj")
+		plt.title("Distributions for FS for %s"%name)
+		plt.legend()
+		plt.savefig("%s_fs_m_jj_pre.png"%name)
+		plt.close()
 
-        plt.hist(sig[:,0],label="Signal after preprocessing",histtype='step')
-        plt.hist(bkg_fs[:,0],label="Bkg after preprocessing",histtype='step')
-        plt.xlabel("m_jj")
-        plt.title("Distributions for FS for %s"%name)
-        plt.legend()
-        plt.savefig("%s_fs_m_jj_post.png"%name)
-        plt.close()
-        
-        print("Plotting %s pre and post processing (FS): deltaR_jj"%name)
-        plt.hist(sig[:,1],label="Signal after preprocessing",histtype='step')
-        plt.hist(bkg_fs[:,1],label="Bkg after preprocessing",histtype='step')
-        plt.hist(sig_pre[:,1],label="Signal before preprocessing",histtype='step')
-        plt.hist(bkg_fs_pre[:,1],label="Bkg before preprocessing",histtype='step')
-        plt.xlabel("deltaR_jj")
-        plt.title("Distributions for FS for %s"%name)
-        plt.legend()
-        plt.savefig("%s_fs_deltaR_jj_pre_post.png"%name)
-        plt.close()
+		plt.hist(sig[:,0],label="Signal after preprocessing",histtype='step')
+		plt.hist(bkg_fs[:,0],label="Bkg after preprocessing",histtype='step')
+		plt.xlabel("m_jj")
+		plt.title("Distributions for FS for %s"%name)
+		plt.legend()
+		plt.savefig("%s_fs_m_jj_post.png"%name)
+		plt.close()
+		
+		print("Plotting %s pre and post processing (FS): deltaR_jj"%name)
+		plt.hist(sig[:,1],label="Signal after preprocessing",histtype='step')
+		plt.hist(bkg_fs[:,1],label="Bkg after preprocessing",histtype='step')
+		plt.hist(sig_pre[:,1],label="Signal before preprocessing",histtype='step')
+		plt.hist(bkg_fs_pre[:,1],label="Bkg before preprocessing",histtype='step')
+		plt.xlabel("deltaR_jj")
+		plt.title("Distributions for FS for %s"%name)
+		plt.legend()
+		plt.savefig("%s_fs_deltaR_jj_pre_post.png"%name)
+		plt.close()
 
 
 def plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title):
@@ -344,9 +360,9 @@ def plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title):
 	plt.close()
 
 sig_list = ["2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag",
-            "eVLQ_TPrimeTPrimeToTTPhiPhiToTauTauAll_TpM1000_PhiM250_NoMisTag",
-            "HeavyN_vbsNToTauTau_NM250_2J_LO", 
-            "VAL_dyVfVfToXiCXiCToTauSTauS_XiM1000_VfM250_MinMass120_NoMisTag"]
+			"eVLQ_TPrimeTPrimeToTTPhiPhiToTauTauAll_TpM1000_PhiM250_NoMisTag",
+			"HeavyN_vbsNToTauTau_NM250_2J_LO", 
+			"VAL_dyVfVfToXiCXiCToTauSTauS_XiM1000_VfM250_MinMass120_NoMisTag"]
 
 bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M_TauTag", "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M", "SM_dyToTauTau_0J1J2J_MinMass120_3M"]
 sig_names = ["250 GeV heavy Higgs (VBF)", "250 GeV scalar from T'", "250 GeV HNL", "250 GeV VAL"]
