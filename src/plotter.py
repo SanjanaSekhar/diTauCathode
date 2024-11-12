@@ -133,7 +133,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
                 m_sig.SetBinContent(j,binc/width)
             #print("Filled sig histogram")
 
-            c = ROOT.TCanvas(col, col, 800, 600)
+            c = ROOT.TCanvas(col, col, 900, 700)
             
             if 'm' or 'pt' in col: 
                 stack.SetTitle("Distribution of "+col)
@@ -148,7 +148,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
                 stack_n.Draw("hist")
                 n_sig.Draw("hist same")
 
-            leg = ROOT.TLegend(0.8,0.8,1,1)
+            leg = ROOT.TLegend(0.7,0.7,1,1)
             for i in range(len(bkg)):
                 if 'm' or 'pt' in col: leg.AddEntry(m_bkg[i], bkg_labels[i])
                 if 'delta' in col: leg.AddEntry(delta_bkg[i], bkg_labels[i])
@@ -173,12 +173,12 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
             delta_sig.Reset()
             n_sig.Reset()
             
-            print("reset sig hists")
+            #print("reset sig hists")
             
             if 'm' or 'pt' in col: stack.Delete()
             if 'delta' in col: stack_delta.Delete()
             if 'n' in col: stack_n.Delete()
-            leg.Delete()
+            leg.Clear()
 
 def plot_pre_postprocessed(train, val, test, train_ws, val_ws, test_ws):
 
