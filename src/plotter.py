@@ -83,7 +83,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 
 		sig.columns = columns
 		#sig["deltaeta_tau1tau2"] = abs(sig['tau1_eta'] - sig['tau2_eta'])
-		sig = sig[["m_jet1jet2", "m_tau1tau2", #"pt_tau1tau2", "met_met", 
+		sig = sig[["m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", 
 				"deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", 
 				"event_weight"]]
 		print(sig_label)
@@ -93,7 +93,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 			if 'm' or 'pt' in col: stack = ROOT.THStack(col, col)
 			if 'delta' in col: stack_delta = ROOT.THStack(col, col)
 			if 'n' in col: stack_n = ROOT.THStack(col, col)
-			print("Plotting ", col)
+			#print("Plotting ", col)
 			for i in range(len(bkg)):
 				for entry,wt in zip(bkg[i][col], bkg[i]["event_weight"]):
 					if 'm' or 'pt' in col: m_bkg[i].Fill(entry, wt)
