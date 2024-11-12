@@ -52,7 +52,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
         #bkg[i]["deltaeta_tau1tau2"] = abs(bkg[i]['tau1_eta'] - bkg[i]['tau2_eta'])
         bkg[i] = bkg[i][["m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", "event_weight"]]
 
-    bkg[2]["event_weight"] = bkg[2]["event_weight"] * 0.0001
+    #bkg[2]["event_weight"] = bkg[2]["event_weight"] * 0.0001
     #print("mjj in QCD: ",bkg[2]["m_jet1jet2"].min(),bkg[2]["m_jet1jet2"].max()) 
     #print("deltaR_tau1tau2 in QCD: ",bkg[2]["deltaR_tau1tau2"].min(),bkg[2]["deltaR_tau1tau2"].max())
 
@@ -83,14 +83,16 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
         sig.columns = columns
         sig["deltaeta_tau1tau2"] = abs(sig['tau1_eta'] - sig['tau2_eta'])
         sig = sig[["m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", 
-                #"deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", 
+                "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", 
                 "event_weight"]]
         # pp = PdfPages('plots/%s_DY_ttbar_QCD_distributions.pdf'%sig__)
         print(sig_label)
         
         
         for col in sig.columns[:-1]:
-            stack = ROOT.THStack(col, col)
+            if 'm' or 'pt' in col: stack = ROOT.THStack(col, col)
+            if 'delta' in col: stack_delta = ROOT.THStack(col, col)
+            if 'n' in col: stack_n = ROOT.THStack(col, col)
             print("Plotting ", col)
             for i in range(len(bkg)):
                 for entry,wt in zip(bkg[i][col], bkg[i]["event_weight"]):
@@ -103,10 +105,10 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
                     stack.Add(m_bkg[i])
                 if 'delta' in col: 
                     #delta_bkg[i].Scale(1./delta_bkg[i].Integral())
-                    stack.Add(delta_bkg[i])
+                    stack_delta.Add(delta_bkg[i])
                 if 'n' in col: 
                     #n_bkg[i].Scale(1./n_bkg[i].Integral())
-                    stack.Add(n_bkg[i])
+                    stack_n.Add(n_bkg[i])
             print("Filled bkg histograms")
             for entry in sig[col]:
                 if 'm' or 'pt' in col: m_sig.Fill(entry)
@@ -120,13 +122,20 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
             '''
             print("Filled sig histogram")
 
-            c = ROOT.TCanvas("c1", "Stack canvas", 800, 600)
-            stack.SetTitle("Distribution of "+col)
-            stack.Draw("hist")
-            if 'm' or 'pt' in col: m_sig.Draw("hist same")
-            if 'delta' in col: delta_sig.Draw("hist same")
-            if 'n' in col: n_sig.Draw("hist same")
-
+            c = ROOT.TCanvas(col, col, 800, 600)
+            
+            if 'm' or 'pt' in col: 
+                stack.SetTitle("Distribution of "+col)
+                stack.Draw("hist")
+                m_sig.Draw("hist same")
+            if 'delta' in col: 
+                stack_delta.SetTitle("Distribution of "+col)
+                stack_delta.Draw("hist")
+                delta_sig.Draw("hist same")
+            if 'n' in col:
+                stack_n.SetTitle("Distribution of "+col)
+                stack_n.Draw("hist")
+                n_sig.Draw("hist same")
 
             leg = ROOT.TLegend()
             for i in range(len(bkg)):
@@ -155,7 +164,9 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
             
             print("reset sig hists")
             
-            stack.Delete()
+            if 'm' or 'pt' in col: stack.Delete()
+            if 'delta' in col: stack_delta.Delete()
+            if 'n' in col: stack_n.Delete()
 
 
 def plot_pre_postprocessed(train, val, test, train_ws, val_ws, test_ws):
