@@ -87,7 +87,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 				"deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", 
 				"event_weight"]]
 		print(sig_label)
-		c = ROOT.TCanvas(col, col, 900, 700)
+		c = ROOT.TCanvas(sig__, sig__, 900, 700)
 		for col in sig.columns[:-1]:
 			if 'm' or 'pt' in col: stack = ROOT.THStack(col, col)
 			if 'delta' in col: stack_delta = ROOT.THStack(col, col)
