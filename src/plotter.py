@@ -20,8 +20,8 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 	# tau2_m, m_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
 	# jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, isSig
 
-	m_sig = ROOT.TH1F("m_sig", "m_sig", 80, 0.0, 600.0)
-	delta_sig = ROOT.TH1F("delta_sig","delta_sig",20, 0, 5)
+	m_sig = ROOT.TH1F("m_sig", "m_sig", 80, 0.0, 800.0)
+	delta_sig = ROOT.TH1F("delta_sig","delta_sig",20, 0, 7)
 	n_sig = ROOT.TH1F("n_sig","n_sig", 10,0,10)
 	m_bkg, delta_bkg, n_bkg = [],[],[]
 	m_sig.Sumw2()
@@ -139,17 +139,17 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 				stack.SetTitle("Distribution of "+col)
 				stack.Draw("hist")
 				m_sig.Draw("hist same")
-				leg_m = ROOT.TLegend(0.7,0.7,1,1)
+				leg_m = ROOT.TLegend(0.7,0.7,0.9,0.9)
 			if 'delta' in col: 
 				stack_delta.SetTitle("Distribution of "+col)
 				stack_delta.Draw("hist")
 				delta_sig.Draw("hist same")
-				leg_delta = ROOT.TLegend(0.7,0.7,1,1)
+				leg_delta = ROOT.TLegend(0.7,0.7,0.9,0.9)
 			if 'n' in col:
 				stack_n.SetTitle("Distribution of "+col)
 				stack_n.Draw("hist")
 				n_sig.Draw("hist same")
-				leg_n = ROOT.TLegend(0.7,0.7,1,1)
+				leg_n = ROOT.TLegend(0.7,0.7,0.9,0.9)
 
 			
 			for i in range(len(bkg)):
