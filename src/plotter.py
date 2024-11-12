@@ -52,7 +52,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
         #bkg[i]["deltaeta_tau1tau2"] = abs(bkg[i]['tau1_eta'] - bkg[i]['tau2_eta'])
         bkg[i] = bkg[i][["m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", "event_weight"]]
 
-    bkg[0]["event_weight"] = bkg[0]["event_weight"] * 0.0001
+    #bkg[0]["event_weight"] = bkg[0]["event_weight"] * 0.0001
     #print("mjj in QCD: ",bkg[2]["m_jet1jet2"].min(),bkg[2]["m_jet1jet2"].max()) 
     #print("deltaR_tau1tau2 in QCD: ",bkg[2]["deltaR_tau1tau2"].min(),bkg[2]["deltaR_tau1tau2"].max())
 
@@ -76,7 +76,8 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
     delta_sig.SetLineWidth(2)
     n_sig.SetLineWidth(2)
 
-        
+    scale = 10 # scale signal
+
     for sig__,sig_label in zip(sigs,sig_labels):
         sig = pd.read_csv("csv_files/%s.csv" % sig__)
 
@@ -122,9 +123,9 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
                     stack_n.Add(n_bkg[i])
             print("Filled bkg histograms")
             for entry in sig[col]:
-                if 'm' or 'pt' in col: m_sig.Fill(entry, 1e2)
-                if 'delta' in col: delta_sig.Fill(entry, 1e2)
-                if 'n' in col: n_sig.Fill(entry, 1e2)
+                if 'm' or 'pt' in col: m_sig.Fill(entry, scale)
+                if 'delta' in col: delta_sig.Fill(entry, scale)
+                if 'n' in col: n_sig.Fill(entry, scale)
 			
             for j in range(m_sig.GetNbinsX()):
                 binc = m_sig.GetBinContent(j)
@@ -153,8 +154,8 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
                 if 'delta' in col: leg.AddEntry(delta_bkg[i], bkg_labels[i])
                 if 'n' in col: leg.AddEntry(n_bkg[i], bkg_labels[i])
 			
-            if 'm' or 'pt' in col: leg.AddEntry(m_sig, "100 * "+sig_label)
-            if 'delta' in col: leg.AddEntry(delta_sig, "100 * "+sig_label)
+            if 'm' or 'pt' in col: leg.AddEntry(m_sig, str(scale)+" * "+sig_label)
+            if 'delta' in col: leg.AddEntry(delta_sig, str(scale)+" * "+sig_label)
             if 'n' in col: leg.AddEntry(n_sig, "100 * "+sig_label)
 
             leg.Draw()
