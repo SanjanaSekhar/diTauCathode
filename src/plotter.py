@@ -190,8 +190,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 				leg_n.AddEntry(n_sig, str(scale)+" * "+sig_label)
 				leg_n.Draw()
 
-			
-		c.Print("plots/"+sig__+".pdf")
+			c.Print("plots/"+sig__+".pdf")
 			
 
 def plot_pre_postprocessed(train, val, test, train_ws, val_ws, test_ws):
