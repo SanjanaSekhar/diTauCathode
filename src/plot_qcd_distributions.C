@@ -32,14 +32,14 @@ void plot_qcd_distributions() {
     string file_n = "SM_QCD_JJ_0J1J2J_MinMass120_LO_1M";
 	//string file_name = "LQ_nonResScalarLQ-M1000_2J";
 	string file_name = file_n.c_str();
-	sprintf(infile,"%s%s.root",in_path.c_str(),file_name.c_str());
-	TFile * fin = TFile::Open(infile);
+	//sprintf(infile,"%s%s.root",in_path.c_str(),file_name.c_str());
+	//TFile * fin = TFile::Open(infile);
 	FILE *fout;
 	sprintf(outfile,"%s/diTauCathode/csv_files/%s.csv",csv_path.c_str(),file_name.c_str());
 	fout = fopen(outfile, "w");
 	
 	std::cout << "Sample used is " << file_name.c_str() << std::endl;
-	int n_files = 6;
+	int n_files = 2;
 
 	TChain chain("Delphes");
 	for(int i = 1; i<=n_files; i++){
@@ -76,6 +76,7 @@ void plot_qcd_distributions() {
 	float evt_weight = 0.;
 	float fake_rate = 1e-4;
 	float xsec = 437700; // in pb
+	float lumi = 138.;
 
 	TH1F m_jj("m_jj", "m_jj", 150, 0.0, 1500.0);
 	TH1F m_tautau("m_tautau", "m_tautau", 100, 0.0, 500.0);
@@ -97,10 +98,10 @@ void plot_qcd_distributions() {
 	TH1F pT_tautau_dRcut("pT_tautau_dRcut", "pT_tautau_dRcut", 70, 0.0, 400.0);
 	TH1F pT_jj_dRcut("pT_jj_dRcut", "pT_jj_dRcut", 70, 0.0, 600.0);
 	// after deta < 2 cut
-	TH1F m_jj_dRcut("m_jj_detacut", "m_jj_detacut", 100, 0.0, 1500.0);
-	TH1F m_tautau_dRcut("m_tautau_detacut", "m_tautau_detacut", 70, 0.0, 500.0);
-	TH1F pT_tautau_dRcut("pT_tautau_detacut", "pT_tautau_detacut", 70, 0.0, 400.0);
-	TH1F pT_jj_dRcut("pT_jj_detacut", "pT_jj_detacut", 70, 0.0, 600.0);
+	TH1F m_jj_detacut("m_jj_detacut", "m_jj_detacut", 100, 0.0, 1500.0);
+	TH1F m_tautau_detacut("m_tautau_detacut", "m_tautau_detacut", 70, 0.0, 500.0);
+	TH1F pT_tautau_detacut("pT_tautau_detacut", "pT_tautau_detacut", 70, 0.0, 400.0);
+	TH1F pT_jj_detacut("pT_jj_detacut", "pT_jj_detacut", 70, 0.0, 600.0);
 	
 	float arr_mjj[10000], arr_mtt[10000], arr_ntaus[10000], arr_jet1pt[10000]; int k = 0; 
 
@@ -159,12 +160,12 @@ void plot_qcd_distributions() {
 				}
 				else { if (jet->BTag == 0 and jet->TauTag == 0) n_extra_jets++;}
 				}
-				if (!filledBJet1 and jet->BTag == 1) {
+				if (!filledBjet1 and jet->BTag == 1) {
 					n_bjets++;
 					bjet1_pt = jet->PT;
 					bjet1_eta = jet->Eta;
 					bjet1_phi = jet->Phi;
-					filledBJet1 = true;
+					filledBjet1 = true;
 				}
 				else {if (jet->BTag == 1) n_bjets++;}
 				if (jet->TauTag == 1) { // not a real tau

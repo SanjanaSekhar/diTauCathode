@@ -36,7 +36,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
         delta_bkg[i].Sumw2()
         n_bkg[i].Sumw2()
     
-    columns = ["m_jet1jet2", "deltaR_jet1jet2", "m_bjet1bjet2", "deltaR_bjet1bjet2", "deltaR_tau1tau2","tau1_pt", "tau1_eta", "tau1_phi", 
+    columns = ["m_jet1jet2", "deltaR_jet1jet2", "m_bjet1bjet2", "deltaR_bjet1bjet2", "deltaR_tau1tau2","deltaeta_tau1tau2","tau1_pt", "tau1_eta", "tau1_phi", 
                 "tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m","m_tau1tau2", "pt_tau1tau2", "eta_tau1tau2", "phi_tau1tau2",
                 "met_met", "met_eta", "met_phi", "n_jets", "n_bjets","jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", 
                 "bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef","jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", 
@@ -49,7 +49,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 
     for i in range(len(bkg)):
         bkg[i].columns = columns
-        bkg[i]["deltaeta_tau1tau2"] = abs(bkg[i]['tau1_eta'] - bkg[i]['tau2_eta'])
+        #bkg[i]["deltaeta_tau1tau2"] = abs(bkg[i]['tau1_eta'] - bkg[i]['tau2_eta'])
         bkg[i] = bkg[i][["m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", "event_weight"]]
 
     bkg[2]["event_weight"] = bkg[2]["event_weight"] * 0.0001
@@ -82,8 +82,8 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 
         sig.columns = columns
         sig["deltaeta_tau1tau2"] = abs(sig['tau1_eta'] - sig['tau2_eta'])
-        sig = sig[[#"m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", 
-                "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", 
+        sig = sig[["m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", 
+                #"deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", 
                 "event_weight"]]
         # pp = PdfPages('plots/%s_DY_ttbar_QCD_distributions.pdf'%sig__)
         print(sig_label)
@@ -139,7 +139,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
             if 'n' in col: leg.AddEntry(n_sig, sig_label)
 
             leg.Draw()
-            c.Print("plots/"+sig__+"_"+col+".png")
+            c.Print("plots/"+sig__+"_"+col+"_tautagged.png")
             print("plotted hists")
 
             for i in range(len(bkg)):
@@ -326,9 +326,9 @@ sig_list = ["2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag",
             "HeavyN_vbsNToTauTau_NM250_2J_LO", 
             "VAL_dyVfVfToXiCXiCToTauSTauS_XiM1000_VfM250_MinMass120_NoMisTag"]
 
-bkg_list = ["SM_dyToTauTau_0J1J2J_MinMass120_3M", "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M", "SM_QCD_JJ_0J1J2J_MinMass120_LO_6M"]
+bkg_list = ["SM_dyToTauTau_0J1J2J_MinMass120_3M", "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M", "SM_QCD_JJ_0J1J2J_MinMass120_LO_6M_TauTag"]
 sig_names = ["250 GeV heavy Higgs (VBF)", "250 GeV scalar from T'", "250 GeV HNL", "250 GeV VAL"]
-bkg_names = ["DY + 0/1/2 jets", "ttbar + 0/1/2 jets", "QCD multijet"]
+bkg_names = ["DY + 0/1/2 jets", "ttbar + 0/1/2 jets", "QCD multijet (tautagged)"]
 '''
 bkg = []
 
