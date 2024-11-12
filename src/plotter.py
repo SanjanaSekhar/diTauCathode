@@ -87,6 +87,30 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 				"deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", 
 				"event_weight"]]
 		print(sig_label)
+
+		for i in range(len(bkg)):
+			m_bkg[i].Reset()
+			delta_bkg[i].Reset()
+			n_bkg[i].Reset()
+			
+			#print("reset bkg hists")
+
+		m_sig.Reset()
+		delta_sig.Reset()
+		n_sig.Reset()
+			
+			#print("reset sig hists")
+			
+		# if 'm' or 'pt' in col: 
+		# 	stack.Delete()
+		# 	leg_m.Delete()
+		# if 'delta' in col: 
+		# 	stack_delta.Delete()
+		# 	leg_delta.Delete()
+		# if 'n' in col: 
+		# 	stack_n.Delete()
+		# 	leg_n.Delete()
+
 		c = ROOT.TCanvas(sig__, sig__, 900, 700)
 		for col in sig.columns[:-1]:
 			if 'm' or 'pt' in col: stack = ROOT.THStack(col, col)
@@ -166,34 +190,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 				leg_n.AddEntry(n_sig, str(scale)+" * "+sig_label)
 				leg_n.Draw()
 
-
 			
-			#c.Print("plots/"+sig__+"_"+col+".png")
-			#print("plotted hists")
-
-			for i in range(len(bkg)):
-				m_bkg[i].Reset()
-				delta_bkg[i].Reset()
-				n_bkg[i].Reset()
-			
-			#print("reset bkg hists")
-
-			m_sig.Reset()
-			delta_sig.Reset()
-			n_sig.Reset()
-			
-			#print("reset sig hists")
-			
-			if 'm' or 'pt' in col: 
-				stack.Delete()
-				leg_m.Delete()
-			if 'delta' in col: 
-				stack_delta.Delete()
-				leg_delta.Delete()
-			if 'n' in col: 
-				stack_n.Delete()
-				leg_n.Delete()
-
 		c.Print("plots/"+sig__+".pdf")
 			
 
