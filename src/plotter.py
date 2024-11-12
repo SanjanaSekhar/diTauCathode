@@ -159,7 +159,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
             if 'n' in col: leg.AddEntry(n_sig, "100 * "+sig_label)
 
             leg.Draw()
-            c.Print("plots/"+sig__+"_"+col+".png")
+            c.Print("plots/"+sig__+"_"+col+"_tautagged.png")
             print("plotted hists")
 
             for i in range(len(bkg)):
@@ -348,9 +348,9 @@ sig_list = ["2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag",
             "HeavyN_vbsNToTauTau_NM250_2J_LO", 
             "VAL_dyVfVfToXiCXiCToTauSTauS_XiM1000_VfM250_MinMass120_NoMisTag"]
 
-bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M", "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M", "SM_dyToTauTau_0J1J2J_MinMass120_3M"]
+bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M_TauTag", "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M", "SM_dyToTauTau_0J1J2J_MinMass120_3M"]
 sig_names = ["250 GeV heavy Higgs (VBF)", "250 GeV scalar from T'", "250 GeV HNL", "250 GeV VAL"]
-bkg_names = ["QCD multijet", "ttbar + 0/1/2 jets", "DY + 0/1/2 jets"]
+bkg_names = ["QCD multijet (tautagged)", "ttbar + 0/1/2 jets", "DY + 0/1/2 jets"]
 '''
 bkg = []
 
