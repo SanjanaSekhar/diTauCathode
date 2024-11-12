@@ -52,7 +52,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
         #bkg[i]["deltaeta_tau1tau2"] = abs(bkg[i]['tau1_eta'] - bkg[i]['tau2_eta'])
         bkg[i] = bkg[i][["m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", "event_weight"]]
 
-    #bkg[2]["event_weight"] = bkg[2]["event_weight"] * 0.0001
+    bkg[2]["event_weight"] = bkg[2]["event_weight"] * 0.0001
     #print("mjj in QCD: ",bkg[2]["m_jet1jet2"].min(),bkg[2]["m_jet1jet2"].max()) 
     #print("deltaR_tau1tau2 in QCD: ",bkg[2]["deltaR_tau1tau2"].min(),bkg[2]["deltaR_tau1tau2"].max())
 
@@ -167,7 +167,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
             if 'm' or 'pt' in col: stack.Delete()
             if 'delta' in col: stack_delta.Delete()
             if 'n' in col: stack_n.Delete()
-
+            leg.Delete()
 
 def plot_pre_postprocessed(train, val, test, train_ws, val_ws, test_ws):
 
