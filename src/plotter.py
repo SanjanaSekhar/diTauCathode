@@ -19,7 +19,7 @@ def binwidth_normalize(hist):
 		hist.SetBinContent(j,binc/width)
 	return hist
 
-def plot_features(sigs,sig_labels,bkgs,bkg_labels, sig_scale):
+def plot_features(sigs,sig_labels,bkgs,bkg_labels, sig_scale,plot_label):
 
 
 	# Format of csv file:
@@ -123,7 +123,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels, sig_scale):
 			#print("Plotting ", col)
 			for i in range(len(bkg)):
 				for entry,wt in zip(bkg[i][col], bkg[i]["event_weight"]):
-					wt = 1
+					#wt = 1
 					if 'm_t' in col: m_tt_bkg[i].Fill(entry, wt)
 					elif 'm' or 'pt' in col: m_bkg[i].Fill(entry, wt)
 					elif 'delta' in col: delta_bkg[i].Fill(entry, wt)
@@ -131,7 +131,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels, sig_scale):
 				
 				if 'm_t' in col: 
 					m_tt_bkg[i] = binwidth_normalize(m_tt_bkg[i])
-					stack.Add(m_tt_bkg[i])
+					stack_mtt.Add(m_tt_bkg[i])
 				elif 'm' or 'pt' in col: 
 					m_bkg[i] = binwidth_normalize(m_bkg[i])
 					stack.Add(m_bkg[i])
@@ -195,9 +195,9 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels, sig_scale):
 				leg_n.AddEntry(n_sig, str(scale)+" * "+sig_label)
 				leg_n.Draw()
 
-			if idx==0: c.Print("plots/"+sig__+"_tautagged_nowts.pdf(")
-			elif idx==len(sig.columns)-2: c.Print("plots/"+sig__+"_tautagged_nowts.pdf)")
-			else: c.Print("plots/"+sig__+"_tautagged_nowts.pdf")
+			if idx==0: c.Print("plots/"+sig__+"%s.pdf("%plot_label)
+			elif idx==len(sig.columns)-2: c.Print("plots/"+sig__+"%s.pdf)"%plot_label)
+			else: c.Print("plots/"+sig__+"%s.pdf"%plot_label)
 			
 
 def plot_pre_postprocessed(train, val, test, train_ws, val_ws, test_ws):
@@ -368,12 +368,13 @@ sig_list = ["2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag"]
 			#"HeavyN_vbsNToTauTau_NM250_2J_LO", 
 			#"VAL_dyVfVfToXiCXiCToTauSTauS_XiM1000_VfM250_MinMass120_NoMisTag"]
 
-bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M_TauTag", "SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M", "SM_dyToTauTau_0J1J2J_MinMass120_3M"]
+bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M_TauTag","SM_QCD_JJ_0J1J2J_MinMass120_LO_6M"] 
+#"SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M", "SM_dyToTauTau_0J1J2J_MinMass120_3M"]
 sig_names = ["250 GeV heavy Higgs (VBF)"]#, "250 GeV scalar from T'", "250 GeV HNL", 
 				#"250 GeV VAL"]
-bkg_names = ["QCD multijet (tautagged)", "ttbar + 0/1/2 jets", "DY + 0/1/2 jets"]
-
-plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 10)
+#bkg_names = ["QCD multijet (tautagged)", "ttbar + 0/1/2 jets", "DY + 0/1/2 jets"]
+bkg_names = ["QCD multijet (tautagged)", "QCD multijet"]
+plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 10, plot_label = "_compareQCD")
 
 #injections = ["0.100","0.050","0.010","0.005"]
 #injections = ["0.100"]#,"0.200","0.300","0.400","0.500","0.600","0.700","0.800","0.900"]
