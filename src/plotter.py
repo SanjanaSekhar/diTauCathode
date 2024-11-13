@@ -119,6 +119,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 			#print("Plotting ", col)
 			for i in range(len(bkg)):
 				for entry,wt in zip(bkg[i][col], bkg[i]["event_weight"]):
+					wt = 1
 					if 'm' or 'pt' in col: m_bkg[i].Fill(entry, wt)
 					if 'delta' in col: delta_bkg[i].Fill(entry, wt)
 					if 'n' in col: n_bkg[i].Fill(entry, wt)
@@ -190,9 +191,9 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 				leg_n.AddEntry(n_sig, str(scale)+" * "+sig_label)
 				leg_n.Draw()
 
-			if idx==0: c.Print("plots/"+sig__+".pdf(")
-			elif idx==len(sig.columns)-2: c.Print("plots/"+sig__+".pdf)")
-			else: c.Print("plots/"+sig__+".pdf")
+			if idx==0: c.Print("plots/"+sig__+"_nowts.pdf(")
+			elif idx==len(sig.columns)-2: c.Print("plots/"+sig__+"_nowts.pdf)")
+			else: c.Print("plots/"+sig__+"_nowts.pdf")
 			
 
 def plot_pre_postprocessed(train, val, test, train_ws, val_ws, test_ws):
