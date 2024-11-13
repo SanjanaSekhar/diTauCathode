@@ -12,7 +12,14 @@ from ROOT import *
 gStyle.SetOptStat(0)
 gROOT.SetBatch(1)
 
-def plot_features(sigs,sig_labels,bkgs,bkg_labels):
+def binwidth_normalize(hist):
+	for j in range(hist.GetNbinsX()):
+		binc = hist.GetBinContent(j)
+		width = hist.GetBinWidth(j)
+		hist.SetBinContent(j,binc/width)
+	return hist
+
+def plot_features(sigs,sig_labels,bkgs,bkg_labels, sig_scale):
 
 
 	# Format of csv file:
@@ -20,18 +27,22 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 	# tau2_m, m_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
 	# jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, isSig
 
-	m_sig = ROOT.TH1F("m_sig", "m_sig", 100, 0.0, 800.0)
+	m_sig = ROOT.TH1F("m_sig", "m_sig", 50, 0.0, 300.0)
+	m_tt_sig = ROOT.TH1F("m_sig", "m_sig", 100, 0.0, 800.0)
 	delta_sig = ROOT.TH1F("delta_sig","delta_sig",20, 0, 7)
 	n_sig = ROOT.TH1F("n_sig","n_sig", 10,0,10)
-	m_bkg, delta_bkg, n_bkg = [],[],[]
+	m_bkg, m_tt_bkg, delta_bkg, n_bkg = [],[],[],[]
 	m_sig.Sumw2()
 	delta_sig.Sumw2()
 	n_sig.Sumw2()
+	m_tt_sig.Sumw2()
 	
 	for i in range(len(bkgs)):
+		m_tt_bkg.append(m_tt_sig.Clone("m_tt_bkg%i" %i))
 		m_bkg.append(m_sig.Clone("m_bkg%i" %i))
 		delta_bkg.append(delta_sig.Clone("delta_bkg%i" %i))
 		n_bkg.append(n_sig.Clone("n_bkg%i" %i))
+		m_tt_bkg[i].Sumw2()
 		m_bkg[i].Sumw2()
 		delta_bkg[i].Sumw2()
 		n_bkg[i].Sumw2()
@@ -50,7 +61,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 	for i in range(len(bkg)):
 		bkg[i].columns = columns
 		#bkg[i]["deltaeta_tau1tau2"] = abs(bkg[i]['tau1_eta'] - bkg[i]['tau2_eta'])
-		bkg[i] = bkg[i][["m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", "event_weight"]]
+		bkg[i] = bkg[i][["m_tau1tau2", "m_jet1jet2", "pt_tau1tau2", "met_met", "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", "event_weight"]]
 
 	#bkg[0]["event_weight"] = bkg[0]["event_weight"] * 0.0001
 	#print("mjj in QCD: ",bkg[2]["m_jet1jet2"].min(),bkg[2]["m_jet1jet2"].max()) 
@@ -61,115 +72,104 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 	for i in range(len(bkg)):
 
 		m_bkg[i].SetLineColor(colors[i])
+		m_tt_bkg[i].SetLineColor(colors[i])
 		delta_bkg[i].SetLineColor(colors[i])
 		n_bkg[i].SetLineColor(colors[i])
 
 		m_bkg[i].SetFillColor(colors[i])
+		m_tt_bkg[i].SetFillColor(colors[i])
 		delta_bkg[i].SetFillColor(colors[i])
 		n_bkg[i].SetFillColor(colors[i])
 
 	m_sig.SetLineColor(kRed)
+	m_tt_sig.SetLineColor(kRed)
 	delta_sig.SetLineColor(kRed)
 	n_sig.SetLineColor(kRed)
 
 	m_sig.SetLineWidth(2)
+	m_tt_sig.SetLineWidth(2)
 	delta_sig.SetLineWidth(2)
 	n_sig.SetLineWidth(2)
 
-	scale = 50 # scale signal
+	scale = sig_scale # scale signal
 
 	for sig__,sig_label in zip(sigs,sig_labels):
 		sig = pd.read_csv("csv_files/%s.csv" % sig__)
 
 		sig.columns = columns
 		#sig["deltaeta_tau1tau2"] = abs(sig['tau1_eta'] - sig['tau2_eta'])
-		sig = sig[["m_jet1jet2", "m_tau1tau2", "pt_tau1tau2", "met_met", 
-				"deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", 
-				"event_weight"]]
+		sig = sig[["m_tau1tau2", "m_jet1jet2", "pt_tau1tau2", "met_met", "deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets", "event_weight"]]
 		print(sig_label)
 
 		for i in range(len(bkg)):
 			m_bkg[i].Reset()
+			m_tt_bkg[i].Reset()
 			delta_bkg[i].Reset()
 			n_bkg[i].Reset()
 			
 			#print("reset bkg hists")
 
 		m_sig.Reset()
+		m_tt_sig.Reset()
 		delta_sig.Reset()
 		n_sig.Reset()
-			
-			#print("reset sig hists")
-			
-		# if 'm' or 'pt' in col: 
-		# 	stack.Delete()
-		# 	leg_m.Delete()
-		# if 'delta' in col: 
-		# 	stack_delta.Delete()
-		# 	leg_delta.Delete()
-		# if 'n' in col: 
-		# 	stack_n.Delete()
-		# 	leg_n.Delete()
-
+		
 		c = ROOT.TCanvas(sig__, sig__, 900, 700)
 		for idx,col in enumerate(sig.columns[:-1]):
-			if 'm' or 'pt' in col: stack = ROOT.THStack(col, col)
-			if 'delta' in col: stack_delta = ROOT.THStack(col, col)
-			if 'n' in col: stack_n = ROOT.THStack(col, col)
+			if 'm_t' in col: stack_mtt = ROOT.THStack(col, col)
+			elif 'm' or 'pt' in col: stack = ROOT.THStack(col, col)
+			elif 'delta' in col: stack_delta = ROOT.THStack(col, col)
+			elif 'n' in col: stack_n = ROOT.THStack(col, col)
 			#print("Plotting ", col)
 			for i in range(len(bkg)):
 				for entry,wt in zip(bkg[i][col], bkg[i]["event_weight"]):
 					wt = 1
-					if 'm' or 'pt' in col: m_bkg[i].Fill(entry, wt)
-					if 'delta' in col: delta_bkg[i].Fill(entry, wt)
-					if 'n' in col: n_bkg[i].Fill(entry, wt)
+					if 'm_t' in col: m_tt_bkg[i].Fill(entry, wt)
+					elif 'm' or 'pt' in col: m_bkg[i].Fill(entry, wt)
+					elif 'delta' in col: delta_bkg[i].Fill(entry, wt)
+					elif 'n' in col: n_bkg[i].Fill(entry, wt)
 				
-				if 'm' or 'pt' in col: 
-					for j in range(m_bkg[i].GetNbinsX()):
-						binc = m_bkg[i].GetBinContent(j)
-						width = m_bkg[i].GetBinWidth(j)
-						m_bkg[i].SetBinContent(j,binc/width)
-					#m_bkg[i].Scale(1./m_bkg[i].Integral())
+				if 'm_t' in col: 
+					m_tt_bkg[i] = binwidth_normalize(m_tt_bkg[i])
+					stack.Add(m_tt_bkg[i])
+				elif 'm' or 'pt' in col: 
+					m_bkg[i] = binwidth_normalize(m_bkg[i])
 					stack.Add(m_bkg[i])
-				if 'delta' in col: 
-					for j in range(delta_bkg[i].GetNbinsX()):
-						binc = delta_bkg[i].GetBinContent(j)
-						width = delta_bkg[i].GetBinWidth(j)
-						delta_bkg[i].SetBinContent(j,binc/width)
-					#delta_bkg[i].Scale(1./delta_bkg[i].Integral())
+				elif 'delta' in col: 
+					delta_bkg[i] = binwidth_normalize(delta_bkg[i])
 					stack_delta.Add(delta_bkg[i])
-				if 'n' in col: 
-					for j in range(n_bkg[i].GetNbinsX()):
-						binc = n_bkg[i].GetBinContent(j)
-						width = n_bkg[i].GetBinWidth(j)
-						n_bkg[i].SetBinContent(j,binc/width)
-					#n_bkg[i].Scale(1./n_bkg[i].Integral())
+				elif 'n' in col: 
+					n_bkg[i] = binwidth_normalize(n_bkg[i])
 					stack_n.Add(n_bkg[i])
 			#print("Filled bkg histograms")
 			for entry in sig[col]:
-				if 'm' or 'pt' in col: m_sig.Fill(entry, scale)
-				if 'delta' in col: delta_sig.Fill(entry, scale)
-				if 'n' in col: n_sig.Fill(entry, scale)
+				if 'm_t' in col: m_tt_sig.Fill(entry, scale)
+				elif 'm' or 'pt' in col: m_sig.Fill(entry, scale)
+				elif 'delta' in col: delta_sig.Fill(entry, scale)
+				elif 'n' in col: n_sig.Fill(entry, scale)
 			
-			for j in range(m_sig.GetNbinsX()):
-				binc = m_sig.GetBinContent(j)
-				width = m_sig.GetBinWidth(j)
-				m_sig.SetBinContent(j,binc/width)
-			#print("Filled sig histogram")
+			m_tt_sig = binwidth_normalize(m_tt_sig)
+			m_sig = binwidth_normalize(m_sig)
+			delta_sig =  binwidth_normalize(delta_sig)
+			n_sig = binwidth_normalize(n_sig)
 
 			#c = ROOT.TCanvas(col, col, 900, 700)
-			
-			if 'm' or 'pt' in col: 
+			if 'm_t' in col: 
+				stack_mtt.SetTitle("Distribution of "+col)
+				stack_mtt.Draw("hist")
+				m_tt_sig.Draw("hist same")
+				leg_mtt = ROOT.TLegend(0.65,0.65,0.9,0.9)
+			elif 'm' or 'pt' in col: 
 				stack.SetTitle("Distribution of "+col)
 				stack.Draw("hist")
 				m_sig.Draw("hist same")
 				leg_m = ROOT.TLegend(0.65,0.65,0.9,0.9)
-			if 'delta' in col: 
+			elif 'delta' in col: 
 				stack_delta.SetTitle("Distribution of "+col)
 				stack_delta.Draw("hist")
 				delta_sig.Draw("hist same")
 				leg_delta = ROOT.TLegend(0.65,0.65,0.9,0.9)
-			if 'n' in col:
+			elif 'n' in col:
 				stack_n.SetTitle("Distribution of "+col)
 				stack_n.Draw("hist")
 				n_sig.Draw("hist same")
@@ -177,17 +177,21 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels):
 
 			
 			for i in range(len(bkg)):
-				if 'm' or 'pt' in col: leg_m.AddEntry(m_bkg[i], bkg_labels[i])
-				if 'delta' in col: leg_delta.AddEntry(delta_bkg[i], bkg_labels[i])
-				if 'n' in col: leg_n.AddEntry(n_bkg[i], bkg_labels[i])
+				if 'm_t' in col: leg_mtt.AddEntry(m_tt_bkg[i], bkg_labels[i])
+				elif 'm' or 'pt' in col: leg_m.AddEntry(m_bkg[i], bkg_labels[i])
+				elif 'delta' in col: leg_delta.AddEntry(delta_bkg[i], bkg_labels[i])
+				elif 'n' in col: leg_n.AddEntry(n_bkg[i], bkg_labels[i])
 			
-			if 'm' or 'pt' in col: 
+			if 'm_t' in col: 
+				leg_mtt.AddEntry(m_tt_sig, str(scale)+" * "+sig_label)
+				leg_mtt.Draw()
+			elif 'm' or 'pt' in col: 
 				leg_m.AddEntry(m_sig, str(scale)+" * "+sig_label)
 				leg_m.Draw()
-			if 'delta' in col: 
+			elif 'delta' in col: 
 				leg_delta.AddEntry(delta_sig, str(scale)+" * "+sig_label)
 				leg_delta.Draw()
-			if 'n' in col: 
+			elif 'n' in col: 
 				leg_n.AddEntry(n_sig, str(scale)+" * "+sig_label)
 				leg_n.Draw()
 
@@ -368,17 +372,8 @@ bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M_TauTag", "SM_ttbarTo2Tau2Nu_0J1J2
 sig_names = ["250 GeV heavy Higgs (VBF)"]#, "250 GeV scalar from T'", "250 GeV HNL", 
 				#"250 GeV VAL"]
 bkg_names = ["QCD multijet (tautagged)", "ttbar + 0/1/2 jets", "DY + 0/1/2 jets"]
-'''
-bkg = []
 
-for b in bkg_list:
-	bkg.append(pd.read_csv("csv_files/%s.csv"%b))
-
-
-for sig in sig_list:
-	sig__ = pd.read_csv("csv_files/%s.csv"%sig)
-'''
-plot_features(sig_list, sig_names, bkg_list, bkg_names)
+plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 10)
 
 #injections = ["0.100","0.050","0.010","0.005"]
 #injections = ["0.100"]#,"0.200","0.300","0.400","0.500","0.600","0.700","0.800","0.900"]
