@@ -199,6 +199,11 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels, sig_scale,plot_label):
 			if idx==0: c.Print("plots/"+sig__+"%s.pdf("%plot_label)
 			elif idx==len(sig.columns)-2: c.Print("plots/"+sig__+"%s.pdf)"%plot_label)
 			else: c.Print("plots/"+sig__+"%s.pdf"%plot_label)
+
+			stack_mtt.Delete()
+			stack.Delete()
+			stack_delta.Delete()
+			stack_n.Delete()
 			
 
 def plot_pre_postprocessed(train, val, test, train_ws, val_ws, test_ws):
