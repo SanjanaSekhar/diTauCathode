@@ -28,7 +28,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels, sig_scale,plot_label):
 	# jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, isSig
 
 	m_sig = ROOT.TH1F("m_sig", "m_sig", 50, 0.0, 300.0)
-	m_tt_sig = ROOT.TH1F("m_sig", "m_sig", 100, 0.0, 800.0)
+	m_tt_sig = ROOT.TH1F("m_tt_sig", "m_tt_sig", 100, 0.0, 800.0)
 	delta_sig = ROOT.TH1F("delta_sig","delta_sig",20, 0, 7)
 	n_sig = ROOT.TH1F("n_sig","n_sig", 10,0,10)
 	m_bkg, m_tt_bkg, delta_bkg, n_bkg = [],[],[],[]
@@ -98,7 +98,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels, sig_scale,plot_label):
 
 		sig.columns = columns
 		#sig["deltaeta_tau1tau2"] = abs(sig['tau1_eta'] - sig['tau2_eta'])
-		sig = sig[["deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets"]]#,"m_tau1tau2", "m_jet1jet2", "pt_tau1tau2", "met_met",  "event_weight"]]
+		sig = sig[["deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets","m_tau1tau2", "m_jet1jet2", "pt_tau1tau2", "met_met",  "event_weight"]]
 		print(sig_label)
 
 		for i in range(len(bkg)):
@@ -117,7 +117,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels, sig_scale,plot_label):
 		c = ROOT.TCanvas(sig__, sig__, 900, 700)
 		for idx,col in enumerate(sig.columns[:-1]):
 			if 'm_t' in col: stack_mtt = ROOT.THStack(col, col)
-			elif 'm' or 'pt' in col: stack = ROOT.THStack(col, col)
+			elif 'm' in col or 'pt' in col: stack = ROOT.THStack(col, col)
 			elif 'delta' in col: stack_delta = ROOT.THStack(col, col)
 			elif 'n' in col: stack_n = ROOT.THStack(col, col)
 			#print("Plotting ", col)
@@ -125,14 +125,14 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels, sig_scale,plot_label):
 				for entry,wt in zip(bkg[i][col], bkg[i]["event_weight"]):
 					#wt = 1
 					if 'm_t' in col: m_tt_bkg[i].Fill(entry, wt)
-					elif 'm' or 'pt' in col: m_bkg[i].Fill(entry, wt)
+					elif 'm' in col or 'pt' in col: m_bkg[i].Fill(entry, wt)
 					elif 'delta' in col: delta_bkg[i].Fill(entry, wt)
 					elif 'n' in col: n_bkg[i].Fill(entry, wt)
 				
 				if 'm_t' in col: 
 					m_tt_bkg[i] = binwidth_normalize(m_tt_bkg[i])
 					stack_mtt.Add(m_tt_bkg[i])
-				elif 'm' or 'pt' in col: 
+				elif 'm' in col or 'pt' in col: 
 					m_bkg[i] = binwidth_normalize(m_bkg[i])
 					stack.Add(m_bkg[i])
 				elif 'delta' in col: 
@@ -144,7 +144,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels, sig_scale,plot_label):
 			#print("Filled bkg histograms")
 			for entry in sig[col]:
 				if 'm_t' in col: m_tt_sig.Fill(entry, scale)
-				elif 'm' or 'pt' in col: m_sig.Fill(entry, scale)
+				elif 'm' in col or 'pt' in col: m_sig.Fill(entry, scale)
 				elif 'delta' in col: delta_sig.Fill(entry, scale)
 				elif 'n' in col: n_sig.Fill(entry, scale)
 			
@@ -159,7 +159,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels, sig_scale,plot_label):
 				stack_mtt.Draw("hist")
 				m_tt_sig.Draw("hist same")
 				leg_mtt = ROOT.TLegend(0.65,0.65,0.9,0.9)
-			elif 'm' or 'pt' in col: 
+			elif 'm' in col or 'pt' in col: 
 				stack.SetTitle("Distribution of "+col)
 				stack.Draw("hist")
 				m_sig.Draw("hist same")
@@ -178,14 +178,14 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels, sig_scale,plot_label):
 			
 			for i in range(len(bkg)):
 				if 'm_t' in col: leg_mtt.AddEntry(m_tt_bkg[i], bkg_labels[i])
-				elif 'm' or 'pt' in col: leg_m.AddEntry(m_bkg[i], bkg_labels[i])
+				elif 'm' in col or 'pt' in col: leg_m.AddEntry(m_bkg[i], bkg_labels[i])
 				elif 'delta' in col: leg_delta.AddEntry(delta_bkg[i], bkg_labels[i])
 				elif 'n' in col: leg_n.AddEntry(n_bkg[i], bkg_labels[i])
 			
 			if 'm_t' in col: 
 				leg_mtt.AddEntry(m_tt_sig, str(scale)+" * "+sig_label)
 				leg_mtt.Draw()
-			elif 'm' or 'pt' in col: 
+			elif 'm' in col or 'pt' in col: 
 				leg_m.AddEntry(m_sig, str(scale)+" * "+sig_label)
 				leg_m.Draw()
 			elif 'delta' in col: 
@@ -201,7 +201,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels, sig_scale,plot_label):
 			else: c.Print("plots/"+sig__+"%s.pdf"%plot_label)
 
 			if 'm_t' in col: stack_mtt.Delete()
-			elif 'm' or 'pt' in col: stack.Delete()
+			elif 'm' in col or 'pt' in col: stack.Delete()
 			elif 'delta' in col:  stack_delta.Delete()
 			elif 'n' in col: stack_n.Delete()
 			
@@ -380,7 +380,7 @@ sig_names = ["250 GeV heavy Higgs (VBF)"]#, "250 GeV scalar from T'", "250 GeV H
 				#"250 GeV VAL"]
 #bkg_names = ["QCD multijet (tautagged)", "ttbar + 0/1/2 jets", "DY + 0/1/2 jets"]
 bkg_names = ["QCD multijet (tautagged)", "QCD multijet"]
-plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 100, plot_label = "_compareQCD_delta")
+plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 100, plot_label = "_compareQCD")
 
 #injections = ["0.100","0.050","0.010","0.005"]
 #injections = ["0.100"]#,"0.200","0.300","0.400","0.500","0.600","0.700","0.800","0.900"]
