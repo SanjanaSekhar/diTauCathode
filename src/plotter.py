@@ -98,7 +98,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels, sig_scale,plot_label):
 
 		sig.columns = columns
 		#sig["deltaeta_tau1tau2"] = abs(sig['tau1_eta'] - sig['tau2_eta'])
-		sig = sig[["deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets","m_tau1tau2", "m_jet1jet2", "pt_tau1tau2", "met_met",  "event_weight"]]
+		sig = sig[["deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets"]]#,"m_tau1tau2", "m_jet1jet2", "pt_tau1tau2", "met_met",  "event_weight"]]
 		print(sig_label)
 
 		for i in range(len(bkg)):
@@ -380,7 +380,7 @@ sig_names = ["250 GeV heavy Higgs (VBF)"]#, "250 GeV scalar from T'", "250 GeV H
 				#"250 GeV VAL"]
 #bkg_names = ["QCD multijet (tautagged)", "ttbar + 0/1/2 jets", "DY + 0/1/2 jets"]
 bkg_names = ["QCD multijet (tautagged)", "QCD multijet"]
-plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 100, plot_label = "_compareQCD")
+plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 100, plot_label = "_compareQCD_delta")
 
 #injections = ["0.100","0.050","0.010","0.005"]
 #injections = ["0.100"]#,"0.200","0.300","0.400","0.500","0.600","0.700","0.800","0.900"]
