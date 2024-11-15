@@ -89,7 +89,7 @@ def compare_QCD(bkgs,bkg_labels,plot_label):
 
 		for i in range(len(bkg)):
 			for entry,wt in zip(bkg[i][col], bkg[i]["event_weight"]):
-				wt = 1
+				#wt = 1
 				if 'm_t' in col: m_tt_bkg[i].Fill(entry, wt)
 				elif 'm' in col or 'pt' in col: m_bkg[i].Fill(entry, wt)
 				elif 'delta' in col: delta_bkg[i].Fill(entry, wt)
