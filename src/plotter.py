@@ -79,12 +79,12 @@ def compare_QCD(bkgs,bkg_labels,plot_label):
 		n_bkg[i].Reset()
 			
 	
-	c = ROOT.TCanvas(sig__, sig__, 900, 700)
-	for idx,col in enumerate(sig.columns[:-1]):
+	c = ROOT.TCanvas('qcd', 'qcd', 900, 700)
+	for idx,col in enumerate(bkg[0].columns[:-1]):
 
 		for i in range(len(bkg)):
 			for entry,wt in zip(bkg[i][col], bkg[i]["event_weight"]):
-				#wt = 1
+				wt = 1
 				if 'm_t' in col: m_tt_bkg[i].Fill(entry, wt)
 				elif 'm' in col or 'pt' in col: m_bkg[i].Fill(entry, wt)
 				elif 'delta' in col: delta_bkg[i].Fill(entry, wt)
@@ -134,7 +134,7 @@ def compare_QCD(bkgs,bkg_labels,plot_label):
 
 		c.Update()
 		if idx==0: c.Print("plots/compareQCD%s.pdf("%plot_label)
-		elif idx==len(sig.columns)-2: c.Print("plots/compareQCD%s.pdf)"%plot_label)
+		elif idx==len(bkg[0].columns)-2: c.Print("plots/compareQCD%s.pdf)"%plot_label)
 		else: c.Print("plots/compareQCD%s.pdf"%plot_label)
 
 def plot_features(sigs,sig_labels,bkgs,bkg_labels,sig_scale,plot_label):
@@ -501,7 +501,7 @@ bkg_names = ["QCD multijet (tautagged)", "ttbar + 0/1/2 jets", "DY + 0/1/2 jets"
 
 bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M","SM_QCD_JJ_0J1J2J_MinMass120_LO_6M_TauTag"]
 bkg_names = ["QCD multijet", "QCD multijet (tautagged)"]
-compare_QCD(bkg_list, bkg_names, plot_label = "")
+compare_QCD(bkg_list, bkg_names, plot_label = "_nowts")
 
 #injections = ["0.100","0.050","0.010","0.005"]
 #injections = ["0.100"]#,"0.200","0.300","0.400","0.500","0.600","0.700","0.800","0.900"]
