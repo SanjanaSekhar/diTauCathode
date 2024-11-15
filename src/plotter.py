@@ -246,7 +246,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels,sig_scale,plot_label):
 			#print("Plotting ", col)
 			for i in range(len(bkg)):
 				for entry,wt in zip(bkg[i][col], bkg[i]["event_weight"]):
-					#wt = 1
+					wt = 1
 					if 'm_t' in col: m_tt_bkg[i].Fill(entry, wt)
 					elif 'm' in col or 'pt' in col: m_bkg[i].Fill(entry, wt)
 					elif 'delta' in col: delta_bkg[i].Fill(entry, wt)
@@ -497,16 +497,16 @@ sig_list = ["2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag"]
 			#"HeavyN_vbsNToTauTau_NM250_2J_LO", 
 			#"VAL_dyVfVfToXiCXiCToTauSTauS_XiM1000_VfM250_MinMass120_NoMisTag"]
 
-bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M","SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M", "SM_dyToTauTau_0J1J2J_MinMass120_3M"]
+bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M_TauTag","SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M", "SM_dyToTauTau_0J1J2J_MinMass120_3M"]
 sig_names = ["250 GeV heavy Higgs (VBF)"]#, "250 GeV scalar from T'", "250 GeV HNL", 
 				#"250 GeV VAL"]
 bkg_names = ["QCD multijet (tautagged)", "ttbar + 0/1/2 jets", "DY + 0/1/2 jets"]
 #bkg_names = ["QCD multijet", "QCD multijet (tautagged)"]
-#plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 50, plot_label = "_compareQCD_nowts")
+plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 10, plot_label = "_tautagged_nowts")
 
 bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M","SM_QCD_JJ_0J1J2J_MinMass120_LO_6M_TauTag"]
 bkg_names = ["QCD multijet", "QCD multijet (tautagged)"]
-compare_QCD(bkg_list[::-1], bkg_names[::-1], plot_label = "")
+#compare_QCD(bkg_list[::-1], bkg_names[::-1], plot_label = "")
 
 #injections = ["0.100","0.050","0.010","0.005"]
 #injections = ["0.100"]#,"0.200","0.300","0.400","0.500","0.600","0.700","0.800","0.900"]
