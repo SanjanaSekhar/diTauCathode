@@ -19,7 +19,7 @@ def binwidth_normalize(hist):
 		hist.SetBinContent(j,binc/width)
 	return hist
 
-def plot_features(sigs,sig_labels,bkgs,bkg_labels, sig_scale,plot_label):
+def compare_QCD(bkgs,bkg_labels,plot_label):
 
 
 	# Format of csv file:
@@ -30,7 +30,125 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels, sig_scale,plot_label):
 	m_sig = ROOT.TH1F("m_sig", "m_sig", 50, 0.0, 400.0)
 	m_tt_sig = ROOT.TH1F("m_tt_sig", "m_tt_sig", 80, 0.0, 800.0)
 	delta_sig = ROOT.TH1F("delta_sig","delta_sig",20, 0, 4.5)
-	n_sig = ROOT.TH1F("n_sig","n_sig", 10,0,5)
+	n_sig = ROOT.TH1F("n_sig","n_sig", 10,0,5.)
+	m_bkg, m_tt_bkg, delta_bkg, n_bkg = [],[],[],[]
+	
+	for i in range(len(bkgs)):
+		m_tt_bkg.append(m_tt_sig.Clone("m_tt_bkg%i" %i))
+		m_bkg.append(m_sig.Clone("m_bkg%i" %i))
+		delta_bkg.append(delta_sig.Clone("delta_bkg%i" %i))
+		n_bkg.append(n_sig.Clone("n_bkg%i" %i))
+		m_tt_bkg[i].Sumw2()
+		m_bkg[i].Sumw2()
+		delta_bkg[i].Sumw2()
+		n_bkg[i].Sumw2()
+	
+	columns = ["m_jet1jet2", "deltaR_jet1jet2", "m_bjet1bjet2", "deltaR_bjet1bjet2", "deltaR_tau1tau2","deltaeta_tau1tau2","tau1_pt", "tau1_eta", "tau1_phi", 
+				"tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m","m_tau1tau2", "pt_tau1tau2", "eta_tau1tau2", "phi_tau1tau2",
+				"met_met", "met_eta", "met_phi", "n_jets", "n_bjets","jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", 
+				"bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef","jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", 
+				"bjet2_pt", "bjet2_eta", "bjet2_phi", "bjet2_cef", "bjet2_nef", "event_weight","label"]
+	
+	bkg = []
+	for b in bkgs:
+		bkg.append(pd.read_csv("csv_files/%s.csv" % b))
+
+
+	for i in range(len(bkg)):
+		bkg[i].columns = columns
+		#bkg[i]["deltaeta_tau1tau2"] = abs(bkg[i]['tau1_eta'] - bkg[i]['tau2_eta'])
+		bkg[i] = bkg[i][["deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets","m_tau1tau2", "m_jet1jet2", "pt_tau1tau2", "met_met",  "event_weight"]]
+
+	#bkg[0]["event_weight"] = bkg[0]["event_weight"] * 0.0001
+	#print("mjj in QCD: ",bkg[2]["m_jet1jet2"].min(),bkg[2]["m_jet1jet2"].max()) 
+	#print("deltaR_tau1tau2 in QCD: ",bkg[2]["deltaR_tau1tau2"].min(),bkg[2]["deltaR_tau1tau2"].max())
+
+	colors = [kTeal-5, kPink+6]
+
+	for i in range(len(bkg)):
+
+		m_bkg[i].SetLineColor(colors[i])
+		m_tt_bkg[i].SetLineColor(colors[i])
+		delta_bkg[i].SetLineColor(colors[i])
+		n_bkg[i].SetLineColor(colors[i])
+
+	for i in range(len(bkg)):
+		m_bkg[i].Reset()
+		m_tt_bkg[i].Reset()
+		delta_bkg[i].Reset()
+		n_bkg[i].Reset()
+			
+	
+	c = ROOT.TCanvas(sig__, sig__, 900, 700)
+	for idx,col in enumerate(sig.columns[:-1]):
+
+		for i in range(len(bkg)):
+			for entry,wt in zip(bkg[i][col], bkg[i]["event_weight"]):
+				#wt = 1
+				if 'm_t' in col: m_tt_bkg[i].Fill(entry, wt)
+				elif 'm' in col or 'pt' in col: m_bkg[i].Fill(entry, wt)
+				elif 'delta' in col: delta_bkg[i].Fill(entry, wt)
+				elif 'n' in col: n_bkg[i].Fill(entry, wt)
+			
+			if 'm_t' in col: 
+				m_tt_bkg[i] = binwidth_normalize(m_tt_bkg[i])
+			elif 'm' in col or 'pt' in col: 
+				m_bkg[i] = binwidth_normalize(m_bkg[i])
+			elif 'delta' in col: 
+				delta_bkg[i] = binwidth_normalize(delta_bkg[i])
+			elif 'n' in col: 
+				n_bkg[i] = binwidth_normalize(n_bkg[i])
+		
+		if 'm_t' in col: 
+			m_tt_bkg[0].SetTitle("Distribution of "+col)
+			m_tt_bkg[0].Draw("hist")
+			m_tt_bkg[1].Draw("hist same")
+			leg_mtt = ROOT.TLegend(0.65,0.65,0.9,0.9)
+		elif 'm' in col or 'pt' in col: 
+			m_bkg[0].SetTitle("Distribution of "+col)
+			m_bkg[0].Draw("hist")
+			m_bkg[1].Draw("hist same")
+			leg_m = ROOT.TLegend(0.65,0.65,0.9,0.9)
+		elif 'delta' in col: 
+			delta_bkg[0].SetTitle("Distribution of "+col)
+			delta_bkg[0].Draw("hist")
+			delta_bkg[1].Draw("hist same")
+			leg_delta = ROOT.TLegend(0.65,0.65,0.9,0.9)
+		elif 'n' in col:
+			n_bkg[0].SetTitle("Distribution of "+col)
+			n_bkg[0].Draw("hist")
+			n_bkg[1].Draw("hist same")
+			leg_n = ROOT.TLegend(0.65,0.65,0.9,0.9)
+
+		
+		for i in range(len(bkg)):
+			if 'm_t' in col: leg_mtt.AddEntry(m_tt_bkg[i], bkg_labels[i])
+			elif 'm' in col or 'pt' in col: leg_m.AddEntry(m_bkg[i], bkg_labels[i])
+			elif 'delta' in col: leg_delta.AddEntry(delta_bkg[i], bkg_labels[i])
+			elif 'n' in col: leg_n.AddEntry(n_bkg[i], bkg_labels[i])
+		
+		if 'm_t' in col: leg_mtt.Draw()
+		elif 'm' in col or 'pt' in col: leg_m.Draw()
+		elif 'delta' in col: leg_delta.Draw()
+		elif 'n' in col: leg_n.Draw()
+
+		c.Update()
+		if idx==0: c.Print("plots/compareQCD%s.pdf("%plot_label)
+		elif idx==len(sig.columns)-2: c.Print("plots/compareQCD%s.pdf)"%plot_label)
+		else: c.Print("plots/compareQCD%s.pdf"%plot_label)
+
+def plot_features(sigs,sig_labels,bkgs,bkg_labels,sig_scale,plot_label):
+
+
+	# Format of csv file:
+	# tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, 
+	# tau2_m, m_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
+	# jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, isSig
+
+	m_sig = ROOT.TH1F("m_sig", "m_sig", 50, 0.0, 400.0)
+	m_tt_sig = ROOT.TH1F("m_tt_sig", "m_tt_sig", 80, 0.0, 800.0)
+	delta_sig = ROOT.TH1F("delta_sig","delta_sig",20, 0, 4.5)
+	n_sig = ROOT.TH1F("n_sig","n_sig", 10,0,5.)
 	m_bkg, m_tt_bkg, delta_bkg, n_bkg = [],[],[],[]
 	m_sig.Sumw2()
 	delta_sig.Sumw2()
@@ -374,12 +492,16 @@ sig_list = ["2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag"]
 			#"HeavyN_vbsNToTauTau_NM250_2J_LO", 
 			#"VAL_dyVfVfToXiCXiCToTauSTauS_XiM1000_VfM250_MinMass120_NoMisTag"]
 
-bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M","SM_QCD_JJ_0J1J2J_MinMass120_LO_6M_TauTag"]#,"SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M", "SM_dyToTauTau_0J1J2J_MinMass120_3M"]
+bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M","SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M", "SM_dyToTauTau_0J1J2J_MinMass120_3M"]
 sig_names = ["250 GeV heavy Higgs (VBF)"]#, "250 GeV scalar from T'", "250 GeV HNL", 
 				#"250 GeV VAL"]
-#bkg_names = ["QCD multijet (tautagged)", "ttbar + 0/1/2 jets", "DY + 0/1/2 jets"]
+bkg_names = ["QCD multijet (tautagged)", "ttbar + 0/1/2 jets", "DY + 0/1/2 jets"]
+#bkg_names = ["QCD multijet", "QCD multijet (tautagged)"]
+#plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 50, plot_label = "_compareQCD_nowts")
+
+bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M","SM_QCD_JJ_0J1J2J_MinMass120_LO_6M_TauTag"]
 bkg_names = ["QCD multijet", "QCD multijet (tautagged)"]
-plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 50, plot_label = "_compareQCD_nowts")
+compare_QCD(bkg_list, bkg_names, plot_label = "")
 
 #injections = ["0.100","0.050","0.010","0.005"]
 #injections = ["0.100"]#,"0.200","0.300","0.400","0.500","0.600","0.700","0.800","0.900"]
