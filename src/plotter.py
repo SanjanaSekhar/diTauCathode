@@ -29,8 +29,8 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels, sig_scale,plot_label):
 
 	m_sig = ROOT.TH1F("m_sig", "m_sig", 50, 0.0, 400.0)
 	m_tt_sig = ROOT.TH1F("m_tt_sig", "m_tt_sig", 80, 0.0, 800.0)
-	delta_sig = ROOT.TH1F("delta_sig","delta_sig",20, 0, 7)
-	n_sig = ROOT.TH1F("n_sig","n_sig", 10,0,10)
+	delta_sig = ROOT.TH1F("delta_sig","delta_sig",20, 0, 4.5)
+	n_sig = ROOT.TH1F("n_sig","n_sig", 10,0,5)
 	m_bkg, m_tt_bkg, delta_bkg, n_bkg = [],[],[],[]
 	m_sig.Sumw2()
 	delta_sig.Sumw2()
@@ -374,12 +374,12 @@ sig_list = ["2HDM-vbfPhiToTauTau-M250_2J_MinMass120_NoMisTag"]
 			#"HeavyN_vbsNToTauTau_NM250_2J_LO", 
 			#"VAL_dyVfVfToXiCXiCToTauSTauS_XiM1000_VfM250_MinMass120_NoMisTag"]
 
-bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M","SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M", "SM_dyToTauTau_0J1J2J_MinMass120_3M"]
+bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M","SM_QCD_JJ_0J1J2J_MinMass120_LO_6M_TauTag"]#,"SM_ttbarTo2Tau2Nu_0J1J2J_MinMass120_MadSpin_2M", "SM_dyToTauTau_0J1J2J_MinMass120_3M"]
 sig_names = ["250 GeV heavy Higgs (VBF)"]#, "250 GeV scalar from T'", "250 GeV HNL", 
 				#"250 GeV VAL"]
-bkg_names = ["QCD multijet", "ttbar + 0/1/2 jets", "DY + 0/1/2 jets"]
-#bkg_names = ["QCD multijet", "QCD multijet (tautagged)"]
-plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 10, plot_label = "_nowts")
+#bkg_names = ["QCD multijet (tautagged)", "ttbar + 0/1/2 jets", "DY + 0/1/2 jets"]
+bkg_names = ["QCD multijet", "QCD multijet (tautagged)"]
+plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 50, plot_label = "_compareQCD_nowts")
 
 #injections = ["0.100","0.050","0.010","0.005"]
 #injections = ["0.100"]#,"0.200","0.300","0.400","0.500","0.600","0.700","0.800","0.900"]
