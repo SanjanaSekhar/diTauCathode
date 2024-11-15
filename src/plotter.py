@@ -72,6 +72,11 @@ def compare_QCD(bkgs,bkg_labels,plot_label):
 		delta_bkg[i].SetLineColor(colors[i])
 		n_bkg[i].SetLineColor(colors[i])
 
+		m_bkg[i].SetLineWidth(3)
+		m_tt_bkg[i].SetLineWidth(3)
+		delta_bkg[i].SetLineWidth(3)
+		n_bkg[i].SetLineWidth(3)
+
 	for i in range(len(bkg)):
 		m_bkg[i].Reset()
 		m_tt_bkg[i].Reset()
