@@ -504,8 +504,8 @@ bkg_names = ["QCD multijet (tautagged)", "ttbar + 0/1/2 jets", "DY + 0/1/2 jets"
 #bkg_names = ["QCD multijet", "QCD multijet (tautagged)"]
 #plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 50, plot_label = "_compareQCD_nowts")
 
-bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M_TauTag","SM_QCD_JJ_0J1J2J_MinMass120_LO_6M"]
-bkg_names = ["QCD multijet (tautagged)", "QCD multijet"]
+bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M","SM_QCD_JJ_0J1J2J_MinMass120_LO_6M_TauTag"]
+bkg_names = ["QCD multijet", "QCD multijet (tautagged)"]
 compare_QCD(bkg_list, bkg_names, plot_label = "")
 
 #injections = ["0.100","0.050","0.010","0.005"]
