@@ -108,22 +108,22 @@ def compare_QCD(bkgs,bkg_labels,plot_label):
 			m_tt_bkg[0].SetTitle("Distribution of "+col)
 			m_tt_bkg[0].Draw("hist")
 			m_tt_bkg[1].Draw("hist same")
-			leg_mtt = ROOT.TLegend(0.65,0.65,0.9,0.9)
+			leg_mtt = ROOT.TLegend(0.65,0.8,0.9,0.9)
 		elif 'm' in col or 'pt' in col: 
 			m_bkg[0].SetTitle("Distribution of "+col)
 			m_bkg[0].Draw("hist")
 			m_bkg[1].Draw("hist same")
-			leg_m = ROOT.TLegend(0.65,0.65,0.9,0.9)
+			leg_m = ROOT.TLegend(0.65,0.8,0.9,0.9)
 		elif 'delta' in col: 
 			delta_bkg[0].SetTitle("Distribution of "+col)
 			delta_bkg[0].Draw("hist")
 			delta_bkg[1].Draw("hist same")
-			leg_delta = ROOT.TLegend(0.65,0.65,0.9,0.9)
+			leg_delta = ROOT.TLegend(0.65,0.8,0.9,0.9)
 		elif 'n' in col:
 			n_bkg[0].SetTitle("Distribution of "+col)
 			n_bkg[0].Draw("hist")
 			n_bkg[1].Draw("hist same")
-			leg_n = ROOT.TLegend(0.65,0.65,0.9,0.9)
+			leg_n = ROOT.TLegend(0.65,0.8,0.9,0.9)
 
 		
 		for i in range(len(bkg)):
