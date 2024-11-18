@@ -119,6 +119,7 @@ int create_qcd_dataset() {
         jet2_eta = 0., jet2_phi = 0., bjet2_eta = 0., bjet2_phi = 0.,jet2_ehadeem = 0, bjet2_ehadeem = 0.;
         jet2_cef = 0., jet2_nef = 0.,bjet2_cef = 0., bjet2_nef = 0.;
 		TLorentzVector jet1_p4, bjet1_p4, tau1_p4;
+		float jet_idx[10] = {}; int j_idx = 0;  
 			
 			// set aside 2 highest pT jets that are not btagged assuming they are hadronic taus
 			// use the remaining jets to check for jets and bjets
@@ -127,12 +128,20 @@ int create_qcd_dataset() {
 				 if (!jet) continue;
 				
 				if (jet->BTag == 1) n_bjets++;
-				else n_jets_all ++; 
-
-				if (n_jets_all > 2 and jet->BTag == 0) n_jets++;
+				else {
+					n_jets++;
+					jet_idx[j_idx] = i;
+					j_idx++;
+				}
 				}
 			
-			//else continue;
+			// choose indices at random to form the ditau pair
+			// x is in [0,1[
+			double x = rand()/static_cast<double>(RAND_MAX+1); 
+			int tau1_idx = static_cast<int>( x * (n_jets) );
+			x = rand()/static_cast<double>(RAND_MAX+1); 
+			int tau2_idx = static_cast<int>( x * (n_jets) );
+			if (tau1_idx == tau2_idx) cout << "the two random indices are equal\n" << endl;
 		
 			for (int i = 0; i < branchJet->GetEntries(); ++i) {
 
@@ -168,7 +177,42 @@ int create_qcd_dataset() {
 						}
 					}		
 				}
-				if(n_jets > 0 and filledTau2){
+
+				if(i == jet_idx[tau1_idx]){
+					tau1_pt = jet->PT;
+					tau1_eta = jet->Eta;
+					tau1_phi = jet->Phi;
+					tau1_m = (jet->P4()).M();
+					//for(int i=0; i<5; i++) n_subj[i] = (jet->Tau)[i];
+					met_met = met->MET;
+					met_eta = met->Eta;
+					met_phi = met->Phi;
+					tau1_ncharged = jet->NCharged;
+					tau1_nneutrals = jet->NNeutrals;
+					tau1_ehadeem = jet->EhadOverEem;
+					tau1_p4 = jet->P4();
+					filledTau1 = true;
+				}
+				else{
+					if(i == jet_idx[tau2_idx]){
+					m_tau1tau2 = (tau1_p4 + jet->P4()).M();
+					pt_tau1tau2 = (tau1_p4 + jet->P4()).Pt();
+					eta_tau1tau2 = (tau1_p4 + jet->P4()).Eta();	
+					phi_tau1tau2 = (tau1_p4 + jet->P4()).Phi();
+					tau2_pt = jet->PT;
+					tau2_eta = jet->Eta;
+					tau2_phi = jet->Phi;
+					tau2_m = (jet->P4()).M();
+					tau2_ncharged = jet->NCharged;
+					tau2_nneutrals = jet->NNeutrals;
+					tau2_ehadeem = jet->EhadOverEem; 
+				
+					filledTau2 = true;
+				}
+			
+			}
+
+				if(n_jets > 2 and i!=jet_idx[tau1_idx] and i!=jet_idx[tau2_idx]){
 					if (jet->BTag == 0){
 						if(!filledJet1){
 							jet1_m = (jet->P4()).M();
@@ -198,38 +242,7 @@ int create_qcd_dataset() {
 					}		
 				}
 			
-				if(!filledTau1 and jet->BTag == 0){
-					tau1_pt = jet->PT;
-					tau1_eta = jet->Eta;
-					tau1_phi = jet->Phi;
-					tau1_m = (jet->P4()).M();
-					//for(int i=0; i<5; i++) n_subj[i] = (jet->Tau)[i];
-					met_met = met->MET;
-					met_eta = met->Eta;
-					met_phi = met->Phi;
-					tau1_ncharged = jet->NCharged;
-					tau1_nneutrals = jet->NNeutrals;
-					tau1_ehadeem = jet->EhadOverEem;
-					tau1_p4 = jet->P4();
-					filledTau1 = true;
-				}
-				else{
-					if(!filledTau2 and jet->BTag == 0){
-					m_tau1tau2 = (tau1_p4 + jet->P4()).M();
-					pt_tau1tau2 = (tau1_p4 + jet->P4()).Pt();
-					eta_tau1tau2 = (tau1_p4 + jet->P4()).Eta();	
-					phi_tau1tau2 = (tau1_p4 + jet->P4()).Phi();
-					tau2_pt = jet->PT;
-					tau2_eta = jet->Eta;
-					tau2_phi = jet->Phi;
-					tau2_m = (jet->P4()).M();
-					tau2_ncharged = jet->NCharged;
-					tau2_nneutrals = jet->NNeutrals;
-					tau2_ehadeem = jet->EhadOverEem; 
 				
-					filledTau2 = true;
-				}
-			}
 							
 			}			
 		
@@ -249,17 +262,18 @@ int create_qcd_dataset() {
 				deltaR_jet1jet2 = pow((pow((jet1_eta - jet2_eta),2) +  pow((jet1_phi - jet2_phi),2)),0.5);
 				deltaR_bjet1bjet2 = pow((pow((bjet1_eta - bjet2_eta),2) +  pow((bjet1_phi - bjet2_phi),2)),0.5);
 
-				if(m_jet1jet2 < 0)                                                                                                                                                                          { //printf("m_jj is negative: m_jet1jet2, jet1_m, jet1_pt, jet2_m, jet2_pt,n_jets - %f,%f,%f,%f,%f,%i\n",m_jet1jet2, jet1_m, jet1_pt, jet2_m, jet2_pt,n_jets);
-                                jet1_pt = 0., jet1_eta = 0., jet1_phi = 0., jet1_m = 0., jet1_ehadeem = 0.,m_jet1jet2 = 0.;
-                                jet2_pt = 0., jet2_eta = 0., jet2_phi = 0., jet2_m = 0., jet2_ehadeem = 0., m_jet1jet2 = 0;
-                                neg_mjj ++ ;
-
-                                }				
-				if(m_bjet1bjet2 < 0)                                                                                                                                                                          { //printf("m_jj is negative: m_jet1jet2, jet1_m, jet1_pt, jet2_m, jet2_pt,n_jets - %f,%f,%f,%f,%f,%i\n",m_jet1jet2, jet1_m, jet1_pt, jet2_m, jet2_pt,n_jets);
-                                bjet1_pt = 0., bjet1_eta = 0., bjet1_phi = 0., bjet1_m = 0., bjet1_ehadeem = 0.,m_bjet1bjet2 = 0.;
-                                bjet2_pt = 0., bjet2_eta = 0., bjet2_phi = 0., bjet2_m = 0., bjet2_ehadeem = 0., m_bjet1bjet2 = 0;
-                                neg_mjj ++ ;
-                                }
+				if(m_jet1jet2 < 0) {                                                                                                                                                                         
+					jet1_pt = 0., jet1_eta = 0., jet1_phi = 0., jet1_m = 0., jet1_ehadeem = 0.,m_jet1jet2 = 0.;
+					jet2_pt = 0., jet2_eta = 0., jet2_phi = 0., jet2_m = 0., jet2_ehadeem = 0., m_jet1jet2 = 0;
+					neg_mjj ++ ;
+					continue;
+					}				
+				if(m_bjet1bjet2 < 0) {                                                                                                                                                                         
+					bjet1_pt = 0., bjet1_eta = 0., bjet1_phi = 0., bjet1_m = 0., bjet1_ehadeem = 0.,m_bjet1bjet2 = 0.;
+					bjet2_pt = 0., bjet2_eta = 0., bjet2_phi = 0., bjet2_m = 0., bjet2_ehadeem = 0., m_bjet1bjet2 = 0;
+					neg_mjj ++ ;
+					continue;
+					}
 				// if(m_tau1tau2 >= 120){
 					nevents++;
 					fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i\n", 
@@ -268,7 +282,7 @@ int create_qcd_dataset() {
 					tau2_m, m_tau1tau2, pt_tau1tau2, eta_tau1tau2, phi_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
 					jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, 
 					jet2_pt, jet2_eta, jet2_phi, jet2_cef, jet2_nef, bjet2_pt, bjet2_eta, bjet2_phi, bjet2_cef, bjet2_nef, evt_weight, isSig);
-	//printf("No. of tau jets = %i\n",numTauJets);  }
+				 
 			}
 
 			}
