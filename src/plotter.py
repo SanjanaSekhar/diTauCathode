@@ -253,7 +253,9 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels,sig_scale,plot_label):
 					elif 'n' in col: n_bkg[i].Fill(entry, wt)
 				
 				if 'm_t' in col: 
+					m_tt_bkg[i].Print("range")
 					m_tt_bkg[i] = binwidth_normalize(m_tt_bkg[i])
+					m_tt_bkg[i].Print("range")
 					stack_mtt.Add(m_tt_bkg[i])
 				elif 'm' in col or 'pt' in col: 
 					m_bkg[i] = binwidth_normalize(m_bkg[i])
