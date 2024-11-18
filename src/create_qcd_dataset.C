@@ -8,6 +8,8 @@
 #include "TTree.h"
 #include "TLorentzVector.h"
 #include <cstdlib>
+#include <time.h>
+#include <stdlib.h>
 #ifdef __CLING__
 R__LOAD_LIBRARY(libDelphes)
 #include "../../classes/DelphesClasses.h"
@@ -19,7 +21,7 @@ class TFile;
 
 int create_qcd_dataset() {
 
-
+	srand(time(NULL));
 	int debug = 0; 
 	gSystem->Load("libDelphes");
 	int isSig = 0;
@@ -119,7 +121,7 @@ int create_qcd_dataset() {
         jet2_eta = 0., jet2_phi = 0., bjet2_eta = 0., bjet2_phi = 0.,jet2_ehadeem = 0, bjet2_ehadeem = 0.;
         jet2_cef = 0., jet2_nef = 0.,bjet2_cef = 0., bjet2_nef = 0.;
 		TLorentzVector jet1_p4, bjet1_p4, tau1_p4;
-		float jet_idx[10] = {}; int j_idx = 0;  
+		float jet_idx[10] = {}; int tau1_idx, tau2_idx, j_idx = 0;  
 			
 			// set aside 2 highest pT jets that are not btagged assuming they are hadronic taus
 			// use the remaining jets to check for jets and bjets
@@ -133,20 +135,21 @@ int create_qcd_dataset() {
 					jet_idx[j_idx] = i;
 					j_idx++;
 				}
-				}
+			}
 			
 			// choose indices at random to form the ditau pair
-			// x is in [0,1[
-			double x = rand()/static_cast<double>(RAND_MAX+1); 
-			int tau1_idx = static_cast<int>( x * (n_jets) );
-			x = rand()/static_cast<double>(RAND_MAX+1); 
-			int tau2_idx = static_cast<int>( x * (n_jets) );
-			if (tau1_idx == tau2_idx) cout << "the two random indices are equal\n" << endl;
-		
+			if (n_jets < 2) continue;
+			if (n_jets == 2) {tau1_idx = 0; tau2_idx = 1;}
+			else{
+				tau1_idx = rand() % n_jets;
+				tau2_idx = rand() % n_jets;
+				while (tau1_idx == tau2_idx) {tau2_idx = rand() % n_jets;}
+			}
+			//cout << "n_jets = "<< n_jets <<" ,the two random indices are "<< tau1_idx << "," << tau2_idx << " for entry " << entry << endl;
 			for (int i = 0; i < branchJet->GetEntries(); ++i) {
 
-					Jet *jet = (Jet*) branchJet->At(i);
-					MissingET *met = (MissingET*) branchMET->At(0);
+				Jet *jet = (Jet*) branchJet->At(i);
+				MissingET *met = (MissingET*) branchMET->At(0);
 				if (!jet) continue;
 				if(n_bjets > 0){
 					if (jet->BTag == 1){
