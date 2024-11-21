@@ -150,8 +150,8 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels,sig_scale,plot_label):
 	# tau2_m, m_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
 	# jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, isSig
 
-	m_sig = ROOT.TH1F("m_sig", "m_sig", 70, 0.0, 700.0)
-	m_tt_sig = ROOT.TH1F("m_tt_sig", "m_tt_sig", 90, 100, 1000.0)
+	m_sig = ROOT.TH1F("m_sig", "m_sig", 60, 0.0, 800.0)
+	m_tt_sig = ROOT.TH1F("m_tt_sig", "m_tt_sig", 60, 100, 1000.0)
 	delta_sig = ROOT.TH1F("delta_sig","delta_sig",30, 0, 5)
 	n_sig = ROOT.TH1F("n_sig","n_sig",7,0,7)
 	m_bkg, m_tt_bkg, delta_bkg, n_bkg = [],[],[],[]
@@ -506,7 +506,7 @@ sig_names = ["250 GeV heavy Higgs (VBF)"]#, "250 GeV scalar from T'", "250 GeV H
 				#"250 GeV VAL"]
 bkg_names = ["QCD multijet", "ttbar + 0/1/2 jets", "DY + 0/1/2 jets"]
 #bkg_names = ["QCD multijet", "QCD multijet (tautagged)"]
-plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 30, plot_label = "")
+plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 10, plot_label = "")
 
 bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M","SM_QCD_JJ_0J1J2J_MinMass120_LO_6M_TauTag"]
 bkg_names = ["QCD multijet", "QCD multijet (tautagged)"]
