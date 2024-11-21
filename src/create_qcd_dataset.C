@@ -63,7 +63,7 @@ int create_qcd_dataset() {
 
 	float tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, tau2_m, m_tau1tau2, pt_tau1tau2, eta_tau1tau2, phi_tau1tau2, met_met, met_eta, met_phi, tau1_d1, tau1_d2, tau2_d1, tau2_d2;
         int n_jets, n_bjets, n_jets_all;
-        float m_jet1jet2, m_bjet1bjet2;
+        float m_jet1jet2, m_bjet1bjet2, pt_jet1jet2;
 	float tau1_ncharged, tau1_nneutrals, tau1_ehadeem, tau2_ncharged, tau2_nneutrals, tau2_ehadeem;
 	float jet1_m, jet1_pt, jet1_eta, jet1_phi, bjet1_m, bjet1_pt, bjet1_eta, bjet1_phi, jet1_ehadeem, bjet1_ehadeem, jet1_cef, jet1_nef, bjet1_cef, bjet1_nef;
 	float jet2_m, jet2_pt, jet2_eta, jet2_phi, bjet2_m, bjet2_pt, bjet2_eta, bjet2_phi, jet2_ehadeem, bjet2_ehadeem, jet2_cef, jet2_nef, bjet2_cef, bjet2_nef;
@@ -238,6 +238,7 @@ int create_qcd_dataset() {
 								jet2_nef = jet->NeutralEnergyFraction;
 								jet2_cef = jet->ChargedEnergyFraction;
 								m_jet1jet2 = (jet1_p4 + jet->P4()).M();
+								pt_jet1jet2 = (jet1_p4 + jet->P4()).Pt();
 								filledJet2 = true;
 							}
 						
@@ -254,9 +255,9 @@ int create_qcd_dataset() {
 
 				
 				//printf("n_jets = %i,jet1_pt = %.2f, jet1_eta = %.2f, jet1_phi = %.2f, n_bjets = %i, bjet1_pt = %.2f, bjet1_eta = %.2f, bjet1_phi = %.2f\n",n_jets,jet1_pt, jet1_eta, jet1_phi,bjet1_pt, bjet1_eta, bjet1_phi, n_bjets);
-				if (n_jets == 0) { jet1_pt = 0., jet1_eta = 0., jet1_phi = 0., jet1_ehadeem = 0., m_jet1jet2 = 0.;}
+				if (n_jets == 0) { jet1_pt = 0., jet1_eta = 0., jet1_phi = 0., jet1_ehadeem = 0., m_jet1jet2 = 0., pt_jet1jet2 = 0.;}
 				if (n_bjets == 0) {bjet1_pt = 0., bjet1_eta = 0., bjet1_phi = 0., bjet1_ehadeem = 0., m_bjet1bjet2 = 0.;}
-				if (n_jets < 2) {jet2_pt = 0., jet2_eta = 0., jet2_phi = 0., jet2_ehadeem = 0., m_jet1jet2 = jet1_m;}
+				if (n_jets < 2) {jet2_pt = 0., jet2_eta = 0., jet2_phi = 0., jet2_ehadeem = 0., m_jet1jet2 = jet1_m, pt_jet1jet2 = jet1_pt;}
                 if (n_bjets < 2) {bjet2_pt = 0., bjet2_eta = 0., bjet2_phi = 0., bjet2_ehadeem = 0., m_bjet1bjet2 = bjet1_m;}
 
 
@@ -277,10 +278,13 @@ int create_qcd_dataset() {
 					neg_mjj ++ ;
 					continue;
 					}
+				bool pass = m_tau1tau2 >= 120;
+				pass = pass and (tau1_pt >= 40 or tau1_pt >= 40);
+				pass = pass and abs(tau1_eta) < 2.4 and abs(tau2_eta) < 2.4;
 				// if(m_tau1tau2 >= 120){
 					nevents++;
-					fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i\n", 
-					m_jet1jet2, deltaR_jet1jet2, m_bjet1bjet2, deltaR_bjet1bjet2, deltaR_tau1tau2, deltaeta_tau1tau2,
+					fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i\n", 
+					m_jet1jet2, pt_jet1jet2, deltaR_jet1jet2, m_bjet1bjet2, deltaR_bjet1bjet2, deltaR_tau1tau2, deltaeta_tau1tau2,
 					tau1_pt, tau1_eta, tau1_phi, tau2_pt, tau2_eta, tau2_phi, tau1_m, 
 					tau2_m, m_tau1tau2, pt_tau1tau2, eta_tau1tau2, phi_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
 					jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, 
