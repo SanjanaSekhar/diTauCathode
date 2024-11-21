@@ -281,7 +281,7 @@ int create_qcd_dataset() {
 				bool pass = m_tau1tau2 >= 120;
 				pass = pass and (tau1_pt >= 40 or tau1_pt >= 40);
 				pass = pass and abs(tau1_eta) < 2.4 and abs(tau2_eta) < 2.4;
-				// if(m_tau1tau2 >= 120){
+				if(pass){
 					nevents++;
 					fprintf(fout,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i\n", 
 					m_jet1jet2, pt_jet1jet2, deltaR_jet1jet2, m_bjet1bjet2, deltaR_bjet1bjet2, deltaR_tau1tau2, deltaeta_tau1tau2,
@@ -289,7 +289,7 @@ int create_qcd_dataset() {
 					tau2_m, m_tau1tau2, pt_tau1tau2, eta_tau1tau2, phi_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
 					jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, 
 					jet2_pt, jet2_eta, jet2_phi, jet2_cef, jet2_nef, bjet2_pt, bjet2_eta, bjet2_phi, bjet2_cef, bjet2_nef, evt_weight, isSig);
-				 
+				 }
 			}
 
 			}
