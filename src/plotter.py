@@ -170,7 +170,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels,sig_scale,plot_label):
 		delta_bkg[i].Sumw2()
 		n_bkg[i].Sumw2()
 	
-	columns = ["m_jet1jet2", "deltaR_jet1jet2", "m_bjet1bjet2", "deltaR_bjet1bjet2", "deltaR_tau1tau2","deltaeta_tau1tau2","tau1_pt", "tau1_eta", "tau1_phi", 
+	columns = ["m_jet1jet2", "pt_jet1jet2", "deltaR_jet1jet2", "m_bjet1bjet2", "deltaR_bjet1bjet2", "deltaR_tau1tau2","deltaeta_tau1tau2","tau1_pt", "tau1_eta", "tau1_phi", 
 				"tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m","m_tau1tau2", "pt_tau1tau2", "eta_tau1tau2", "phi_tau1tau2",
 				"met_met", "met_eta", "met_phi", "n_jets", "n_bjets","jet1_pt", "jet1_eta", "jet1_phi", "jet1_cef", "jet1_nef", 
 				"bjet1_pt", "bjet1_eta", "bjet1_phi", "bjet1_cef", "bjet1_nef","jet2_pt", "jet2_eta", "jet2_phi", "jet2_cef", "jet2_nef", 
@@ -184,9 +184,9 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels,sig_scale,plot_label):
 	for i in range(len(bkg)):
 		bkg[i].columns = columns
 		#bkg[i]["deltaeta_tau1tau2"] = abs(bkg[i]['tau1_eta'] - bkg[i]['tau2_eta'])
-		bkg[i] = bkg[i][["deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets","m_tau1tau2", "m_jet1jet2", "pt_tau1tau2", "met_met",  "event_weight"]]
+		bkg[i] = bkg[i][["deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets","m_tau1tau2", "m_jet1jet2", "pt_tau1tau2", "pt_jet1jet2","met_met",  "event_weight"]]
 
-	bkg[0]["event_weight"] = bkg[0]["event_weight"] * 0.01
+	#bkg[0]["event_weight"] = bkg[0]["event_weight"] * 0.01
 	#print("mjj in QCD: ",bkg[2]["m_jet1jet2"].min(),bkg[2]["m_jet1jet2"].max()) 
 	#print("deltaR_tau1tau2 in QCD: ",bkg[2]["deltaR_tau1tau2"].min(),bkg[2]["deltaR_tau1tau2"].max())
 
@@ -221,7 +221,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels,sig_scale,plot_label):
 
 		sig.columns = columns
 		#sig["deltaeta_tau1tau2"] = abs(sig['tau1_eta'] - sig['tau2_eta'])
-		sig = sig[["deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets","m_tau1tau2", "m_jet1jet2", "pt_tau1tau2", "met_met",  "event_weight"]]
+		sig = sig[["deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets","m_tau1tau2", "m_jet1jet2", "pt_tau1tau2","pt_jet1jet2", "met_met",  "event_weight"]]
 		print(sig_label)
 
 		for i in range(len(bkg)):
@@ -506,11 +506,11 @@ sig_names = ["250 GeV heavy Higgs (VBF)"]#, "250 GeV scalar from T'", "250 GeV H
 				#"250 GeV VAL"]
 bkg_names = ["QCD multijet", "ttbar + 0/1/2 jets", "DY + 0/1/2 jets"]
 #bkg_names = ["QCD multijet", "QCD multijet (tautagged)"]
-plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 10, plot_label = "")
+plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 50, plot_label = "")
 
 bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M","SM_QCD_JJ_0J1J2J_MinMass120_LO_6M_TauTag"]
 bkg_names = ["QCD multijet", "QCD multijet (tautagged)"]
-compare_QCD(bkg_list[::-1], bkg_names[::-1], plot_label = "")
+#compare_QCD(bkg_list[::-1], bkg_names[::-1], plot_label = "")
 
 #injections = ["0.100","0.050","0.010","0.005"]
 #injections = ["0.100"]#,"0.200","0.300","0.400","0.500","0.600","0.700","0.800","0.900"]

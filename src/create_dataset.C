@@ -29,7 +29,7 @@ int create_dataset(string file_n, int label) {
 	gSystem->Load("libDelphes");
 	int isSig = label;
         float lumi = 138.;
-	int n_files = 1;
+	int n_files = 3;
 	char infile[200], outfile[200];
 	string csv_path = "/uscms/home/ssekhar/nobackup/CATHODE_ditau/Delphes/";
 	string in_path = "root://cmseos.fnal.gov//store/user/tvami/diTauCathode/";
@@ -38,7 +38,7 @@ int create_dataset(string file_n, int label) {
 	// DY xsec: 17.37 pb
 	// ttbar xsec: 13.4918 pb
 	// QCD xsec : 437700 pb
-	float xsec = 437700;
+	float xsec = 17.37;
 	if(isSig) xsec = -1; 
 	//TFile * fin = TFile::Open(infile);
 	FILE *fout;
@@ -81,7 +81,7 @@ int create_dataset(string file_n, int label) {
 	// sum of weights = 5.10332e+07 for DY
 	// sum of weights = 1.40821e+07 for ttbar
 	// sum of weights = 2.49425e+12 for QCD
-	float sum_weights = 2.49425e+12; 
+	float sum_weights = 5.10332e+07; 
         //numberOfEntries = 50000;
         /*
 	for (Long64_t entry = 0; entry < numberOfEntries; ++entry) {
