@@ -150,10 +150,10 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels,sig_scale,plot_label):
 	# tau2_m, m_tau1tau2, met_met, met_eta, met_phi, n_jets, n_bjets, 
 	# jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, isSig
 
-	m_sig = ROOT.TH1F("m_sig", "m_sig", 50, 0.0, 400.0)
-	m_tt_sig = ROOT.TH1F("m_tt_sig", "m_tt_sig", 80, 0.0, 800.0)
-	delta_sig = ROOT.TH1F("delta_sig","delta_sig",20, 0, 4.5)
-	n_sig = ROOT.TH1F("n_sig","n_sig", 10,0,5.)
+	m_sig = ROOT.TH1F("m_sig", "m_sig", 60, 0.0, 600.0)
+	m_tt_sig = ROOT.TH1F("m_tt_sig", "m_tt_sig", 100, 0.0, 1000.0)
+	delta_sig = ROOT.TH1F("delta_sig","delta_sig",30, 0, 5)
+	n_sig = ROOT.TH1F("n_sig","n_sig",7,0,7)
 	m_bkg, m_tt_bkg, delta_bkg, n_bkg = [],[],[],[]
 	m_sig.Sumw2()
 	delta_sig.Sumw2()
@@ -165,10 +165,10 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels,sig_scale,plot_label):
 		m_bkg.append(m_sig.Clone("m_bkg%i" %i))
 		delta_bkg.append(delta_sig.Clone("delta_bkg%i" %i))
 		n_bkg.append(n_sig.Clone("n_bkg%i" %i))
-		m_tt_bkg[i].Sumw2()
-		m_bkg[i].Sumw2()
-		delta_bkg[i].Sumw2()
-		n_bkg[i].Sumw2()
+		#m_tt_bkg[i].Sumw2()
+		#m_bkg[i].Sumw2()
+		#delta_bkg[i].Sumw2()
+		#n_bkg[i].Sumw2()
 	
 	columns = ["m_jet1jet2", "pt_jet1jet2", "deltaR_jet1jet2", "m_bjet1bjet2", "deltaR_bjet1bjet2", "deltaR_tau1tau2","deltaeta_tau1tau2","tau1_pt", "tau1_eta", "tau1_phi", 
 				"tau2_pt", "tau2_eta", "tau2_phi", "tau1_m","tau2_m","m_tau1tau2", "pt_tau1tau2", "eta_tau1tau2", "phi_tau1tau2",
@@ -186,7 +186,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels,sig_scale,plot_label):
 		#bkg[i]["deltaeta_tau1tau2"] = abs(bkg[i]['tau1_eta'] - bkg[i]['tau2_eta'])
 		bkg[i] = bkg[i][["deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets","m_tau1tau2", "m_jet1jet2", "pt_tau1tau2", "pt_jet1jet2","met_met",  "event_weight"]]
 
-	#bkg[0]["event_weight"] = bkg[0]["event_weight"] * 0.01
+	bkg[0]["event_weight"] = bkg[0]["event_weight"] * 0.01
 	#print("mjj in QCD: ",bkg[2]["m_jet1jet2"].min(),bkg[2]["m_jet1jet2"].max()) 
 	#print("deltaR_tau1tau2 in QCD: ",bkg[2]["deltaR_tau1tau2"].min(),bkg[2]["deltaR_tau1tau2"].max())
 
