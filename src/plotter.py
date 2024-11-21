@@ -248,16 +248,16 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels,sig_scale,plot_label):
 				for entry,wt in zip(bkg[i][col], bkg[i]["event_weight"]):
 					#wt = 1
 					if 'm_t' in col:
-						if i==0: print(entry) 
+						#if i==0: print(entry,wt) 
 						m_tt_bkg[i].Fill(entry, wt)
 					elif 'm' in col or 'pt' in col: m_bkg[i].Fill(entry, wt)
 					elif 'delta' in col: delta_bkg[i].Fill(entry, wt)
 					elif 'n' in col: n_bkg[i].Fill(entry, wt)
 				
 				if 'm_t' in col: 
-					m_tt_bkg[i].Print("range")
+					#m_tt_bkg[i].Print("range")
 					m_tt_bkg[i] = binwidth_normalize(m_tt_bkg[i])
-					m_tt_bkg[i].Print("range")
+					#m_tt_bkg[i].Print("range")
 					stack_mtt.Add(m_tt_bkg[i])
 				elif 'm' in col or 'pt' in col: 
 					m_bkg[i] = binwidth_normalize(m_bkg[i])
