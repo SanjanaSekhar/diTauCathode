@@ -59,8 +59,8 @@ def compare_QCD(bkgs,bkg_labels,plot_label):
 		#bkg[i]["deltaeta_tau1tau2"] = abs(bkg[i]['tau1_eta'] - bkg[i]['tau2_eta'])
 		bkg[i] = bkg[i][["deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets","m_tau1tau2", "m_jet1jet2", "pt_tau1tau2", "pt_jet1jet2", "met_met",  "event_weight"]]
 
-	bkg[0]["n_jets"] = bkg[0]["n_jets"] - 2
-	bkg[0]["event_weight"] = bkg[0]["event_weight"] * 100
+	bkg[1]["n_jets"] = bkg[1]["n_jets"] - 2
+	bkg[1]["event_weight"] = bkg[1]["event_weight"] * 100
 	#print("mjj in QCD: ",bkg[2]["m_jet1jet2"].min(),bkg[2]["m_jet1jet2"].max()) 
 	#print("deltaR_tau1tau2 in QCD: ",bkg[2]["deltaR_tau1tau2"].min(),bkg[2]["deltaR_tau1tau2"].max())
 
