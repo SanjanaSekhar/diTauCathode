@@ -186,7 +186,7 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels,sig_scale,plot_label):
 		#bkg[i]["deltaeta_tau1tau2"] = abs(bkg[i]['tau1_eta'] - bkg[i]['tau2_eta'])
 		bkg[i] = bkg[i][["deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets","m_tau1tau2", "m_jet1jet2", "pt_tau1tau2", "met_met",  "event_weight"]]
 
-	#bkg[0]["event_weight"] = bkg[0]["event_weight"] * 0.0001
+	bkg[0]["event_weight"] = bkg[0]["event_weight"] * 0.01
 	#print("mjj in QCD: ",bkg[2]["m_jet1jet2"].min(),bkg[2]["m_jet1jet2"].max()) 
 	#print("deltaR_tau1tau2 in QCD: ",bkg[2]["deltaR_tau1tau2"].min(),bkg[2]["deltaR_tau1tau2"].max())
 
