@@ -28,7 +28,7 @@ def compare_QCD(bkgs,bkg_labels,plot_label):
 	# jet1_pt, jet1_eta, jet1_phi, jet1_cef, jet1_nef, bjet1_pt, bjet1_eta, bjet1_phi, bjet1_cef, bjet1_nef, isSig
 
 	m_sig = ROOT.TH1F("m_sig", "m_sig", 60, 0.0, 800.0)
-	m_tt_sig = ROOT.TH1F("m_tt_sig", "m_tt_sig", 60, 0.0, 900.0)
+	m_tt_sig = ROOT.TH1F("m_tt_sig", "m_tt_sig", 60, 100.0, 900.0)
 	delta_sig = ROOT.TH1F("delta_sig","delta_sig",20, 0, 5)
 	n_sig = ROOT.TH1F("n_sig","n_sig", 7,0,7.)
 	m_bkg, m_tt_bkg, delta_bkg, n_bkg = [],[],[],[]
@@ -60,7 +60,7 @@ def compare_QCD(bkgs,bkg_labels,plot_label):
 		bkg[i] = bkg[i][["deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets","m_tau1tau2", "m_jet1jet2", "pt_tau1tau2", "pt_jet1jet2", "met_met",  "event_weight"]]
 
 	bkg[1]["n_jets"] = bkg[1]["n_jets"] - 2
-	bkg[1]["event_weight"] = bkg[1]["event_weight"] * 100
+	bkg[1]["event_weight"] = bkg[1]["event_weight"] * 10
 	#print("mjj in QCD: ",bkg[2]["m_jet1jet2"].min(),bkg[2]["m_jet1jet2"].max()) 
 	#print("deltaR_tau1tau2 in QCD: ",bkg[2]["deltaR_tau1tau2"].min(),bkg[2]["deltaR_tau1tau2"].max())
 
@@ -430,7 +430,7 @@ bkg_names = ["QCD multijet (tautagged)", "ttbar + 0/1/2 jets", "DY + 0/1/2 jets"
 plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 100, plot_label = "_tautagged")
 
 bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M","SM_QCD_JJ_0J1J2J_MinMass120_LO_6M_TauTag"]
-bkg_names = ["100 * QCD multijet", "QCD multijet (tautagged)"]
+bkg_names = ["10 * QCD multijet", "QCD multijet (tautagged)"]
 compare_QCD(bkg_list[::-1], bkg_names[::-1], plot_label = "")
 
 #injections = ["0.100","0.050","0.010","0.005"]
