@@ -60,6 +60,7 @@ def compare_QCD(bkgs,bkg_labels,plot_label):
 		bkg[i] = bkg[i][["deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets","m_tau1tau2", "m_jet1jet2", "pt_tau1tau2", "pt_jet1jet2", "met_met",  "event_weight"]]
 
 	bkg[0]["n_jets"] = bkg[0]["n_jets"] - 2
+    bkg[0]["event_weight"] = bkg[0]["event_weight"] * 100
 	#print("mjj in QCD: ",bkg[2]["m_jet1jet2"].min(),bkg[2]["m_jet1jet2"].max()) 
 	#print("deltaR_tau1tau2 in QCD: ",bkg[2]["deltaR_tau1tau2"].min(),bkg[2]["deltaR_tau1tau2"].max())
 
@@ -333,86 +334,6 @@ def plot_features(sigs,sig_labels,bkgs,bkg_labels,sig_scale,plot_label):
 			elif 'n' in col: stack_n.Delete()
 			
 
-def plot_pre_postprocessed(train, val, test, train_ws, val_ws, test_ws):
-
-
-		# plot data vs bkg for pre and post proc
-		data_pre = train_ws[train_ws[:,2]==1]
-		bkg_pre =  train_ws[train_ws[:,2]==0]
-		sig_pre = train[train[:,2]==1]
-		bkg_fs_pre = train[train[:,2]==0]
-
-		train, val, test = preprocess(train, val, test)
-		train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
-
-		data = train_ws[train_ws[:,2]==1]
-		bkg =  train_ws[train_ws[:,2]==0]
-		sig = train[train[:,2]==1]
-		bkg_fs = train[train[:,2]==0]
-		
-		print("m_jj in data post proc (IAD):", data[:,0]) 
-		print("Plotting %s pre and post processing: m_jj"%name)
-		plt.hist(data_pre[:,0],label="Data before preprocessing",histtype='step')
-		plt.hist(bkg_pre[:,0],label="Bkg before preprocessing",histtype='step')
-		#plt.hist(data[:,0],label="Data after preprocessing",histtype='step')
-		#plt.hist(bkg[:,0],label="Bkg after preprocessing",histtype='step')
-		plt.xlim(0,4000)
-		plt.xlabel("m_jj")
-		plt.title("Distributions for IAD for %s"%name)
-		plt.legend()
-		plt.savefig("%s_m_jj_pre.png"%name)
-		plt.close()
-
-		plt.hist(data[:,0],label="Data after preprocessing",histtype='step')
-		plt.hist(bkg[:,0],label="Bkg after preprocessing",histtype='step')
-		plt.xlabel("m_jj")
-		plt.title("Distributions for IAD for %s"%name)
-		plt.legend()
-		plt.savefig("%s_m_jj_post.png"%name)
-		plt.close()
-
-		print("Plotting %s pre and post processing: deltaR_jj"%name)
-		plt.hist(data[:,1],label="Data after preprocessing",histtype='step')
-		plt.hist(bkg[:,1],label="Bkg after preprocessing",histtype='step')
-		plt.hist(data_pre[:,1],label="Data before preprocessing",histtype='step')
-		plt.hist(bkg_pre[:,1],label="Bkg before preprocessing",histtype='step')
-		plt.xlabel("deltaR_jj")
-		plt.title("Distributions for IAD for %s"%name)
-		plt.legend()
-		plt.savefig("%s_deltaR_jj_pre_post.png"%name)
-		plt.close()
-		
-		print("m_jj in sig post proc (FS):", sig[:,0])
-		print("Plotting %s pre and post processing (FS): m_jj"%name)
-		plt.hist(sig_pre[:,0],label="Signal before preprocessing",histtype='step')
-		plt.hist(bkg_fs_pre[:,0],label="Bkg before preprocessing",histtype='step')
-		#plt.hist(sig[:,0],label="Signal after preprocessing",histtype='step')
-		#plt.hist(bkg_fs[:,0],label="Bkg after preprocessing",histtype='step')
-		plt.xlim(0,4000)
-		plt.xlabel("m_jj")
-		plt.title("Distributions for FS for %s"%name)
-		plt.legend()
-		plt.savefig("%s_fs_m_jj_pre.png"%name)
-		plt.close()
-
-		plt.hist(sig[:,0],label="Signal after preprocessing",histtype='step')
-		plt.hist(bkg_fs[:,0],label="Bkg after preprocessing",histtype='step')
-		plt.xlabel("m_jj")
-		plt.title("Distributions for FS for %s"%name)
-		plt.legend()
-		plt.savefig("%s_fs_m_jj_post.png"%name)
-		plt.close()
-		
-		print("Plotting %s pre and post processing (FS): deltaR_jj"%name)
-		plt.hist(sig[:,1],label="Signal after preprocessing",histtype='step')
-		plt.hist(bkg_fs[:,1],label="Bkg after preprocessing",histtype='step')
-		plt.hist(sig_pre[:,1],label="Signal before preprocessing",histtype='step')
-		plt.hist(bkg_fs_pre[:,1],label="Bkg before preprocessing",histtype='step')
-		plt.xlabel("deltaR_jj")
-		plt.title("Distributions for FS for %s"%name)
-		plt.legend()
-		plt.savefig("%s_fs_deltaR_jj_pre_post.png"%name)
-		plt.close()
 
 
 def plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title):
@@ -509,7 +430,7 @@ bkg_names = ["QCD multijet (tautagged)", "ttbar + 0/1/2 jets", "DY + 0/1/2 jets"
 plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 100, plot_label = "_tautagged")
 
 bkg_list = ["SM_QCD_JJ_0J1J2J_MinMass120_LO_6M","SM_QCD_JJ_0J1J2J_MinMass120_LO_6M_TauTag"]
-bkg_names = ["QCD multijet", "QCD multijet (tautagged)"]
+bkg_names = ["100 * QCD multijet", "QCD multijet (tautagged)"]
 compare_QCD(bkg_list[::-1], bkg_names[::-1], plot_label = "")
 
 #injections = ["0.100","0.050","0.010","0.005"]
@@ -567,3 +488,84 @@ for mass in masses:
 		plt_title = "Phi%ivs%s_BDT_hgb_skl_sig0.010"%(mass,bkg) 
 		plot_ROC_SIC(ws_lists, ws_names, fs_lists, fs_names, plt_title)
 '''
+
+def plot_pre_postprocessed(train, val, test, train_ws, val_ws, test_ws):
+
+
+		# plot data vs bkg for pre and post proc
+		data_pre = train_ws[train_ws[:,2]==1]
+		bkg_pre =  train_ws[train_ws[:,2]==0]
+		sig_pre = train[train[:,2]==1]
+		bkg_fs_pre = train[train[:,2]==0]
+
+		train, val, test = preprocess(train, val, test)
+		train_ws, val_ws, test_ws = preprocess(train_ws, val_ws, test_ws)
+
+		data = train_ws[train_ws[:,2]==1]
+		bkg =  train_ws[train_ws[:,2]==0]
+		sig = train[train[:,2]==1]
+		bkg_fs = train[train[:,2]==0]
+		
+		print("m_jj in data post proc (IAD):", data[:,0]) 
+		print("Plotting %s pre and post processing: m_jj"%name)
+		plt.hist(data_pre[:,0],label="Data before preprocessing",histtype='step')
+		plt.hist(bkg_pre[:,0],label="Bkg before preprocessing",histtype='step')
+		#plt.hist(data[:,0],label="Data after preprocessing",histtype='step')
+		#plt.hist(bkg[:,0],label="Bkg after preprocessing",histtype='step')
+		plt.xlim(0,4000)
+		plt.xlabel("m_jj")
+		plt.title("Distributions for IAD for %s"%name)
+		plt.legend()
+		plt.savefig("%s_m_jj_pre.png"%name)
+		plt.close()
+
+		plt.hist(data[:,0],label="Data after preprocessing",histtype='step')
+		plt.hist(bkg[:,0],label="Bkg after preprocessing",histtype='step')
+		plt.xlabel("m_jj")
+		plt.title("Distributions for IAD for %s"%name)
+		plt.legend()
+		plt.savefig("%s_m_jj_post.png"%name)
+		plt.close()
+
+		print("Plotting %s pre and post processing: deltaR_jj"%name)
+		plt.hist(data[:,1],label="Data after preprocessing",histtype='step')
+		plt.hist(bkg[:,1],label="Bkg after preprocessing",histtype='step')
+		plt.hist(data_pre[:,1],label="Data before preprocessing",histtype='step')
+		plt.hist(bkg_pre[:,1],label="Bkg before preprocessing",histtype='step')
+		plt.xlabel("deltaR_jj")
+		plt.title("Distributions for IAD for %s"%name)
+		plt.legend()
+		plt.savefig("%s_deltaR_jj_pre_post.png"%name)
+		plt.close()
+		
+		print("m_jj in sig post proc (FS):", sig[:,0])
+		print("Plotting %s pre and post processing (FS): m_jj"%name)
+		plt.hist(sig_pre[:,0],label="Signal before preprocessing",histtype='step')
+		plt.hist(bkg_fs_pre[:,0],label="Bkg before preprocessing",histtype='step')
+		#plt.hist(sig[:,0],label="Signal after preprocessing",histtype='step')
+		#plt.hist(bkg_fs[:,0],label="Bkg after preprocessing",histtype='step')
+		plt.xlim(0,4000)
+		plt.xlabel("m_jj")
+		plt.title("Distributions for FS for %s"%name)
+		plt.legend()
+		plt.savefig("%s_fs_m_jj_pre.png"%name)
+		plt.close()
+
+		plt.hist(sig[:,0],label="Signal after preprocessing",histtype='step')
+		plt.hist(bkg_fs[:,0],label="Bkg after preprocessing",histtype='step')
+		plt.xlabel("m_jj")
+		plt.title("Distributions for FS for %s"%name)
+		plt.legend()
+		plt.savefig("%s_fs_m_jj_post.png"%name)
+		plt.close()
+		
+		print("Plotting %s pre and post processing (FS): deltaR_jj"%name)
+		plt.hist(sig[:,1],label="Signal after preprocessing",histtype='step')
+		plt.hist(bkg_fs[:,1],label="Bkg after preprocessing",histtype='step')
+		plt.hist(sig_pre[:,1],label="Signal before preprocessing",histtype='step')
+		plt.hist(bkg_fs_pre[:,1],label="Bkg before preprocessing",histtype='step')
+		plt.xlabel("deltaR_jj")
+		plt.title("Distributions for FS for %s"%name)
+		plt.legend()
+		plt.savefig("%s_fs_deltaR_jj_pre_post.png"%name)
+		plt.close()
