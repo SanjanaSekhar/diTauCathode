@@ -60,7 +60,7 @@ def compare_QCD(bkgs,bkg_labels,plot_label):
 		bkg[i] = bkg[i][["deltaR_jet1jet2", "deltaeta_tau1tau2","deltaR_tau1tau2","n_jets", "n_bjets","m_tau1tau2", "m_jet1jet2", "pt_tau1tau2", "pt_jet1jet2", "met_met",  "event_weight"]]
 
 	bkg[1]["n_jets"] = bkg[1]["n_jets"] - 1
-	bkg[1]["event_weight"] = bkg[1]["event_weight"] * 1000
+	bkg[1]["event_weight"] = bkg[1]["event_weight"] * 100
 	#print("mjj in QCD: ",bkg[2]["m_jet1jet2"].min(),bkg[2]["m_jet1jet2"].max()) 
 	#print("deltaR_tau1tau2 in QCD: ",bkg[2]["deltaR_tau1tau2"].min(),bkg[2]["deltaR_tau1tau2"].max())
 
@@ -430,7 +430,7 @@ bkg_names = ["QCD multijet (tautagged)", "ttbar + 0/1/2 jets", "DY + 0/1/2 jets"
 #plot_features(sig_list, sig_names, bkg_list, bkg_names, sig_scale = 100, plot_label = "_tautagged")
 
 bkg_list = ["SM_WTo1Tau1Nu_0J1J2J_LO_MinMass120_1M","SM_QCD_JJ_0J1J2J_MinMass120_LO_6M_TauTag"]
-bkg_names = ["1000 * W+jets (tautagged)", "QCD multijet (tautagged)"]
+bkg_names = ["100 * W+jets (tautagged)", "QCD multijet (tautagged)"]
 compare_QCD(bkg_list[::-1], bkg_names[::-1], plot_label = "_QCD_Wjets")
 
 #injections = ["0.100","0.050","0.010","0.005"]
